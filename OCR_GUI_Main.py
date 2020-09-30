@@ -12,7 +12,8 @@ from initializeDataFromImage import InitializeDataFromImage
 from interactiveWords import MarkWordsInImage
 from statusBar import *
 
-# constants
+#################################################################
+from tesseractCalls import printTessaractOutputForImage
 
 windowWidth = 794
 windowHeight = 794
@@ -27,7 +28,7 @@ client = vision.ImageAnnotatorClient()
 # conf=0.90 ignore the words that have confidance more than 0.75%
 minimumConfidence = .99
 
-# main window
+#################################################################
 root = Tk()
 root.wm_geometry(geometry)
 root.resizable(0, 0)
@@ -59,8 +60,7 @@ outputFrame = Frame(root)
 outputFrame.grid(row=2, column=0, sticky='nsew')
 CreateOutputFrameToDisplayInfo(outputFrame, windowWidth)
 
-
-# Hover Status Area
+#################################################################
 
 def openImage():
     imagePath = filedialog.askopenfilename(
@@ -68,12 +68,14 @@ def openImage():
     )
     processNewImage(imagePath)
 
-
 def processNewImage(imagePath):
     removeOldData()
+    printTessaractOutputForImage(imagePath)
     df = InitializeDataFromImage(imagePath, client, vision, minimumConfidence)
+    print("After google OCR:")
+    print(df['description'][0])
     RemoveDuplicates(df)
-    df = GetSerealizedData2(df, 3)
+    df = GetSerealizedData2(df)
 
     ApplyCorrection(dfs=df, minimumConfidence=minimumConfidence)
 
@@ -84,9 +86,9 @@ def processNewImage(imagePath):
     MarkWordsInImage(root, scrollableImage, df)
     setDF(d=df)
 
-
 def removeOldData():
     ClearWordStatus()
+
 
 
 root.mainloop()

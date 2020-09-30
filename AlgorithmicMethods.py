@@ -32,7 +32,7 @@ causing words to be appear out of index
 to fix the situation evaluate the centroid of each word, and cluster them by y index
 and each cluster should represent a row, serialize each cluster afterward based upon x index
 '''
-def GetSerealizedData2(df,GapRatio):
+def GetSerealizedData2(df):
     d = []
     for index, w in df.iterrows():
         if (w['index'] > 0):
@@ -71,62 +71,9 @@ def GetSerealizedData2(df,GapRatio):
     return df.sort_values(by=['index'])
     return df
 
-
-
-def GetSerealizedData(df, GapRatio):
-
-    d = []
-    for index, w in df.iterrows():
-        if (w['index'] > 0):
-            d.append((w['centroid'], w))
-
-    if len(d)<3:
-        return df
-    #step #1 short vertically
-    d.sort(key=sortByCentroidY, reverse=False)
-    #step #2 create list of rows based upon the vertical gap ratio
-    rows=[]
-    row=[]
-    i=0
-
-    for i in range(len(d)-1):
-        if i==0:
-            row.append(d[i])
-        else:
-            G1=(d[i][0][1]-d[i-1][0][1])+1 # vertical gap between current word and previous word
-            G2=(d[i+1][0][1]-d[i][0][1])+1 # vertical gap between next word and current word
-            if (G1/G2>GapRatio): # we are in a new line
-                row.sort(key=sortByCentroidX, reverse=False)#order current row by x
-                rows.append(row)
-                row=[]
-            row.append(d[i])
-        if i==(len(d)-2):#last iteration
-             if(G2/G1>GapRatio) and len(row)>0:
-                 row.sort(key=sortByCentroidX, reverse=False)  # order current row by x
-                 rows.append(row)
-                 row = []
-                 row.append(d[i+1])
-                 rows.append(row)
-                 row = []
-             else:
-                 row.append(d[i+1])
-                 row.sort(key=sortByCentroidX, reverse=False)  # order current row by x
-                 rows.append(row)
-                 row = []
-
-    #step #3 serialize the indexes
-    i=1
-    for r in rows:
-        for w in r:
-            w[1]['index']=i
-            i=i+1
-    #step #4 sort the data frame by index
-    return df.sort_values(by=['index'])
-
 '''return top suggestions which has higher probability of chances to meet with charsAboveMinimumConfidance'''
 def getFilteredSuggestionList(charsAboveMinimumConfidance,suggestions):
     count=5
-    print("Enhance this method: getFilteredSuggestionList")
     if(len(suggestions)<count):
         return suggestions
     # return suggestions

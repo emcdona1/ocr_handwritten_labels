@@ -32,7 +32,7 @@ def GetDescriptionFromDataFrame(type,dfs, hint):
         for index, w in dfs.iterrows():
             if w['index'] > 0:
                 correctedText += w['description'] + " "
-    return correctedText
+    return replaceExtraSpace(correctedText)
 
 def setToDefaultWord(word):
     if word['index']>0:
@@ -81,3 +81,15 @@ def GetWordByXY(dfs, x, y):
             if polygon.contains(point):
                 return w
     return None
+
+import re
+def replaceExtraSpace(text):
+    rep = {' \'': '\'',
+           ' .':'.',
+           ' ,':',',
+           ' ?':'?',
+           ' !':'!'}
+    rep = dict((re.escape(k), v) for k, v in rep.items())
+    pattern = re.compile("|".join(rep.keys()))
+    text = pattern.sub(lambda m: rep[re.escape(m.group(0))], text)
+    return text
