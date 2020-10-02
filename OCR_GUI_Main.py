@@ -4,9 +4,12 @@ from google.cloud import vision
 from CreateOutputFrameToDisplayInfo import CreateOutputFrameToDisplayInfo
 from DetectWrongWords import DetectWrongWords
 from ScrollableImage import ScrollableImage
+from globalCalls import updateOutput
 from initializeDataFromImage import InitializeDataFromImage
 from interactiveWords import MarkWordsInImage
 from statusBar import *
+from tesseractCalls import printTessaractOutputForImage
+
 root =Tk()
 
 #################################################################
@@ -61,10 +64,10 @@ def openImage():
 
 def processNewImage(root):
     removeOldData(root)
-    #printTessaractOutputForImage(imagePath)
+    printTessaractOutputForImage(root.imagePath)
     InitializeDataFromImage(root,vision)
-    #print("After google OCR:")
-    #print(df['description'][0])
+    print("After google OCR:")
+    print(root.df['description'][0])
     #RemoveDuplicates(df)
     #print("Correction skipped")
     # df = GetSerealizedData2(df)
@@ -74,6 +77,8 @@ def processNewImage(root):
     root.scrollableImage = ScrollableImage(root.imageCanvasFrame, root=root, scrollbarwidth=6, width=root.imageWidth,
                                       height=root.imageHeight)
     MarkWordsInImage(root)
+    updateOutput(root)
+
 
 def removeOldData(root):
     ClearWordStatus(root)
