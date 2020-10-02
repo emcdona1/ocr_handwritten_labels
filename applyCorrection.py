@@ -29,11 +29,10 @@ def ApplyCorrection(dfs):
     for k, s in enumerate(segs):
         segments_ids = segments_ids + [k] * (s - prev)
         prev = s
-    print(segs)
     segments_ids = segments_ids + [len(segs)] * (len(tokenized_text) - len(segments_ids))
-    print(segments_ids)
+
     segments_tensors = torch.tensor([segments_ids])
-    print(segments_tensors)
+
     # prepare Torch inputs
     tokens_tensor = torch.tensor([indexed_tokens])
     # Load pre-trained model

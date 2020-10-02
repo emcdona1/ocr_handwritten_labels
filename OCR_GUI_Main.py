@@ -4,6 +4,7 @@ from google.cloud import vision
 from CreateOutputFrameToDisplayInfo import CreateOutputFrameToDisplayInfo
 from DetectWrongWords import DetectWrongWords
 from ScrollableImage import ScrollableImage
+from applyCorrection import ApplyCorrection
 from globalCalls import updateOutput
 from initializeDataFromImage import InitializeDataFromImage
 from interactiveWords import MarkWordsInImage
@@ -72,7 +73,10 @@ def processNewImage(root):
     #print("Correction skipped")
     # df = GetSerealizedData2(df)
     DetectWrongWords(root.df,root.minimumConfidence)
-    #ApplyCorrection(dfs=df)
+    try:
+        ApplyCorrection(dfs=root.df)
+    except:
+        print("Could not apply the correction from bert")
 
     root.scrollableImage = ScrollableImage(root.imageCanvasFrame, root=root, scrollbarwidth=6, width=root.imageWidth,
                                       height=root.imageHeight)
