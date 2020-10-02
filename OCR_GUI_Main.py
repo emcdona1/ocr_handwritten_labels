@@ -1,94 +1,81 @@
 import os
 from tkinter import filedialog
-
 from google.cloud import vision
-
-from AlgorithmicMethods import RemoveDuplicates, GetSerealizedData2
 from CreateOutputFrameToDisplayInfo import CreateOutputFrameToDisplayInfo
+from DetectWrongWords import DetectWrongWords
 from ScrollableImage import ScrollableImage
-from applyCorrection import ApplyCorrection
-from globalCalls import *
 from initializeDataFromImage import InitializeDataFromImage
 from interactiveWords import MarkWordsInImage
 from statusBar import *
+root =Tk()
 
 #################################################################
-from tesseractCalls import printTessaractOutputForImage
-
-windowWidth = 794
-windowHeight = 794
-imageWidth = 788
-imageHeight = 400
-totalColumns = 3
-wordHovered = ""
-geometry = str(windowWidth) + "x" + str(windowHeight)
+root.windowWidth = 794
+root.windowHeight = 794
+root.imageWidth = 788
+root.imageHeight = 400
+root.wordHovered = ""
+root.geometry = str(root.windowWidth) + "x" + str(root.windowHeight)
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = r'serviceAccountToken.json'
-client = vision.ImageAnnotatorClient()
+root.client = vision.ImageAnnotatorClient()
 # conf=1 even if the confidence is 100% check the word if it is actual word or not
 # conf=0.90 ignore the words that have confidance more than 0.75%
-minimumConfidence = .99
+root.minimumConfidence = .99
 
 #################################################################
-root = Tk()
-root.wm_geometry(geometry)
+
+root.wm_geometry(root.geometry)
 root.resizable(0, 0)
 root.title("Classify Specimen")
 root.config(background="white")
 root.image_window = ""
 
-textInPath = StringVar()
-userInputVal = StringVar()
-
 # menu bar
-menuBar = Menu(root)
-root.config(menu=menuBar)
+root.menuBar = Menu(root)
+root.config(menu=root.menuBar)
 # sub Menu
-subMenu = Menu(menuBar)
-menuBar.add_cascade(label="File", menu=subMenu)
+subMenu = Menu(root.menuBar)
+root.menuBar.add_cascade(label="File", menu=subMenu)
 subMenu.add_command(label="Open Image", command=lambda: openImage())
 
 # Image canvas area Row#0 both column
-imageCanvasFrame = Frame(root)
-imageCanvasFrame.grid(row=0, column=0, sticky='nsew')
+root.imageCanvasFrame = Frame(root)
+root.imageCanvasFrame.grid(row=0, column=0, sticky='nsew')
 # status bar and user input Row#1 two columns
-hoverStatusFrame = Frame(root)
-hoverStatusFrame.grid(row=1, column=0, sticky='nsew')
-CreateStatusBar(hoverStatusFrame, windowWidth)
-SetStatus("\n\t\t\t  Open image file to begin !")
+root.hoverStatusFrame = Frame(root)
+root.hoverStatusFrame.grid(row=1, column=0, sticky='nsew')
+CreateStatusBar(root)
+SetStatus(root,"\n\t\t\t  Open image file to begin !")
 #
-outputFrame = Frame(root)
-outputFrame.grid(row=2, column=0, sticky='nsew')
-CreateOutputFrameToDisplayInfo(outputFrame, windowWidth)
+root.outputFrame = Frame(root)
+root.outputFrame.grid(row=2, column=0, sticky='nsew')
+CreateOutputFrameToDisplayInfo(root,root.outputFrame)
 
 #################################################################
 
 def openImage():
-    imagePath = filedialog.askopenfilename(
-        filetypes=(("PNG", "*.png"), ("PNG", "*.png"))
+    root.imagePath = filedialog.askopenfilename(
+        filetypes=(("PNG", "*.png"), ("JPG", "*.jpg"))
     )
-    processNewImage(imagePath)
+    processNewImage(root)
 
-def processNewImage(imagePath):
-    removeOldData()
-    printTessaractOutputForImage(imagePath)
-    df = InitializeDataFromImage(imagePath, client, vision, minimumConfidence)
-    print("After google OCR:")
-    print(df['description'][0])
-    RemoveDuplicates(df)
-    df = GetSerealizedData2(df)
+def processNewImage(root):
+    removeOldData(root)
+    #printTessaractOutputForImage(imagePath)
+    InitializeDataFromImage(root,vision)
+    #print("After google OCR:")
+    #print(df['description'][0])
+    #RemoveDuplicates(df)
+    #print("Correction skipped")
+    # df = GetSerealizedData2(df)
+    DetectWrongWords(root.df,root.minimumConfidence)
+    #ApplyCorrection(dfs=df)
 
-    ApplyCorrection(dfs=df, minimumConfidence=minimumConfidence)
+    root.scrollableImage = ScrollableImage(root.imageCanvasFrame, root=root, scrollbarwidth=6, width=root.imageWidth,
+                                      height=root.imageHeight)
+    MarkWordsInImage(root)
 
-    root.image = PhotoImage(file=imagePath)
-
-    scrollableImage = ScrollableImage(imageCanvasFrame, root=root, scrollbarwidth=6, width=imageWidth,
-                                      height=imageHeight)
-    MarkWordsInImage(root, scrollableImage, df)
-    setDF(d=df)
-
-def removeOldData():
-    ClearWordStatus()
-
-
+def removeOldData(root):
+    ClearWordStatus(root)
 
 root.mainloop()

@@ -1,6 +1,5 @@
 import os, io
 import pandas as pd
-from shapely.geometry.polygon import Polygon
 
 from AlgorithmicMethods import getPolygonAreaByTouples
 
@@ -40,12 +39,12 @@ def getWordProperties(index, text, full_text_annotation,minimumConfidence):
         area = getPolygonAreaByTouples(tupleVertices)
     return tupleVertices,y_list,centroid,area, conf, charsAboveMinimumConfidence
 
-def InitializeDataFromImage(img, client, vision,minimumConfidence):
-    with io.open(img, 'rb') as image_file:
+def InitializeDataFromImage(root,vision):
+    with io.open(root.imagePath, 'rb') as image_file:
         content = image_file.read()
     image = vision.types.Image(content=content)
     # response = client.text_detection(image=image)
-    response = client.document_text_detection(image=image)
+    response = root.client.document_text_detection(image=image)
     df = pd.DataFrame(columns=['index',
                                'description',
                                'suggestedDescription',
@@ -63,7 +62,7 @@ def InitializeDataFromImage(img, client, vision,minimumConfidence):
     index=0
     texts = response.text_annotations
     for text in texts:
-        tupleVertices,y_list,centroid,area, conf, charsAboveMinimumConfidence = getWordProperties(index, text, response.full_text_annotation,minimumConfidence)
+        tupleVertices,y_list,centroid,area, conf, charsAboveMinimumConfidence = getWordProperties(index, text, response.full_text_annotation,root.minimumConfidence)
         df = df.append(
             dict(
                 index=index,#can be used to ignore the word, if set to -1 in future
@@ -85,4 +84,4 @@ def InitializeDataFromImage(img, client, vision,minimumConfidence):
         )
         index=index+1
 
-    return df
+    root.df=df

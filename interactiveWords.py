@@ -1,74 +1,62 @@
 from PopUpInputBox import popupWindow
 from globalCalls import setToDefaultWord
 from statusBar import *
-oldWord=activeWord={'index':0}
 
 
-def MarkWordsInImage(root,scrollableImage,dfs):
-    for index, w in dfs.iterrows():
+def MarkWordsInImage(root):
+    for index, w in root.df.iterrows():
         if w['index'] > 0:
-            drawBoxesInImage(root,scrollableImage.cnvs,w)
+            drawBoxesInImage(root,root.scrollableImage.cnvs,w)
 
 def drawBoxesInImage(root,canvas, word):
     word['canvas']=canvas
     word['polygon']=canvas.create_polygon(word['tupleVertices'], fill='',outline='',width=1, activeoutline=word['color'],activewidth=2)
     canvas.tag_bind(word.polygon, "<Button-1>", lambda x: word_button1(root,word))
-    canvas.tag_bind(word.polygon, "<Enter>", lambda x: polygon_enter(word))
-    canvas.tag_bind(word.polygon, "<Leave>", lambda x: polygon_leave(word))
+    canvas.tag_bind(word.polygon, "<Enter>", lambda x: polygon_enter(root,word))
+    canvas.tag_bind(word.polygon, "<Leave>", lambda x: polygon_leave(root))
 
-    def word_button1(self,word):
-        SetActiveWord(word)
-        ProcessActiveWord(self,word)
+    def word_button1(root,word):
+        SetActiveWord(root,word)
+        ProcessActiveWord(root,word)
 
-    def polygon_enter(word):
-        global activeWord
-        global oldWord
-        if activeWord['index']==0:
-            SetWordStatus(word)
+    def polygon_enter(root,word):
+        if root.activeWord['index']==0:
+            SetWordStatus(root,word)
 
-    def polygon_leave(word):
-        global activeWord
-        global oldWord
-        if activeWord['index']==0:
-            ClearWordStatus()
+    def polygon_leave(root):
+        if root.activeWord['index']==0:
+            ClearWordStatus(root)
 
     if word['color']!="green":
         canvas.itemconfigure(word['polygon'], fill='',outline=word['color'], width=1)
 
 
-def GetActiveWord():
-    return activeWord
+def SetActiveWord(root,w):
+    root.oldWord=root.activeWord
+    root.activeWord=w
 
-def SetActiveWord(w):
-    global activeWord
-    global oldWord
-    oldWord=activeWord
-    activeWord=w
-
-    if activeWord['index']>0:
-        activeWord['canvas'].itemconfigure(activeWord['polygon'],fill='',
+    if root.activeWord['index']>0:
+        root.activeWord['canvas'].itemconfigure(root.activeWord['polygon'],fill='',
                                        outline='#00BFFF', width=2, activewidth=3, activeoutline='#00BFFF')
+    if root.oldWord['index'] > 0:
+        setToDefaultWord(root.oldWord)
+
+    if root.oldWord['index']==root.activeWord['index']:
+        root.oldWord = root.activeWord = {'index': 0}
+
+def ProcessActiveWord(root,word):
+        if root.activeWord['index'] >0 and word['index']==root.activeWord['index']:
+             SetWordStatus(root,root.activeWord)
+             getUserUpdatesForTheActiveWord(root, root.activeWord)
 
 
-    if oldWord['index'] > 0:
-        setToDefaultWord(oldWord)
-
-    if oldWord['index']==activeWord['index']:
-        oldWord = activeWord = {'index': 0}
-
-def ProcessActiveWord(self,word):
-        if activeWord['index'] >0 and word['index']==activeWord['index']:
-             SetWordStatus(activeWord)
-             getUserUpdatesForTheWord(self,activeWord)
-
-
-def getUserUpdatesForTheWord(self,activeWord):
-    self.w = popupWindow(self.master,activeWord,320,150)
-    self.wait_window(self.w.top)
-    if self.w.top:
-        self.w.top.destroy()
-    SetActiveWord(activeWord)
-    SetWordStatus(activeWord)
+def getUserUpdatesForTheActiveWord(root, activeWord):
+    root.popUp = popupWindow(root.master,root,activeWord,320,150)
+    root.wait_window(root.popUp.top)
+    if root.popUp.top:
+        root.popUp.top.destroy()
+    SetActiveWord(root,activeWord)
+    SetWordStatus(root,activeWord)
 
 
 
