@@ -91,7 +91,8 @@ def updateOutput(root,**kw):
     useHint=kw.pop('useHint',0)
     afterUpdate=GetDescriptionFromDataFrame(type,root.df,useHint)
     setOutput(root,afterUpdate)
-    #tagText(afterUpdate)
+    print("Correction details:")
+    print(GetDescriptionFromDataFrame('corrected',root.df,1))
 
 
 
