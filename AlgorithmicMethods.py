@@ -73,6 +73,7 @@ def GetSerealizedData2(df):
 
 '''return top suggestions which has higher probability of chances to meet with charsAboveMinimumConfidance'''
 def getFilteredSuggestionList(charsAboveMinimumConfidance,suggestions):
+
     count=5
     if(len(suggestions)<count):
         return suggestions

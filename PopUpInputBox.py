@@ -5,7 +5,7 @@ from globalCalls import setToDefaultWord, updateOutput
 
 
 class popupWindow(object):
-    def __init__(self, master, word, width, height):
+    def __init__(self, master, root,word, width, height):
         top = self.top = Toplevel(master)
         self.top.grab_set()
 
@@ -21,12 +21,12 @@ class popupWindow(object):
         self.e.set(word['replacement'])
         self.e.pack(expand=1)
 
-        self.u = Button(self.top, text='Update', command=lambda: self.commandUpdte(word), activebackground='blue')
+        self.u = Button(self.top, text='Update', command=lambda: self.commandUpdte(root,word), activebackground='blue')
         self.c = Button(self.top, text='Cancel', command=self.commandCancel, activebackground="blue")
         self.u.pack(side=RIGHT)
         self.c.pack(side=RIGHT)
 
-    def commandUpdte(self, word):
+    def commandUpdte(self,root, word):
         oldValue = word['replacement']
         newValue = self.e.get()
         if oldValue != newValue:
@@ -40,7 +40,7 @@ class popupWindow(object):
             if oldValue not in word['suggestedDescription']:
                 word['suggestedDescription'].append(oldValue)
             setToDefaultWord(word)
-            updateOutput()
+            updateOutput(root)
 
         self.top.grab_release()
         self.top.destroy()

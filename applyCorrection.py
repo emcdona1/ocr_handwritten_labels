@@ -9,31 +9,9 @@ from AlgorithmicMethods import getFilteredSuggestionList
 from globalCalls import GetDescriptionFromDataFrame, debugDF
 
 
-def ApplyCorrection(dfs,minimumConfidence):
-    rawText2 = GetDescriptionFromDataFrame("OCR",dfs,0)
-    personslist = get_personslist(rawText2)
+def ApplyCorrection(dfs):
 
-    ignorewords = personslist + ["!", ",", ".", "\"", "?", '(', ')', '*', '\'', '\n']
-
-    # using enchant.checker.SpellChecker, identify incorrect words
-    d = SpellChecker("en_US")
-    maskedTextStream = ""
-    for index, w in dfs.iterrows():
-        if (w['index'] > 0 and not d.check(w['description'])
-                and  w['description'] not in ignorewords
-                and not w['description'].isnumeric()
-                 and w['confidence'] < minimumConfidence
-        ):
-            w['suggestedDescription'] = getFilteredSuggestionList(w['charsAboveMinimumConfidence'],d.suggest(w['description']))
-            w['isIncorrectWord'] = True
-            w['color']="red"
-        if w['index']>0:
-            w['replacement'] = w['description'] #default value would be replaced later if needed
-            if w['isIncorrectWord']:
-                maskedTextStream+="[MASK] "
-            else:
-                maskedTextStream+= w['description']+ " "
-
+    maskedTextStream=GetDescriptionFromDataFrame("MASKED",dfs)
     #print (maskedTextStream)
 
     # Load, train and predict using pre-trained model
@@ -51,12 +29,15 @@ def ApplyCorrection(dfs,minimumConfidence):
     for k, s in enumerate(segs):
         segments_ids = segments_ids + [k] * (s - prev)
         prev = s
+    print(segs)
     segments_ids = segments_ids + [len(segs)] * (len(tokenized_text) - len(segments_ids))
+    print(segments_ids)
     segments_tensors = torch.tensor([segments_ids])
+    print(segments_tensors)
     # prepare Torch inputs
     tokens_tensor = torch.tensor([indexed_tokens])
     # Load pre-trained model
-    model = BertForMaskedLM.from_pretrained('bert-base-uncased')
+    model = BertForMaskedLM.from_pretrained('bert-large-uncased')
     # Predict all tokens
     with torch.no_grad():
         predictions = model(tokens_tensor, segments_tensors)

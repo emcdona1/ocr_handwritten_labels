@@ -1,38 +1,38 @@
 from CreateOutputFrameToDisplayInfo import setOutput
+from localTest import tagText
 
-df=""
-
-def setDF(d):
-    global  df
-    df=d
-    updateOutput()
-
-
-
-def GetDescriptionFromDataFrame(type,dfs, hint):
-    correctedText = ""
+def GetDescriptionFromDataFrame(type,dfs, hint=0):
+    text = ""
     if type=="raw":
-        correctedText= dfs['description'][0]
+        text= dfs['description'][0]
     if type=="corrected":
         oldW=None
         for index, w in dfs.iterrows():
             if w['index'] > 0:
                 if w['index']>1:
                     if isCurrentWordInNextLine(currentWord=w,previousWord=oldW):
-                        correctedText+="\n"
+                        text+="\n"
                 oldW=w
                 if w['isIncorrectWord']:
                     if (hint==1):
-                        correctedText+="["+w['description']+"]->"
-                    correctedText += w['replacement']+" "
+                        text+="["+w['description']+"]->"
+                    text += w['replacement']+" "
                 else:
-                    correctedText += w['description'] + " "
+                    text += w['description'] + " "
 
     if type=="OCR":
         for index, w in dfs.iterrows():
             if w['index'] > 0:
-                correctedText += w['description'] + " "
-    return replaceExtraSpace(correctedText)
+                text += w['description'] + " "
+
+    if type=="MASKED":
+        for index, w in dfs.iterrows():
+            if w['isIncorrectWord']:
+                text += "[MASK] "
+            else:
+                text += w['description'] + " "
+
+    return replaceExtraSpace(text)
 
 def setToDefaultWord(word):
     if word['index']>0:
@@ -42,13 +42,6 @@ def setToDefaultWord(word):
        else:
            word['canvas'].itemconfigure(word['polygon'], outline=word['color'], width=1,
                                           fill='',    activeoutline=word['color'], activewidth=2)
-
-def updateOutput(**kw):
-    type=kw.pop('type',"corrected")
-    useHint=kw.pop('useHint',0)
-    global df
-    afterUpdate=GetDescriptionFromDataFrame(type,df,useHint)
-    setOutput(afterUpdate)
 
 def debugDF(df):
     for index, w in df.iterrows():
@@ -68,7 +61,6 @@ def GetWordByPolygon(dfs, polygon):
     for index, w in dfs.iterrows():
         if index > 0:
             if w['polygon']==polygon:
-
                 return w
     return w
 
@@ -93,3 +85,14 @@ def replaceExtraSpace(text):
     pattern = re.compile("|".join(rep.keys()))
     text = pattern.sub(lambda m: rep[re.escape(m.group(0))], text)
     return text
+
+def updateOutput(root,**kw):
+    type=kw.pop('type',"corrected")
+    useHint=kw.pop('useHint',0)
+    afterUpdate=GetDescriptionFromDataFrame(type,root.df,useHint)
+    setOutput(root,afterUpdate)
+    #tagText(afterUpdate)
+
+
+
+

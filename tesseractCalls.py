@@ -6,6 +6,7 @@ import pytesseract
 def printTessaractOutputForImage(imagePath):
     # Simple image to string
    # print(pytesseract.image_to_string(Image.open(imagePath)))
+    print("##################################################")
     print("After tesseract OCR:")
     print(pytesseract.image_to_string(imagePath))
 
