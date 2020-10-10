@@ -1,15 +1,28 @@
 import nltk
 import torch
-from enchant.checker import SpellChecker
 from pytorch_pretrained_bert import BertTokenizer, BertForMaskedLM
 from difflib import SequenceMatcher
 import re
+from transformers import AutoTokenizer, AutoModelWithLMHead, pipeline
 
 from AlgorithmicMethods import getFilteredSuggestionList
 from globalCalls import GetDescriptionFromDataFrame, debugDF
 
 
 def ApplyCorrection(dfs):
+    return ""
+    maskedTextStream = GetDescriptionFromDataFrame("MASKED", dfs)
+
+    tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
+
+    model = AutoModelWithLMHead.from_pretrained("bert-base-uncased")
+
+    unmasker = pipeline('fill-mask', model='bert-base-uncased')
+    result=unmasker(maskedTextStream)
+    print(result)
+
+
+def ApplyCorrection2(dfs):
 
     maskedTextStream=GetDescriptionFromDataFrame("MASKED",dfs)
     #print (maskedTextStream)
@@ -17,6 +30,8 @@ def ApplyCorrection(dfs):
     # Load, train and predict using pre-trained model
     #(bert-base-uncased, bert-large-uncased, bert-base-cased, bert-large-cased,
     # bert-base-multilingual-uncased, bert-base-multilingual-cased, bert-base-chinese).
+
+
 
     tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
     tokenized_text = tokenizer.tokenize(maskedTextStream)
