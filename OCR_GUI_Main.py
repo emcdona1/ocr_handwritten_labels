@@ -1,6 +1,8 @@
 import os
 from tkinter import filedialog
 from google.cloud import vision
+
+from AlgorithmicMethods import RemoveDuplicates, GetSerealizedData2
 from CreateOutputFrameToDisplayInfo import CreateOutputFrameToDisplayInfo
 from DetectWrongWords import DetectWrongWords
 from ScrollableImage import ScrollableImage
@@ -69,17 +71,23 @@ def processNewImage(root):
     InitializeDataFromImage(root,vision)
     print("After google OCR:")
     print(root.df['description'][0])
-    #RemoveDuplicates(df)
+    #RemoveDuplicates(root.df)
     #print("Correction skipped")
-    # df = GetSerealizedData2(df)
+    #df = GetSerealizedData2(root.df)
     DetectWrongWords(root.df,root.minimumConfidence)
     try:
         ApplyCorrection(dfs=root.df)
     except:
         print("Could not apply the correction from bert")
+        print (sys.exc_info())
+    '''
+    
+    root.scrollableImage = CanvasImage(root.imageCanvasFrame, root.imagePath)
+    '''
 
     root.scrollableImage = ScrollableImage(root.imageCanvasFrame, root=root, scrollbarwidth=6, width=root.imageWidth,
-                                      height=root.imageHeight)
+                                           height=root.imageHeight)
+
     MarkWordsInImage(root)
     updateOutput(root)
 
