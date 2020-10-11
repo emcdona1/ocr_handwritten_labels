@@ -2,10 +2,10 @@ from enchant.checker import SpellChecker
 
 from algorithmicMethods import getFilteredSuggestionList
 from applyCorrection import get_personslist
-from getWordsInformation import GetDescriptionFromDataFrame
+from getWordsInformation import getDescriptionFromDataFrame
 
-def DetectWrongWords(dfs,minimumConfidence):
-    rawText2 = GetDescriptionFromDataFrame("OCR", dfs, 0)
+def detectWrongWords(dfs, minimumConfidence):
+    rawText2 = getDescriptionFromDataFrame("OCR", dfs, 0)
     personslist = get_personslist(rawText2)
     ignorewords = personslist + ["!", ",", ".", "\"", "?", '(', ')', '*', '\'', '\n']
 

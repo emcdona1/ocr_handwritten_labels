@@ -39,7 +39,7 @@ def getWordProperties(index, text, full_text_annotation,minimumConfidence):
         area = getPolygonAreaByTouples(tupleVertices)
     return tupleVertices,y_list,centroid,area, conf, charsAboveMinimumConfidence
 
-def InitializeDataFromImage(root,vision):
+def initializeDataFromImage(root, vision):
     with io.open(root.imagePath, 'rb') as image_file:
         content = image_file.read()
     image = vision.types.Image(content=content)

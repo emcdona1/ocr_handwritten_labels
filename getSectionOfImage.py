@@ -43,7 +43,7 @@ def getCoordinatesOfMatchingTemplateBetweenTwoPoints(cv2RgbImg, templates,xStart
                 return xval,yval
     return xStart, yStart
 
-def GetTagByEdgeDetection(imagePath, destination, justMarkTag):
+def getTagByEdgeDetection(imagePath, destination, justMarkTag):
     print("Processing: "+imagePath)
     img_rgb = ""
     if ":" in imagePath:
@@ -81,12 +81,12 @@ def GetTagByEdgeDetection(imagePath, destination, justMarkTag):
         imc = img_rgb[y:ih, x:iw]
         cv2.imwrite(destination, imc)
 
-def GetTagsFromImageFolder(imageFolder,destinationFolder,justMarkTag):
+def getTagsFromImageFolder(imageFolder, destinationFolder, justMarkTag):
     for filename in sorted(os.listdir(imageFolder)):
         if filename.endswith(".jpg"):
-            GetTagByEdgeDetection(os.path.join(imageFolder, filename), os.path.join(destinationFolder, filename),justMarkTag)
+            getTagByEdgeDetection(os.path.join(imageFolder, filename), os.path.join(destinationFolder, filename), justMarkTag)
 
-def GetTagsFromTagUrlFile(textFile,destinationFolder,justMarkTag):
+def getTagsFromTagUrlFile(textFile, destinationFolder, justMarkTag):
     if not os.path.exists(destinationFolder):
         os.makedirs(destinationFolder)
 
@@ -96,12 +96,12 @@ def GetTagsFromTagUrlFile(textFile,destinationFolder,justMarkTag):
         url=line.replace("\n","")
         fileName = url.split('/')[-1]
         destination = os.path.join(destinationFolder, fileName)
-        GetTagByEdgeDetection(url, os.path.join(destinationFolder, destination),justMarkTag)
+        getTagByEdgeDetection(url, os.path.join(destinationFolder, destination), justMarkTag)
 
 initializeTemplates()
 justMarkTag=False
 destination=os.path.expanduser("~/Desktop/")+"Tags/"
-GetTagsFromTagUrlFile("./InputResources/TagUrls.txt",destination,justMarkTag)
-GetTagsFromImageFolder("./InputResources/SampleImages/",destination,justMarkTag)
+getTagsFromTagUrlFile("./InputResources/TagUrls.txt", destination, justMarkTag)
+getTagsFromImageFolder("./InputResources/SampleImages/", destination, justMarkTag)
 
 

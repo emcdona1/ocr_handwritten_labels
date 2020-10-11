@@ -3,7 +3,7 @@ from statusBar import *
 from wordOutline import updateWordOutline
 
 
-def MarkWordsInImage(root):
+def markWordsInImage(root):
     for index, w in root.df.iterrows():
         if w['index'] > 0:
             drawBoxesInImage(root,root.scrollableImage.cnvs,w)
@@ -17,23 +17,23 @@ def drawBoxesInImage(root,canvas, word):
     canvas.tag_bind(word.polygon, "<Leave>", lambda x: polygon_leave(root))
 
     def word_button1(root,word):
-        SetActiveWord(root,word)
-        ProcessActiveWord(root,word)
+        setActiveWord(root, word)
+        processActiveWord(root, word)
 
     def polygon_enter(root,word):
         if root.activeWord['index']==0:
-            SetWordStatus(root,word)
+            setWordStatus(root, word)
 
     def polygon_leave(root):
         if root.activeWord['index']==0:
-            ClearWordStatus(root)
+            clearWordStatus(root)
 
     if word['color']!="green":
         canvas.itemconfigure(word['polygon'], fill='',outline=word['color'], width=1)
 
 
 
-def SetActiveWord(root,w):
+def setActiveWord(root, w):
     root.oldWord=root.activeWord
     root.activeWord=w
 
@@ -46,9 +46,9 @@ def SetActiveWord(root,w):
     if root.oldWord['index']==root.activeWord['index']:
         root.oldWord = root.activeWord = {'index': 0}
 
-def ProcessActiveWord(root,word):
+def processActiveWord(root, word):
         if root.activeWord['index'] >0 and word['index']==root.activeWord['index']:
-             SetWordStatus(root,root.activeWord)
+             setWordStatus(root, root.activeWord)
              getUserUpdatesForTheActiveWord(root, root.activeWord)
 
 def getUserUpdatesForTheActiveWord(root, activeWord):
@@ -56,8 +56,8 @@ def getUserUpdatesForTheActiveWord(root, activeWord):
     root.wait_window(root.popUp.top)
     if root.popUp.top:
         root.popUp.top.destroy()
-    SetActiveWord(root,activeWord)
-    SetWordStatus(root,activeWord)
+    setActiveWord(root, activeWord)
+    setWordStatus(root, activeWord)
 
 
 

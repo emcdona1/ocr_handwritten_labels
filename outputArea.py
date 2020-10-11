@@ -1,10 +1,10 @@
 from tkinter import *
 from tkinter.scrolledtext import ScrolledText
 
-from getWordsInformation import GetDescriptionFromDataFrame
+from getWordsInformation import getDescriptionFromDataFrame
 
 
-def CreateOutputFrameToDisplayInfo(root,outputFrame):
+def createOutputFrameToDisplayInfo(root, outputFrame):
     outputFrame.configure(padx=10,pady=10)
     root.outputField = ScrolledText(outputFrame,height=15, width=75)
 
@@ -16,9 +16,9 @@ def CreateOutputFrameToDisplayInfo(root,outputFrame):
 def updateOutput(root,**kw):
     type=kw.pop('type',"corrected")
     useHint=kw.pop('useHint',0)
-    afterUpdate=GetDescriptionFromDataFrame(type,root.df,useHint)
-    displayData=afterUpdate+"\n\n######### Classified Information #########\n\n"+\
-                GetDescriptionFromDataFrame('classified', root.df, 1)
+    afterUpdate=getDescriptionFromDataFrame(type, root.df, useHint)
+    displayData= afterUpdate +"\n\n######### Classified Information #########\n\n" + \
+                 getDescriptionFromDataFrame('classified', root.df, 1)
     setOutput(root,displayData)
 
 def setOutput(root,value):
