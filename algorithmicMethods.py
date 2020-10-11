@@ -10,7 +10,7 @@ There are cases, where subset of word is being recognized as seperate word,
 to fix this situations, loop by larger area to smaller area
 if smaller area's centroid falls in larger area 
 '''
-def RemoveDuplicates(df):
+def removeDuplicates(df):
     d=[]
 
     for index, w in df.iterrows():
@@ -32,7 +32,7 @@ causing words to be appear out of index
 to fix the situation evaluate the centroid of each word, and cluster them by y index
 and each cluster should represent a row, serialize each cluster afterward based upon x index
 '''
-def GetSerealizedData2(df):
+def getSerealizedData2(df):
     d = []
     for index, w in df.iterrows():
         if (w['index'] > 0):

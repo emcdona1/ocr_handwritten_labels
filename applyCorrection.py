@@ -6,12 +6,12 @@ import re
 from transformers import AutoTokenizer, AutoModelWithLMHead, pipeline
 
 from algorithmicMethods import getFilteredSuggestionList
-from getWordsInformation import GetDescriptionFromDataFrame, debugDF
+from getWordsInformation import getDescriptionFromDataFrame, debugDF
 
 
-def ApplyCorrection(dfs):
+def applyCorrection(dfs):
     return ""
-    maskedTextStream = GetDescriptionFromDataFrame("MASKED", dfs)
+    maskedTextStream = getDescriptionFromDataFrame("MASKED", dfs)
 
     tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
 
@@ -22,9 +22,9 @@ def ApplyCorrection(dfs):
     print(result)
 
 
-def ApplyCorrection2(dfs):
+def applyCorrection2(dfs):
 
-    maskedTextStream=GetDescriptionFromDataFrame("MASKED",dfs)
+    maskedTextStream=getDescriptionFromDataFrame("MASKED", dfs)
     #print (maskedTextStream)
 
     # Load, train and predict using pre-trained model

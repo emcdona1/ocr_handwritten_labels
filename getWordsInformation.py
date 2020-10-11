@@ -3,7 +3,7 @@ from shapely.geometry import Point
 from shapely.geometry.polygon import Polygon
 
 import re
-def GetDescriptionFromDataFrame(type,dfs, hint=0):
+def getDescriptionFromDataFrame(type, dfs, hint=0):
     text = ""
     if type=="raw":
         text= dfs['description'][0]
@@ -64,14 +64,14 @@ def isCurrentWordInNextLine(currentWord,previousWord):
     return currentWord['centroid'][1] >= max(previousWord['y_list']) or \
             min(currentWord['y_list']) >= previousWord['centroid'][1]
 
-def GetWordByPolygon(dfs, polygon):
+def getWordByPolygon(dfs, polygon):
     for index, w in dfs.iterrows():
         if index > 0:
             if w['polygon']==polygon:
                 return w
     return w
 
-def GetWordByXY(dfs, x, y):
+def getWordByXY(dfs, x, y):
     point = (x,y)
     point = Point(x, y)
     for index, w in dfs.iterrows():

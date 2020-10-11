@@ -1,24 +1,24 @@
 from tkinter import *
 
-def CreateStatusBar(root):
+def createStatusBar(root):
     root.statusBar = Label(root.hoverStatusFrame, text="", background="light gray", justify="left", bd=1, anchor="nw",
                       width=root.windowWidth-4,
                       height=4,
                       font=("Courier", 16))
     root.statusBar.pack()
 
-def SetStatus(root,val):
+def setStatus(root, val):
     root.statusBar['text']=val
 
-def SetWordStatus(root,word):
-    SetWordStatusByValue(root,word['description'],str(word['confidence']),word['replacement'],word['category'])
+def setWordStatus(root, word):
+    setWordStatusByValue(root, word['description'], str(word['confidence']), word['replacement'], word['category'])
 
-def ClearWordStatus(root):
+def clearWordStatus(root):
    root.oldWord = root.activeWord = {'index': 0}
-   SetWordStatusByValue(root,'','','','')
+   setWordStatusByValue(root, '', '', '', '')
 
-def SetWordStatusByValue(root,w,c,r,cat):
-    SetStatus(root,(" word       : {w}\n"
+def setWordStatusByValue(root, w, c, r, cat):
+    setStatus(root, (" word       : {w}\n"
                " confidence : {c} \n"
                " replacement: {r}\n"
                " category   : {cat}\n").format(w=w, c=c, r=r,cat=cat))

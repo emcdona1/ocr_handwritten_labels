@@ -2,15 +2,15 @@ import os
 from tkinter import filedialog
 from google.cloud import vision
 
-from algorithmicMethods import RemoveDuplicates, GetSerealizedData2
+from algorithmicMethods import removeDuplicates, getSerealizedData2
 from classifyWords import autoClassifyWords
-from outputArea import CreateOutputFrameToDisplayInfo, updateOutput
-from cetectWrongWords import DetectWrongWords
+from outputArea import createOutputFrameToDisplayInfo, updateOutput
+from cetectWrongWords import detectWrongWords
 from scrollableImage import ScrollableImage
 from wordCategories import initializeCategories
-from applyCorrection import ApplyCorrection
-from initializeDataFromImage import InitializeDataFromImage
-from interactiveWords import MarkWordsInImage
+from applyCorrection import applyCorrection
+from initializeDataFromImage import initializeDataFromImage
+from interactiveWords import markWordsInImage
 from statusBar import *
 from tesseractCalls import printTessaractOutputForImage
 
@@ -54,12 +54,12 @@ root.imageCanvasFrame.grid(row=0, column=0, sticky='nsew')
 # status bar and user input Row#1 two columns
 root.hoverStatusFrame = Frame(root)
 root.hoverStatusFrame.grid(row=1, column=0, sticky='nsew')
-CreateStatusBar(root)
-SetStatus(root,"\n\t\t\t  Open image file to begin !")
+createStatusBar(root)
+setStatus(root, "\n\t\t\t  Open image file to begin !")
 #
 root.outputFrame = Frame(root)
 root.outputFrame.grid(row=2, column=0, sticky='nsew')
-CreateOutputFrameToDisplayInfo(root,root.outputFrame)
+createOutputFrameToDisplayInfo(root, root.outputFrame)
 
 #################################################################
 
@@ -72,15 +72,15 @@ def openImage():
 def processNewImage(root):
     removeOldData(root)
     #printTessaractOutputForImage(root.imagePath)
-    InitializeDataFromImage(root,vision)
+    initializeDataFromImage(root, vision)
     #print("After google OCR:")
     #print(root.df['description'][0])
     #RemoveDuplicates(root.df)
     #print("Correction skipped")
-    #df = GetSerealizedData2(root.df)
-    DetectWrongWords(root.df,root.minimumConfidence)
+    #df = getSerealizedData2(root.df)
+    detectWrongWords(root.df, root.minimumConfidence)
     try:
-        ApplyCorrection(dfs=root.df)
+        applyCorrection(dfs=root.df)
     except:
         print("Could not apply the correction from bert")
         print (sys.exc_info())
@@ -90,11 +90,11 @@ def processNewImage(root):
     root.scrollableImage = ScrollableImage(root.imageCanvasFrame, root=root, scrollbarwidth=6, width=root.imageWidth,
                                            height=root.imageHeight)
 
-    MarkWordsInImage(root)
+    markWordsInImage(root)
     updateOutput(root)
 
 
 def removeOldData(root):
-    ClearWordStatus(root)
+    clearWordStatus(root)
 
 root.mainloop()
