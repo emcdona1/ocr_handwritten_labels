@@ -1,7 +1,8 @@
 from tkinter import *
 import tkinter.ttk as ttk
 
-from globalCalls import setToDefaultWord, updateOutput
+from outputArea import updateOutput
+from wordOutline import updateWordOutline
 
 
 class popupWindow(object):
@@ -26,10 +27,6 @@ class popupWindow(object):
         self.categoryEntry = ttk.Combobox(top, values=root.categories, width=100, font=("Courier", 16))
         self.categoryEntry.set(word['category'])
         self.categoryEntry.pack(expand=1)
-
-
-
-
         self.u = Button(self.top, text='Update', command=lambda: self.commandUpdte(root,word), activebackground='blue')
         self.c = Button(self.top, text='Cancel', command=self.commandCancel, activebackground="blue")
         self.u.pack(side=RIGHT)
@@ -39,7 +36,7 @@ class popupWindow(object):
         self.replacementUpdate(word, self.replacementEntry.get())
         self.categoriesUpdate(root,word,self.categoryEntry.get() )
 
-        setToDefaultWord(word)
+        updateWordOutline(word)
         updateOutput(root)
         self.top.grab_release()
         self.top.destroy()

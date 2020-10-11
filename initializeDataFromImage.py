@@ -1,7 +1,7 @@
 import os, io
 import pandas as pd
 
-from AlgorithmicMethods import getPolygonAreaByTouples
+from algorithmicMethods import getPolygonAreaByTouples
 
 def getWordProperties(index, text, full_text_annotation,minimumConfidence):
     found = False

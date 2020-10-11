@@ -1,7 +1,6 @@
 def detectDescription(dfs):
     pass
 
-
 def detectCollector(dfs):
     pass
 
@@ -19,7 +18,7 @@ def detectScienteficName(dfs):
 
 
 def autoClassifyWords(dfs):
-    print("wip: autoClassifyWords in ClassifyWords.py")
+    print("wip: autoClassifyWords in classifyWords.py")
     detectDescription(dfs)
     detectCollector(dfs)
     detectDate(dfs)

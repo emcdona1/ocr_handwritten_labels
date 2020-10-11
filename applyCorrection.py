@@ -5,8 +5,8 @@ from difflib import SequenceMatcher
 import re
 from transformers import AutoTokenizer, AutoModelWithLMHead, pipeline
 
-from AlgorithmicMethods import getFilteredSuggestionList
-from globalCalls import GetDescriptionFromDataFrame, debugDF
+from algorithmicMethods import getFilteredSuggestionList
+from getWordsInformation import GetDescriptionFromDataFrame, debugDF
 
 
 def ApplyCorrection(dfs):

@@ -1,8 +1,8 @@
 from enchant.checker import SpellChecker
 
-from AlgorithmicMethods import getFilteredSuggestionList
+from algorithmicMethods import getFilteredSuggestionList
 from applyCorrection import get_personslist
-from globalCalls import GetDescriptionFromDataFrame
+from getWordsInformation import GetDescriptionFromDataFrame
 
 def DetectWrongWords(dfs,minimumConfidence):
     rawText2 = GetDescriptionFromDataFrame("OCR", dfs, 0)
