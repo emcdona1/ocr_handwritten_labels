@@ -3,6 +3,7 @@ from tkinter import filedialog
 from google.cloud import vision
 
 from AlgorithmicMethods import RemoveDuplicates, GetSerealizedData2
+from ClassifyWords import autoClassifyWords
 from CreateOutputFrameToDisplayInfo import CreateOutputFrameToDisplayInfo
 from DetectWrongWords import DetectWrongWords
 from ScrollableImage import ScrollableImage
@@ -71,10 +72,10 @@ def openImage():
 
 def processNewImage(root):
     removeOldData(root)
-    printTessaractOutputForImage(root.imagePath)
+    #printTessaractOutputForImage(root.imagePath)
     InitializeDataFromImage(root,vision)
-    print("After google OCR:")
-    print(root.df['description'][0])
+    #print("After google OCR:")
+    #print(root.df['description'][0])
     #RemoveDuplicates(root.df)
     #print("Correction skipped")
     #df = GetSerealizedData2(root.df)
@@ -84,10 +85,8 @@ def processNewImage(root):
     except:
         print("Could not apply the correction from bert")
         print (sys.exc_info())
-    '''
-    
-    root.scrollableImage = CanvasImage(root.imageCanvasFrame, root.imagePath)
-    '''
+
+    autoClassifyWords(root.df)
 
     root.scrollableImage = ScrollableImage(root.imageCanvasFrame, root=root, scrollbarwidth=6, width=root.imageWidth,
                                            height=root.imageHeight)
