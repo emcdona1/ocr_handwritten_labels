@@ -2,14 +2,13 @@ import os
 from tkinter import filedialog
 from google.cloud import vision
 
-from AlgorithmicMethods import RemoveDuplicates, GetSerealizedData2
-from ClassifyWords import autoClassifyWords
-from CreateOutputFrameToDisplayInfo import CreateOutputFrameToDisplayInfo
-from DetectWrongWords import DetectWrongWords
-from ScrollableImage import ScrollableImage
-from WordCategories import initializeCategories
+from algorithmicMethods import RemoveDuplicates, GetSerealizedData2
+from classifyWords import autoClassifyWords
+from outputArea import CreateOutputFrameToDisplayInfo, updateOutput
+from cetectWrongWords import DetectWrongWords
+from scrollableImage import ScrollableImage
+from wordCategories import initializeCategories
 from applyCorrection import ApplyCorrection
-from globalCalls import updateOutput
 from initializeDataFromImage import InitializeDataFromImage
 from interactiveWords import MarkWordsInImage
 from statusBar import *

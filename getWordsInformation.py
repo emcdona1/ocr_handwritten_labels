@@ -1,6 +1,8 @@
-from CreateOutputFrameToDisplayInfo import setOutput
 
+from shapely.geometry import Point
+from shapely.geometry.polygon import Polygon
 
+import re
 def GetDescriptionFromDataFrame(type,dfs, hint=0):
     text = ""
     if type=="raw":
@@ -52,16 +54,6 @@ def getClassifiedDataTuples(dfs):
             classifiedData.append((w['category'], w['replacement']))
     return classifiedData
 
-
-def setToDefaultWord(word):
-    if word['index']>0:
-       if(word['color']=='green'):
-            word['canvas'].itemconfigure(word['polygon'], outline='', width=1,
-                                           fill='',    activeoutline=word['color'],activewidth=2)
-       else:
-           word['canvas'].itemconfigure(word['polygon'], outline=word['color'], width=1,
-                                          fill='',    activeoutline=word['color'], activewidth=2)
-
 def debugDF(df):
     for index, w in df.iterrows():
         print(str(w['index']) + ":" + w['description'])
@@ -71,10 +63,6 @@ def debugDF(df):
 def isCurrentWordInNextLine(currentWord,previousWord):
     return currentWord['centroid'][1] >= max(previousWord['y_list']) or \
             min(currentWord['y_list']) >= previousWord['centroid'][1]
-
-
-from shapely.geometry import Point
-from shapely.geometry.polygon import Polygon
 
 def GetWordByPolygon(dfs, polygon):
     for index, w in dfs.iterrows():
@@ -93,7 +81,6 @@ def GetWordByXY(dfs, x, y):
                 return w
     return None
 
-import re
 def replaceExtraSpace(text):
     rep = {' \'': '\'',
            ' .':'.',
@@ -105,13 +92,6 @@ def replaceExtraSpace(text):
     text = pattern.sub(lambda m: rep[re.escape(m.group(0))], text)
     return text
 
-def updateOutput(root,**kw):
-    type=kw.pop('type',"corrected")
-    useHint=kw.pop('useHint',0)
-    afterUpdate=GetDescriptionFromDataFrame(type,root.df,useHint)
-    displayData=afterUpdate+"\n\n######### Classified Information #########\n\n"+\
-                GetDescriptionFromDataFrame('classified', root.df, 1)
-    setOutput(root,displayData)
 
 
 

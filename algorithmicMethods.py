@@ -3,7 +3,7 @@ from difflib import SequenceMatcher
 from shapely.geometry import Point
 from shapely.geometry.polygon import Polygon
 #usage to find the area of a polygon
-from globalCalls import debugDF, isCurrentWordInNextLine
+from getWordsInformation import debugDF, isCurrentWordInNextLine
 
 '''
 There are cases, where subset of word is being recognized as seperate word, 
