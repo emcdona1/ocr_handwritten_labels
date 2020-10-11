@@ -16,7 +16,17 @@ Part #4 Manual-Correction of the OCR data
 Just click on any word shown, and update the value as needed.
 
 Part #5 Classification
-Work in progress
+Automatic classification is  in progress
+User is now able to manually classify the detected words. below is sample output
+######### Classified Information #########
+Address: Ranken Cave 8 miles St. Valley Park, St. Louis 
+Collector: JULIAN A. STEYERMARK 
+Date: June 13, 1986 
+Registration Number: 1620 
+Scientific Name: Asplenium platyneuron 
+
+
+
 
 Color code
 (will be updated as needed)

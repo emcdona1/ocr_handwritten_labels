@@ -58,7 +58,8 @@ def InitializeDataFromImage(root,vision):
                                'charsAboveMinimumConfidence',
                                'area',
                                'polygon',
-                               'canvas'])
+                               'canvas',
+                               'category'])
     index=0
     texts = response.text_annotations
     for text in texts:
@@ -78,6 +79,7 @@ def InitializeDataFromImage(root,vision):
                 area=area,#area covered by the word, needed to sort
                 polygon=None,#for the gui placeholder
                 canvas=None,#for the gui placeholder
+                category="Unknown",#for the classification of the word
                 y_list=y_list
             ),
             ignore_index=True
