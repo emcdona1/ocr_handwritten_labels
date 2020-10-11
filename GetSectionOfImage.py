@@ -10,24 +10,23 @@ import cv2
 from pandas import np
 
 
-def getCoordinatesOfMatchingTemplate(cv2RgbImg, edgeTemplates, hs, ws, he, we):
+def getCoordinatesOfMatchingTemplateBetweenTwoPoints(cv2RgbImg, edgeTemplates,xStart, yStart, xEnd,yEnd, threshold):
     img_gray = cv2.cvtColor(cv2RgbImg, cv2.COLOR_BGR2GRAY)
     for filename in sorted(os.listdir(edgeTemplates)):
         if filename.endswith(".png"):
             img_template = cv2.imread(os.path.join(edgeTemplates, filename), 0)
             w, h = img_template.shape[::-1]
             res = cv2.matchTemplate(img_gray, img_template, cv2.TM_CCOEFF_NORMED)
-            threshold = 0.7
             loc = np.where(res >= threshold)
-
             for pt in reversed(list(zip(*loc[::-1]))):
-                if pt[0] > ws and pt[1] > hs and pt[0] < we and pt[1] < he:
+                if xStart<=pt[0]<=xEnd and yStart<=pt[1]<=yEnd:
+                    xval = pt[0] + int(w // 2)
                     yval = pt[1]+int(h//2)
-                    xval = pt[0]+int(w//2)
-                    return yval,xval
-    return hs,ws
 
-def GetTagByEdgeDetection(imagePath, destination):
+                    return xval,yval
+    return xStart, yStart
+
+def GetTagByEdgeDetection(imagePath, destination, justMarkTag):
     print("Processing: "+imagePath)
     img_rgb = ""
     if ":" in imagePath:
@@ -39,28 +38,40 @@ def GetTagByEdgeDetection(imagePath, destination):
 
     edgeTemplates = "./EdgeTemplates/"
 
-    oh, ow, oc = img_rgb.shape
-    hs = int(oh // 1.5)
-    ws = int(ow // 2)
-    he=int(oh-oh // 15)
-    we=int(ow-ow // 15)
+    ih, iw, oc = img_rgb.shape
+    xStart = int(iw // 2)
+    xEnd = int(iw - iw // 10)
+    yStart = int(ih // 1.5)
+    yEnd = int(ih - ih // 10)
 
-    ignore,x= getCoordinatesOfMatchingTemplate(img_rgb, edgeTemplates + "left/", hs, ws, he, we)
-    #if above method sends incorrect then following will be worthless
-    y,ignore=getCoordinatesOfMatchingTemplate(img_rgb, edgeTemplates + "top/", hs + int(oh // 15), ws, ignore - int(oh // 15), we)
 
-    #cv2.rectangle(img_rgb, (x, y), (ow, oh), (0, 200, 255), 2)
-    #cv2.imwrite(destination, img_rgb)
+    x,y=getCoordinatesOfMatchingTemplateBetweenTwoPoints(img_rgb, edgeTemplates + "topleft/", xStart,yStart, xEnd, yEnd, 0.8)
+    if not x==xStart and justMarkTag:
+        cv2.rectangle(img_rgb, (x-10, y-10), (x + 10, y + 10), (255, 0, 255), 4)
+    if y==yStart and x==xStart:
+        x,yTemp= getCoordinatesOfMatchingTemplateBetweenTwoPoints(img_rgb, edgeTemplates + "left/",xStart, yStart, xEnd, yEnd, 0.7)
 
-    imc = img_rgb[y:oh, x:ow]
-    cv2.imwrite(destination, imc)
+        xStart=x-int(iw//50) # start little left of the left edge
+        yEnd=yTemp+int(iw//50) # End little down of the yValue value found on the edge
 
-def GetTagsFromImageFolder(imageFolder,destinationFolder):
-    for filename in os.listdir(imageFolder):
+        xTemp,y=getCoordinatesOfMatchingTemplateBetweenTwoPoints(img_rgb, edgeTemplates + "top/", xStart, yStart, xEnd, yEnd, 0.7)
+        if justMarkTag:
+            cv2.rectangle(img_rgb, (xTemp, y), (xTemp + 10, y + 10), (255, 0, 255), 4)
+            cv2.rectangle(img_rgb, (x, yTemp), (x + 10, yTemp + 10), (255, 0, 255), 4)
+
+    if justMarkTag:
+        cv2.rectangle(img_rgb, (x, y), (iw, ih), (0, 200, 255), 2)
+        cv2.imwrite(destination, img_rgb)
+    else:
+        imc = img_rgb[y:ih, x:iw]
+        cv2.imwrite(destination, imc)
+
+def GetTagsFromImageFolder(imageFolder,destinationFolder,justMarkTag):
+    for filename in sorted(os.listdir(imageFolder)):
         if filename.endswith(".jpg"):
-            GetTagByEdgeDetection(os.path.join(imageFolder, filename), os.path.join(destinationFolder, filename))
+            GetTagByEdgeDetection(os.path.join(imageFolder, filename), os.path.join(destinationFolder, filename),justMarkTag)
 
-def GetTagsFromTagUrlFile(textFile,destinationFolder):
+def GetTagsFromTagUrlFile(textFile,destinationFolder,justMarkTag):
     if not os.path.exists(destinationFolder):
         os.makedirs(destinationFolder)
 
@@ -70,10 +81,14 @@ def GetTagsFromTagUrlFile(textFile,destinationFolder):
         url=line.replace("\n","")
         fileName = url.split('/')[-1]
         destination = os.path.join(destinationFolder, fileName)
-        GetTagByEdgeDetection(url, os.path.join(destinationFolder, destination))
+        GetTagByEdgeDetection(url, os.path.join(destinationFolder, destination),justMarkTag)
 
 destination=os.path.expanduser("~/Desktop/")+"Tags/"
-GetTagsFromTagUrlFile("./InputResources/TagUrls.txt",destination)
-GetTagsFromImageFolder("./InputResources/SampleImages/",destination)
+SourceFolder=os.path.expanduser("~/Desktop/")+"AllImages/"
+#justMarkTag with value false will crop the tag
+justMarkTag=False
+GetTagsFromImageFolder(SourceFolder, destination, justMarkTag)
+#GetTagsFromTagUrlFile("./InputResources/TagUrls.txt",destination,justMarkTag)
+#GetTagsFromImageFolder("./InputResources/SampleImages/",destination,justMarkTag)
 
 
