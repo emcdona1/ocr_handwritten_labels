@@ -32,7 +32,26 @@ def GetDescriptionFromDataFrame(type,dfs, hint=0):
             else:
                 text += w['description'] + " "
 
+    if type=="classified":
+        classifiedData = getClassifiedDataTuples(dfs)
+        categories=[c[0] for c in classifiedData]
+        categories = list(set(categories))
+        for c in sorted(categories):
+            if not c=="Unknown" and "ignore" not in c:
+                text+=c+": "
+                for cd in classifiedData:
+                    if(cd[0]==c):
+                        text+=str(cd[1])+" "
+                text+="\n"
     return replaceExtraSpace(text)
+
+def getClassifiedDataTuples(dfs):
+    classifiedData = []
+    for index, w in dfs.iterrows():
+        if w['index'] > 0:
+            classifiedData.append((w['category'], w['replacement']))
+    return classifiedData
+
 
 def setToDefaultWord(word):
     if word['index']>0:
@@ -90,9 +109,11 @@ def updateOutput(root,**kw):
     type=kw.pop('type',"corrected")
     useHint=kw.pop('useHint',0)
     afterUpdate=GetDescriptionFromDataFrame(type,root.df,useHint)
-    setOutput(root,afterUpdate)
-    print("Correction details:")
-    print(GetDescriptionFromDataFrame('corrected',root.df,1))
+    displayData=afterUpdate+"\n\n######### Classified Information #########\n\n"+\
+                GetDescriptionFromDataFrame('classified', root.df, 1)
+    setOutput(root,displayData)
+
+
 
 
 

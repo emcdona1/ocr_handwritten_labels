@@ -17,9 +17,18 @@ class popupWindow(object):
                                   + "\nConfidence:" + '{: <18}'.format(str(word['confidence']))
                                   + "\n\nReplacement:", justify="left", font=("Courier", 16))
         self.l1.pack(expand=1)
-        self.e = ttk.Combobox(top, values=word['suggestedDescription'],width=100,font=("Courier", 16) )
-        self.e.set(word['replacement'])
-        self.e.pack(expand=1)
+        self.replacementEntry = ttk.Combobox(top, values=word['suggestedDescription'],width=100,font=("Courier", 16) )
+        self.replacementEntry.set(word['replacement'])
+        self.replacementEntry.pack(expand=1)
+
+        self.l2 = Label(top,text="Category:", justify="left", font=("Courier", 16) )
+        self.l2.pack(expand=0)
+        self.categoryEntry = ttk.Combobox(top, values=root.categories, width=100, font=("Courier", 16))
+        self.categoryEntry.set(word['category'])
+        self.categoryEntry.pack(expand=1)
+
+
+
 
         self.u = Button(self.top, text='Update', command=lambda: self.commandUpdte(root,word), activebackground='blue')
         self.c = Button(self.top, text='Cancel', command=self.commandCancel, activebackground="blue")
@@ -27,11 +36,27 @@ class popupWindow(object):
         self.c.pack(side=RIGHT)
 
     def commandUpdte(self,root, word):
+        self.replacementUpdate(word, self.replacementEntry.get())
+        self.categoriesUpdate(root,word,self.categoryEntry.get() )
+
+        setToDefaultWord(word)
+        updateOutput(root)
+        self.top.grab_release()
+        self.top.destroy()
+
+    def categoriesUpdate(self,root, word, categoryValue):
+        oldValue = word['category']
+        if oldValue != categoryValue:
+            word['category'] = categoryValue
+            if categoryValue not in root.categories:
+                root.categories.append(categoryValue)
+
+
+    def replacementUpdate(self,word, replacementValue):
         oldValue = word['replacement']
-        newValue = self.e.get()
-        if oldValue != newValue:
-            word['replacement'] = newValue
-            if word['description'] == newValue:
+        if oldValue != replacementValue:
+            word['replacement'] = replacementValue
+            if word['description'] == replacementValue:
                 word['color'] = 'green'
                 word['isIncorrectWord'] = False
             else:
@@ -39,11 +64,6 @@ class popupWindow(object):
                 word['isIncorrectWord'] = True
             if oldValue not in word['suggestedDescription']:
                 word['suggestedDescription'].append(oldValue)
-            setToDefaultWord(word)
-            updateOutput(root)
-
-        self.top.grab_release()
-        self.top.destroy()
 
     def commandCancel(self):
         self.top.grab_release()
