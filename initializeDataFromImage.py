@@ -1,5 +1,8 @@
 import os, io
+import sys
+
 import pandas as pd
+from grpc._channel import _InactiveRpcError
 
 from algorithmicMethods import getPolygonAreaByTouples
 
@@ -46,7 +49,17 @@ def initializeDataFromImage(root, vision):
         content = image_file.read()
     image = vision.types.Image(content=content)
     # response = client.text_detection(image=image)
-    response = root.client.document_text_detection(image=image)
+    response=None
+    try:
+        response = root.client.document_text_detection(image=image)
+    except _InactiveRpcError as err:
+        print ("_InactiveRpcError!.\{0}".format(err))
+        root.client=vision.ImageAnnotatorClient()
+        response = root.client.document_text_detection(image=image)
+    except:
+        print("Unexpected error:", sys.exc_info()[0])
+        raise
+
     df = pd.DataFrame(columns=['index',
                                'description',
                                'suggestedDescription',
