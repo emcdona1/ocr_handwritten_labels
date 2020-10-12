@@ -5,7 +5,7 @@ from algorithmicMethods import getPolygonAreaByTouples
 
 def getWordProperties(index, text, full_text_annotation,minimumConfidence):
     found = False
-    tupleVertices=centroid=area=conf=y_list =None,
+    tupleVertices=centroid=area=conf=y_list=x_list =None,
     charsAboveMinimumConfidence=""
     if index>0:#skip the evaluation of first node
         for page in full_text_annotation.pages:
@@ -35,9 +35,11 @@ def getWordProperties(index, text, full_text_annotation,minimumConfidence):
         tupleVertices=[(v.x,v.y) for v in fullAnnotation.bounding_box.vertices]
         x_list = [v.x for v in fullAnnotation.bounding_box.vertices]
         y_list = [v.y for v in fullAnnotation.bounding_box.vertices]
+        #x_list=x_list.sort()
+        #y_list=y_list.sort()
         centroid= (sum(x_list)/len(x_list), sum(y_list)/len(y_list ))
         area = getPolygonAreaByTouples(tupleVertices)
-    return tupleVertices,y_list,centroid,area, conf, charsAboveMinimumConfidence
+    return tupleVertices,x_list,y_list,centroid,area, conf, charsAboveMinimumConfidence
 
 def initializeDataFromImage(root, vision):
     with io.open(root.imagePath, 'rb') as image_file:
@@ -53,6 +55,7 @@ def initializeDataFromImage(root, vision):
                                'color',
                                'centroid',
                                'tupleVertices',
+                               'x_list',
                                'y_list',
                                'confidence',
                                'charsAboveMinimumConfidence',
@@ -63,7 +66,7 @@ def initializeDataFromImage(root, vision):
     index=0
     texts = response.text_annotations
     for text in texts:
-        tupleVertices,y_list,centroid,area, conf, charsAboveMinimumConfidence = getWordProperties(index, text, response.full_text_annotation,root.minimumConfidence)
+        tupleVertices,x_list,y_list,centroid,area, conf, charsAboveMinimumConfidence = getWordProperties(index, text, response.full_text_annotation,root.minimumConfidence)
         df = df.append(
             dict(
                 index=index,#can be used to ignore the word, if set to -1 in future
@@ -80,6 +83,7 @@ def initializeDataFromImage(root, vision):
                 polygon=None,#for the gui placeholder
                 canvas=None,#for the gui placeholder
                 category="Unknown",#for the classification of the word
+                x_list=x_list,
                 y_list=y_list
             ),
             ignore_index=True

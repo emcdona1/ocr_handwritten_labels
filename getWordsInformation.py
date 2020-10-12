@@ -92,6 +92,36 @@ def replaceExtraSpace(text):
     text = pattern.sub(lambda m: rep[re.escape(m.group(0))], text)
     return text
 
+def getWordsByLinesAndBlocks(dfs):
+    blocks=[]
+    block=[]
+    oldW=""
+    oldW = None
+    for index, w in dfs.iterrows():
+        if w['index'] > 0:
+            if w['index'] > 1:
+                if isCurrentWordInNextBlock(currentWord=w, previousWord=oldW):
+                    blocks.append(block)
+                    block=[]
+            oldW = w
+            block.append(oldW)
+    blocks.append(block)
+    return blocks
+
+#next block is defined by the horizontal space between two words
+def isCurrentWordInNextBlock(currentWord,previousWord):
+    pw_xmin=min(previousWord['x_list'])
+    pw_xmax=max(previousWord['x_list'])
+    cw_xmin=min(currentWord['x_list'])
+    cw_xmax=max(currentWord['x_list'])
+
+    pwSpaceFactor=(pw_xmax-pw_xmin)//(len(previousWord['description']))
+    cwSpaceFactor=(cw_xmax - cw_xmin) // (len(currentWord['description']))
+
+    spaceFactor=max(pwSpaceFactor+1,cwSpaceFactor+1)*4
+    return abs((cw_xmin-pw_xmax))>spaceFactor
+
+
 
 
 
