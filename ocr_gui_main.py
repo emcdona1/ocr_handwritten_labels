@@ -3,7 +3,7 @@ from tkinter import filedialog
 from google.cloud import vision
 
 from algorithmicMethods import removeDuplicates, getSerealizedData2
-from classifyWords import autoClassifyWords
+from wordCategories import autoClassifyWords
 from outputArea import createOutputFrameToDisplayInfo, updateOutput
 from cetectWrongWords import detectWrongWords
 from scrollableImage import ScrollableImage
