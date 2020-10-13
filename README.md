@@ -3,7 +3,20 @@
 #Execution
  from terminal navigate to main.py and execute following command
  python3 main.py
- it will open GUI window, than open the image file that you want
+ it will open GUI window, 
+ 1. File
+    > Open Image : to classify any image
+ 2. ExtractTag
+    > Change Destination: to specify the folder to keep extracted tags
+    > Extract Tags from folder: extract tags of all images within a folder
+    > Extra Tag from Single Image: extract tag of one image
+    > Extract Tags from Text file containing Urls: extract tags from each url
+    > Extract Tag from Image url: extract tag from single image url
+ 
+ 3. Once the image is opened
+    > Application would automatically classify the data
+    > Click on word to to update the classification information or word data
+        
  
  
 #Solution approach
@@ -27,24 +40,15 @@ Part #5 Classification
 Automatic classification is  in progress
 User is now able to manually classify the detected words. below is sample output
 ######### Classified Information #########
-Address: Ranken Cave 8 miles St. Valley Park, St. Louis 
-Collector: JULIAN A. STEYERMARK 
-Date: June 13, 1986 
-Registration Number: 1620 
-Scientific Name: Asplenium platyneuron 
+Description: FLORA OF MISSOURI 
+Scientific Name: Camstozora shyhkyllae 
+Location: ( L. ) Link. Chere Coeur Lake NO 
+Registration Number: No. 1623 
+Date: april 10, 1986 
+Collector: JULIAN A. STEYERMARK, COLLECTOR 
 
 
-
-
-Color code
-(will be updated as needed)
+#Color code(will be updated as needed)
 Red: OCR detected a word that is not present in the dictionary
 Green: OCR value and replacement are same
 Yellow: User manually updated the value.
-
-#sample Execution
-1. command line: python3 main.py
-
-2. Open the file from menu (it will autocorrect data and classify)
-
-3. By clicking on any word you can manually correct the data and it's classification
