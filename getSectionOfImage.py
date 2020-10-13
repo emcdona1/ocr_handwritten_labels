@@ -98,10 +98,13 @@ def getTagsFromTagUrlFile(textFile, destinationFolder, justMarkTag):
         destination = os.path.join(destinationFolder, fileName)
         getTagByEdgeDetection(url, os.path.join(destinationFolder, destination), justMarkTag)
 
+
+'''
 initializeTemplates()
 justMarkTag=False
 destination=os.path.expanduser("~/Desktop/")+"Tags/"
 getTagsFromTagUrlFile("./InputResources/TagUrls.txt", destination, justMarkTag)
 getTagsFromImageFolder("./InputResources/SampleImages/", destination, justMarkTag)
+'''
 
 
