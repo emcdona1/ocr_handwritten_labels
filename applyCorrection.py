@@ -105,5 +105,3 @@ def predict_wordUsingBert(dfs,predictions, MASKIDS, tokenizer, maskedTextStream)
                             simmax = s
                             predicted_token = word1
                 w['replacement'] = predicted_token
-            else:
-                w['replacement'] = w['description'] #for the correct OCR replacement is same.
