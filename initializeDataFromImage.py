@@ -2,6 +2,7 @@ import os, io
 import sys
 
 import pandas as pd
+from google.api_core.exceptions import ServiceUnavailable
 from grpc._channel import _InactiveRpcError
 
 from algorithmicMethods import getPolygonAreaByTouples
@@ -40,7 +41,8 @@ def getWordProperties(index, text, full_text_annotation,minimumConfidence):
         y_list = [v.y for v in fullAnnotation.bounding_box.vertices]
         #x_list=x_list.sort()
         #y_list=y_list.sort()
-        centroid= (sum(x_list)/len(x_list), sum(y_list)/len(y_list ))
+        #centroid= (sum(x_list)/len(x_list), sum(y_list)/len(y_list ))
+        centroid = ((min(x_list)+max(x_list))/ 2, (min(y_list)+max(y_list)) / 2)
         area = getPolygonAreaByTouples(tupleVertices)
     return tupleVertices,x_list,y_list,centroid,area, conf, charsAboveMinimumConfidence
 
@@ -53,9 +55,16 @@ def initializeDataFromImage(root, vision):
     try:
         response = root.client.document_text_detection(image=image)
     except _InactiveRpcError as err:
-        print ("_InactiveRpcError!.\{0}".format(err))
+        print ("_InactiveRpcError! {0}".format(err))
+        print("retrying..!")
         root.client=vision.ImageAnnotatorClient()
         response = root.client.document_text_detection(image=image)
+    except ServiceUnavailable as serr:
+        print("ServiceUnavailable! {0}".format(serr))
+        print("\nCheck the internet connection!")
+        root.client = vision.ImageAnnotatorClient()
+        response = root.client.document_text_detection(image=image)
+
     except:
         print("Unexpected error:", sys.exc_info()[0])
         raise
@@ -85,7 +94,7 @@ def initializeDataFromImage(root, vision):
                 index=index,#can be used to ignore the word, if set to -1 in future
                 description=text.description,#ocr detected word
                 suggestedDescription=[],#later to be corrected if needed
-                replacement="",#replacement by bert or manual
+                replacement=text.description,#replacement by bert or manual, initially it is the samedf
                 isIncorrectWord = False,#ocr is not matching with bert or manual
                 color="green",#red: ocr<>bert, yellow: manual entry, green replacement=OCR
                 centroid = centroid,#we would need this to serialize alogrithm

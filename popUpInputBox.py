@@ -33,9 +33,8 @@ class popupWindow(object):
         self.c.pack(side=RIGHT)
 
     def commandUpdte(self,root, word):
-        self.replacementUpdate(word, self.replacementEntry.get())
+        self.replacementUpdate(word, self.replacementEntry.get(),root)
         self.categoriesUpdate(root,word,self.categoryEntry.get() )
-
         updateWordOutline(word)
         updateOutput(root)
         self.top.grab_release()
@@ -49,7 +48,7 @@ class popupWindow(object):
                 root.categories.append(categoryValue)
 
 
-    def replacementUpdate(self,word, replacementValue):
+    def replacementUpdate(self,word, replacementValue,root):
         oldValue = word['replacement']
         if oldValue != replacementValue:
             word['replacement'] = replacementValue

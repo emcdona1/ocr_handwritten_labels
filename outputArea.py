@@ -14,18 +14,20 @@ def createOutputFrameToDisplayInfo(root, outputFrame):
 
 
 def updateOutput(root,**kw):
+    clearOutput(root)
     type=kw.pop('type',"corrected")
     useHint=kw.pop('useHint',0)
-    afterUpdate=getDescriptionFromDataFrame(type, root.df, useHint)
-    displayData= afterUpdate +"\n\n######### Classified Information #########\n\n" + \
-                 getDescriptionFromDataFrame('classified', root.df, 1)
-    setOutput(root,displayData)
+    data="######### Data #########\n"+ \
+                getDescriptionFromDataFrame(type, root.df, useHint)
+    classifiedData= "\n\n######### Classified Information #########\n" + \
+                 getDescriptionFromDataFrame('classified', root.df, 1,root.categories)
+    appendToOutputArea(root, data)
+    appendToOutputArea(root, classifiedData)
 
-def setOutput(root,value):
-    #textfield.configure(state='normal')
-    root.outputField.delete('1.0', END)
+def appendToOutputArea(root, value):
     root.outputField.insert('insert', value)
 
-    #textfield.configure(state='disabled')
+def clearOutput(root):
+    root.outputField.delete('1.0', END)
 
 

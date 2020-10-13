@@ -3,7 +3,7 @@ from difflib import SequenceMatcher
 from shapely.geometry import Point
 from shapely.geometry.polygon import Polygon
 #usage to find the area of a polygon
-from getWordsInformation import debugDF, isCurrentWordInNextLine
+from getWordsInformation import debugDF, areWordsInDifferentLines, isCurrentWordInNextBlock
 
 '''
 There are cases, where subset of word is being recognized as seperate word, 
@@ -32,7 +32,7 @@ causing words to be appear out of index
 to fix the situation evaluate the centroid of each word, and cluster them by y index
 and each cluster should represent a row, serialize each cluster afterward based upon x index
 '''
-def getSerealizedData2(df):
+def getSerealizedData(df):
     d = []
     for index, w in df.iterrows():
         if (w['index'] > 0):
@@ -46,14 +46,13 @@ def getSerealizedData2(df):
     rows = []
     row = []
     i = 0
-
     for i in range(len(d)):
         if i == 0:
             row.append(d[i])
         else:
             c = d[i][1]  # current
-            p = d[i - 1][1]  # previous (centroid, word), p[0]=(xval,yval), p[1]=word
-            if isCurrentWordInNextLine(currentWord=c,previousWord=p):
+            p = d[i - 1][1]  # previous (centroid, word), w2[0]=(xval,yval), w2[1]=word
+            if areWordsInDifferentLines(c, p):
                 row.sort(key=sortByCentroidX, reverse=False)  # order current row by x
                 rows.append(row)
                 row = []
@@ -63,13 +62,14 @@ def getSerealizedData2(df):
         rows.append(row)
     # step #3 serialize the indexes
     i = 1
+
     for r in rows:
         for w in r:
             w[1]['index'] = i
             i = i + 1
     # step #4 sort the data frame by index
     return df.sort_values(by=['index'])
-    return df
+
 
 '''return top suggestions which has higher probability of chances to meet with charsAboveMinimumConfidance'''
 def getFilteredSuggestionList(charsAboveMinimumConfidance,suggestions):
