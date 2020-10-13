@@ -2,7 +2,7 @@ import os
 from tkinter import filedialog
 from google.cloud import vision
 
-from algorithmicMethods import removeDuplicates, getSerealizedData2
+from algorithmicMethods import removeDuplicates, getSerealizedData
 from wordCategories import autoClassifyWords
 from outputArea import createOutputFrameToDisplayInfo, updateOutput
 from cetectWrongWords import detectWrongWords
@@ -77,7 +77,7 @@ def processNewImage(root):
     #print(root.df['description'][0])
     #RemoveDuplicates(root.df)
     #print("Correction skipped")
-    #df = getSerealizedData2(root.df)
+    root.df = getSerealizedData(root.df)
     detectWrongWords(root.df, root.minimumConfidence)
     try:
         applyCorrection(dfs=root.df)

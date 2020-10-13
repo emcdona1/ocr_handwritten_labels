@@ -22,5 +22,3 @@ def detectWrongWords(dfs, minimumConfidence):
                                                                   d.suggest(w['description']))
             w['isIncorrectWord'] = True
             w['color'] = "red"
-        if w['index'] > 0:
-            w['replacement'] = w['description']  # default value would be replaced later if needed

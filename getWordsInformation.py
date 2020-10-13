@@ -3,7 +3,22 @@ from shapely.geometry import Point
 from shapely.geometry.polygon import Polygon
 
 import re
-def getDescriptionFromDataFrame(type, dfs, hint=0):
+
+#return the categories in order
+def getCalssifiedCategoriesInOrder(mainCategories, classifiedCategories):
+    categories=[]
+    for c in mainCategories:
+        if c in classifiedCategories:
+            categories.append(c)
+    #add any user added categories at the end
+    for c in sorted(classifiedCategories):
+        if c not in categories:
+            categories.append(c)
+    return categories
+    pass
+
+
+def getDescriptionFromDataFrame(type, dfs, hint=0, mainCategories=[]):
     text = ""
     if type=="raw":
         text= dfs['description'][0]
@@ -12,7 +27,7 @@ def getDescriptionFromDataFrame(type, dfs, hint=0):
         for index, w in dfs.iterrows():
             if w['index'] > 0:
                 if w['index']>1:
-                    if isCurrentWordInNextLine(currentWord=w,previousWord=oldW):
+                    if areWordsInDifferentLines(w, oldW):
                         text+="\n"
                 oldW=w
                 if w['isIncorrectWord']:
@@ -36,9 +51,10 @@ def getDescriptionFromDataFrame(type, dfs, hint=0):
 
     if type=="classified":
         classifiedData = getClassifiedDataTuples(dfs)
-        categories=[c[0] for c in classifiedData]
-        categories = list(set(categories))
-        for c in sorted(categories):
+        classifiedCategories=[c[0] for c in classifiedData]
+        classifiedCategories = list(set(classifiedCategories))
+        categories=getCalssifiedCategoriesInOrder(mainCategories,classifiedCategories)
+        for c in categories:
             if not c=="Unknown" and "ignore" not in c:
                 text+=c+": "
                 for cd in classifiedData:
@@ -60,9 +76,18 @@ def debugDF(df):
 
 # current word's centroid is bigger then previous word's y values
 # current word's y values are bigger then previous words' centroid
-def isCurrentWordInNextLine(currentWord,previousWord):
-    return currentWord['centroid'][1] >= max(previousWord['y_list']) or \
-            min(currentWord['y_list']) >= previousWord['centroid'][1]
+# ignore x by
+def areWordsInDifferentLines(w1, w2):
+   cymin = min(w1['y_list'])
+   ccy = w1['centroid'][1]
+   pymin = min(w2['y_list'])
+   pcy = w2['centroid'][1]
+   centroidGapY = abs(ccy - pcy)
+
+   centroidYRatioCw=abs(centroidGapY/(ccy-cymin))
+   centroidYRatioPw=abs(centroidGapY/(pcy-pymin))
+   lineGapFactor=min(centroidYRatioCw,centroidYRatioPw)
+   return lineGapFactor>0.3 # heat and trial line gap factor to be 0.3
 
 def getWordByPolygon(dfs, polygon):
     for index, w in dfs.iterrows():
@@ -119,7 +144,7 @@ def isCurrentWordInNextBlock(currentWord,previousWord):
     cwSpaceFactor=(cw_xmax - cw_xmin) // (len(currentWord['description']))
 
     spaceFactor=max(pwSpaceFactor+1,cwSpaceFactor+1)*4
-    return abs((cw_xmin-pw_xmax))>spaceFactor
+    return abs((cw_xmin-pw_xmax)) > spaceFactor or areWordsInDifferentLines(currentWord, previousWord)
 
 
 

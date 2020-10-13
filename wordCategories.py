@@ -13,14 +13,15 @@ categories=categories()
 
 def initializeCategories(root):
     root.categories=[]
-    root.categories.append(categories.Unknown)
-    root.categories.append(categories.Location)
-    root.categories.append(categories.ScientificName)
-    root.categories.append(categories.Date)
+    #the order of the items will be used when displaying the classified data
     root.categories.append(categories.Description)
+    root.categories.append(categories.ScientificName)
+    root.categories.append(categories.Location)
     root.categories.append(categories.RegistrationNumber)
-    root.categories.append(categories.Label)
+    root.categories.append(categories.Date)
     root.categories.append(categories.Collector)
+    root.categories.append(categories.Label)
+    root.categories.append(categories.Unknown)
 
 
 
@@ -41,59 +42,60 @@ def detectDescription(wordBlock,classified):
             if (description == "of"):
                 applyCategoryToWordBlock(wordBlock, categories.Description)
                 classified.append(categories.Description)
-                break;
-    pass
+                return True;
+    return False
 
 def detectCollector(wordBlock,classified):
     for w in wordBlock:
-        description = (''.join((filter(lambda i: i not in bad_chars, w['description'])))).lower()
+        replacement = (''.join((filter(lambda i: i not in bad_chars, w['replacement'])))).lower()
         if w['category'] == categories.Unknown:
-            if (description == "collector"):
+            if (replacement == "collector"):
                 applyCategoryToWordBlock(wordBlock, categories.Collector)
                 classified.append(categories.Collector)
-                break;
-    pass
-
+                return True;
+    return False
 
 def detectDate(wordBlock,classified):
     for w in wordBlock:
-        description=(''.join((filter(lambda i: i not in bad_chars, w['description'])))).lower()
-        description = description.translate(remove_digits)
+        replacement=(''.join((filter(lambda i: i not in bad_chars, w['replacement'])))).lower()
+        replacement = replacement.translate(remove_digits)
 
         if w['category']==categories.Unknown:
-            if(description in months):
+            if(replacement in months):
                 applyCategoryToWordBlock(wordBlock,categories.Date)
                 classified.append(categories.Date)
-                break;
+                return True;
+    return False
 
 
 def detectRegistrationNumber(wordBlock, classified):
     for w in wordBlock:
-        description = (''.join((filter(lambda i: i not in bad_chars, w['description'])))).lower()
-        description = description.translate(remove_digits)
+        replacement = (''.join((filter(lambda i: i not in bad_chars, w['replacement'])))).lower()
+        replacement = replacement.translate(remove_digits)
         if w['category'] == categories.Unknown:
-            if (description == "no"):
+            if (replacement == "no"):
                 applyCategoryToWordBlock(wordBlock, categories.RegistrationNumber)
                 classified.append(categories.RegistrationNumber)
-                break;
-    pass
+                return True;
+    return False
 
 
-def detectScienteficName(wordBlock,classified):
+def detectScienteficName(wordBlocks,classified):
     print("To Do:\n1. Load latin words data \n2.run 1 gram model to find if given words are latin")
     text=""
-    for w in wordBlock:
-        if w['category'] != categories.Unknown:
-            break;
-        description = (''.join((filter(lambda i: i not in bad_chars, w['description'])))).lower()
-        text += description + " ";
+    for wordBlock in wordBlocks:
+        for w in wordBlock:
+            if w['category'] == categories.Unknown:
+                replacement = (''.join((filter(lambda i: i not in bad_chars, w['replacement'])))).lower()
+                if isItScientificName(replacement):
+                   applyCategoryToWordBlock(wordBlock, categories.ScientificName)
+                   classified.append(categories.ScientificName)
+                   return True;
+    return False
 
-    if isItScientificName(text) and len(text)>0:
-       applyCategoryToWordBlock(wordBlock, categories.ScientificName)
-       classified.append(categories.ScientificName)
-
-def detectLocation(wordBlock):
-    pass
+def detectLocation(wordBlocks):
+    classifyRemainingWordsAsLocation(wordBlocks)
+    return True
 
 def applyCategoryToWordBlock(wordBlock, category, labelIndex=-1):
    for w in wordBlock:
@@ -116,21 +118,21 @@ def autoClassifyWords(dfs):
     blocks=getWordsByLinesAndBlocks(dfs)
     classified=[]
     for block in blocks:
-        if categories.Description not in classified:
-            detectDescription(block,classified)
-        if categories.Collector not in classified:
-            detectCollector(block,classified)
-        if categories.Date not in classified:
-            detectDate(block,classified)
-        if categories.RegistrationNumber not in classified:
-            detectRegistrationNumber(block,classified)
+        detectedCurrentBlock=False
+        if not detectedCurrentBlock and categories.Description not in classified:
+           detectedCurrentBlock= detectDescription(block,classified)
+        if not detectedCurrentBlock and categories.Collector not in classified:
+           detectedCurrentBlock=detectCollector(block,classified)
+        if not detectedCurrentBlock and categories.Date not in classified:
+            detectedCurrentBlock = detectDate(block,classified)
+        if not detectedCurrentBlock and categories.RegistrationNumber not in classified:
+            detectedCurrentBlock = detectRegistrationNumber(block,classified)
 
-    for block in blocks:
-        if categories.ScientificName not in classified:
-            detectScienteficName(block,classified)
-    #if only location is remained to validate, classify all remaining items as location
+        if not detectedCurrentBlock and categories.ScientificName not in classified:
+            detectScienteficName(blocks,classified)
+    #location is seperate detection if everyting is detected.
     if set([categories.Description,categories.Collector,categories.Date,categories.RegistrationNumber,categories.ScientificName]).issubset( classified ):
-        classifyRemainingWordsAsLocation(blocks)
+        detectLocation(blocks)
 
 def isItScientificName(text):
     return True
