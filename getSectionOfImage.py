@@ -7,7 +7,6 @@ import os
 from urllib.request import urlopen
 import numpy as np
 import cv2
-from pandas import np
 
 topLeftTemplates=[]
 leftEdgeTemplates=[]
