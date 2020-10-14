@@ -39,6 +39,12 @@ def buildCorpus(destination):
     resultXpathsWithFileName.append(("//td[@class='name Accepted']/a/span[@class='name']/i[@class='species']/text()","Accepted_species.txt"))
     resultXpathsWithFileName.append(("//td[@class='name Synonym']/a/span[@class='name']/i[@class='genus']/text()","Synonym_genus.txt"))
     resultXpathsWithFileName.append(("//td[@class='name Synonym']/a/span[@class='name']/i[@class='species']/text()","Synonym_species.txt"))
+    resultXpathsWithFileName.append(("//td[@class='name Unresolved']/a/span[@class='name']/i[@class='genus']/text()", "Unresolved_genus.txt"))
+    resultXpathsWithFileName.append(("//td[@class='name Unresolved']/a/span[@class='name']/i[@class='species']/text()", "Unresolved_species.txt"))
+    resultXpathsWithFileName.append(("//td/a/span[@class='name']/i[@class='genus']/text()", "All_genus.txt"))
+    resultXpathsWithFileName.append(("//td/a/span[@class='name']/i[@class='species']/text()", "All_species.txt"))
+
+
 
     if not os.path.exists(destination):
         os.makedirs(destination)
