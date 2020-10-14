@@ -72,6 +72,7 @@ def initializeDataFromImage(root, vision):
     df = pd.DataFrame(columns=['index',
                                'description',
                                'suggestedDescription',
+                               'suggestedLatinDescription',
                                'replacement',
                                'isIncorrectWord',
                                'color',
@@ -94,6 +95,7 @@ def initializeDataFromImage(root, vision):
                 index=index,#can be used to ignore the word, if set to -1 in future
                 description=text.description,#ocr detected word
                 suggestedDescription=[],#later to be corrected if needed
+                suggestedLatinDescription=[],#later to be corrected for latin words possibility
                 replacement=text.description,#replacement by bert or manual, initially it is the samedf
                 isIncorrectWord = False,#ocr is not matching with bert or manual
                 color="green",#red: ocr<>bert, yellow: manual entry, green replacement=OCR
