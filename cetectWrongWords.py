@@ -10,15 +10,12 @@ def detectWrongWords(dfs, minimumConfidence):
     ignorewords = personslist + ["!", ",", ".", "\"", "?", '(', ')', '*', '\'', '\n']
 
     # using enchant.checker.SpellChecker, identify incorrect words
-    d = SpellChecker("en_US")
+    engSpellCheck = SpellChecker("en_US")
     maskedTextStream = ""
     for index, w in dfs.iterrows():
-        if (w['index'] > 0 and not d.check(w['description'])
-                and w['description'] not in ignorewords
-                and not w['description'].isnumeric()
-                and w['confidence'] < minimumConfidence
-        ):
-            w['suggestedDescription'] = getFilteredSuggestionList(w['charsAboveMinimumConfidence'],
-                                                                  d.suggest(w['description']))
-            w['isIncorrectWord'] = True
-            w['color'] = "red"
+        if (w['index'] > 0  and w['description'] not in ignorewords and not w['description'].isnumeric() and w['confidence'] < minimumConfidence):
+            if not engSpellCheck.check(w['description']):
+                w['suggestedDescription'] = getFilteredSuggestionList(w['charsAboveMinimumConfidence'],
+                                                                      engSpellCheck.suggest(w['description']))
+                w['isIncorrectWord'] = True
+                w['color'] = "red"

@@ -32,6 +32,7 @@ Execute main.py, from the Menu "file" open the image
 Part #3 Auto-Correction of the OCR data
 work in progress
 (wrong words are marked with red box)
+corpus is build using the script on corpusBuilder.py, and the output data is used to detect scientific names
 
 Part #4 Manual-Correction of the OCR data
 Just click on any word shown, and update the value as needed.
