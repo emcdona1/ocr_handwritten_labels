@@ -1,6 +1,7 @@
 
 from tkinter import filedialog, simpledialog
 
+from buildPlantDictionary import buildPlantDictionary
 from imageTagExtractor import *
 from interactiveWords import markWordsInImage
 from outputArea import createOutputFrameToDisplayInfo, updateOutput
@@ -27,6 +28,7 @@ class ClassificationApp():
         # conf=1 even if the confidence is 100% check the word if it is actual word or not
         # conf=0.90 ignore the words that have confidance more than 0.75%
         root.minimumConfidence = .99
+        root.plantDictionaryPath="InputResources/genusspecies_data.txt"
 
         #################################################################
 
@@ -57,6 +59,7 @@ class ClassificationApp():
         smTools=Menu(root.menuBar)
         root.menuBar.add_cascade(label="Tools",menu=smTools)
         smTools.add_command(label="Extract Tags To Destination: " + root.destinationFolder, command=lambda: changeDestination(0, smTools))
+        smTools.add_command(label="Build Plant Dictionary: "+ root.plantDictionaryPath ,command=lambda: buildPlantDictionary(root.plantDictionaryPath))
 
         # Image canvas area Row#0 both column
         root.imageCanvasFrame = Frame(root)
