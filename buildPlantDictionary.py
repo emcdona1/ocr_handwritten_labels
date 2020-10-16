@@ -13,10 +13,12 @@ def getSearchXpathResult(searchUrlWithKey, xpath):
     print(searchUrlWithKey)
     result = []
     try:
-        result = doc.xpath(xpath)
+        rawResult = doc.xpath(xpath)
+        for g, s in zip(rawResult[0::2], rawResult[1::2]):
+            result.append(g+" "+s)
     except:
         print(" xpath error :")
-    return result
+    return list(set(result))
 
 
 def buildPlantDictionary(destination):
@@ -29,9 +31,9 @@ def buildPlantDictionary(destination):
                 searchKey=str(a)+str(b)+str(c)+"*"
                 result=getSearchXpathResult(searchurl + searchKey, xpath)
                 if (len(result) > 0):
-                    for g, s in zip(result[0::2], result[1::2]):
-                        f.write(g + " " + s + "\n")
+                    for r in result:
+                        f.write(r+"\n")
     f.close()
 
 #destinationFolder=os.path.expanduser("~/Desktop/")+"plantDictionary/"
-#buildPlantDictionary(destinationFolder)
+#buildPlantDictionary("InputResources/genusspecies_data.txt")
