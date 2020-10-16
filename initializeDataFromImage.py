@@ -3,9 +3,14 @@ import sys
 
 import pandas as pd
 from google.api_core.exceptions import ServiceUnavailable
+from google.cloud import vision
 from grpc._channel import _InactiveRpcError
 
 from algorithmicMethods import getPolygonAreaByTouples
+
+os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = r'serviceAccountToken.json'
+client = vision.ImageAnnotatorClient()
+
 
 def getWordProperties(index, text, full_text_annotation,minimumConfidence):
     found = False
@@ -46,24 +51,25 @@ def getWordProperties(index, text, full_text_annotation,minimumConfidence):
         area = getPolygonAreaByTouples(tupleVertices)
     return tupleVertices,x_list,y_list,centroid,area, conf, charsAboveMinimumConfidence
 
-def initializeDataFromImage(root, vision):
-    with io.open(root.imagePath, 'rb') as image_file:
+def initializeDataFromImage(imagePath,minimumConfidence):
+    global client
+    with io.open(imagePath, 'rb') as image_file:
         content = image_file.read()
     image = vision.types.Image(content=content)
     # response = client.text_detection(image=image)
     response=None
     try:
-        response = root.client.document_text_detection(image=image)
+        response = client.document_text_detection(image=image)
     except _InactiveRpcError as err:
         print ("_InactiveRpcError! {0}".format(err))
         print("retrying..!")
-        root.client=vision.ImageAnnotatorClient()
-        response = root.client.document_text_detection(image=image)
+        client=vision.ImageAnnotatorClient()
+        response = client.document_text_detection(image=image)
     except ServiceUnavailable as serr:
         print("ServiceUnavailable! {0}".format(serr))
         print("\nCheck the internet connection!")
-        root.client = vision.ImageAnnotatorClient()
-        response = root.client.document_text_detection(image=image)
+        client = vision.ImageAnnotatorClient()
+        response = client.document_text_detection(image=image)
 
     except:
         print("Unexpected error:", sys.exc_info()[0])
@@ -89,7 +95,7 @@ def initializeDataFromImage(root, vision):
     index=0
     texts = response.text_annotations
     for text in texts:
-        tupleVertices,x_list,y_list,centroid,area, conf, charsAboveMinimumConfidence = getWordProperties(index, text, response.full_text_annotation,root.minimumConfidence)
+        tupleVertices,x_list,y_list,centroid,area, conf, charsAboveMinimumConfidence = getWordProperties(index, text, response.full_text_annotation,minimumConfidence)
         df = df.append(
             dict(
                 index=index,#can be used to ignore the word, if set to -1 in future
@@ -114,4 +120,4 @@ def initializeDataFromImage(root, vision):
         )
         index=index+1
 
-    root.df=df
+    return df
