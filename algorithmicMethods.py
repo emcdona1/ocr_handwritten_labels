@@ -1,30 +1,5 @@
-from difflib import SequenceMatcher
 
-from shapely.geometry import Point
-from shapely.geometry.polygon import Polygon
-#usage to find the area of a polygon
-from getWordsInformation import debugDF, areWordsInDifferentLines, isCurrentWordInNextBlock
 
-'''
-There are cases, where subset of word is being recognized as seperate word, 
-to fix this situations, loop by larger area to smaller area
-if smaller area's centroid falls in larger area 
-'''
-def removeDuplicates(df):
-    d=[]
-
-    for index, w in df.iterrows():
-        if(w['index']>0):
-            d.append((w['area'], w))
-
-    d.sort(key=sortByArea, reverse=True)
-    for i in range(len(d)-1):
-        for j in range(i+1,len(d),1):
-                if Polygon(d[i][1]['tupleVertices']).contains(Point(d[j][1]['centroid'][0],d[j][1]['centroid'][1]))\
-                        and d[j][1]['description'].lower() in d[i][1]['description'].lower():
-                    d[j][1]['index']=-1 # having index=-1 will make sure that it will be ignored in future.
-    #debugDF(df)
-    pass
 
 '''
 there are cases where big chunk of image is processed first and smaller chunk later
@@ -32,16 +7,19 @@ causing words to be appear out of index
 to fix the situation evaluate the centroid of each word, and cluster them by y index
 and each cluster should represent a row, serialize each cluster afterward based upon x index
 '''
+import math
+
+
 def getSerealizedData(df):
     d = []
     for index, w in df.iterrows():
         if (w['index'] > 0):
-            d.append((w['centroid'],w))
+            d.append((w['sp'],w))
 
     if len(d) < 3:
         return df
     # step #1 short vertically
-    d.sort(key=sortByCentroidY, reverse=False)
+    d.sort(key=sortBySpY, reverse=False)
     # step #2 create list of rows based upon the vertical gap ratio
     rows = []
     row = []
@@ -53,12 +31,12 @@ def getSerealizedData(df):
             c = d[i][1]  # current
             p = d[i - 1][1]  # previous (centroid, word), w2[0]=(xval,yval), w2[1]=word
             if areWordsInDifferentLines(c, p):
-                row.sort(key=sortByCentroidX, reverse=False)  # order current row by x
+                row.sort(key=sortBySpX, reverse=False)  # order current row by x
                 rows.append(row)
                 row = []
             row.append(d[i])
     if (len(row)>0): # final row might not have written
-        row.sort(key=sortByCentroidX, reverse=False)  # order current row by x
+        row.sort(key=sortBySpX, reverse=False)  # order current row by x
         rows.append(row)
     # step #3 serialize the indexes
     i = 1
@@ -69,22 +47,6 @@ def getSerealizedData(df):
             i = i + 1
     # step #4 sort the data frame by index
     return df.sort_values(by=['index'])
-
-
-'''return top suggestions which has higher probability of chances to meet with charsAboveMinimumConfidance'''
-def getFilteredSuggestionList(charsAboveMinimumConfidance,suggestions):
-
-    count=5
-    if(len(suggestions)<count):
-        return suggestions
-    # return suggestions
-    ratioSuggestion=[]
-    for s in suggestions:
-        ratioSuggestion.append((SequenceMatcher(None,s,charsAboveMinimumConfidance).ratio(),s))
-    ratioSuggestion.sort(key=sortBySugestionRatio, reverse=True)
-    return [t[1] for t in ratioSuggestion[:count]] #return top 'count' list of tuple (ratio, suggestion)
-
-
 
 ##########################sub methods#########################
 
@@ -97,18 +59,64 @@ def getPolygonAreaByTouples (t):
     for i in range(len(t)-1):
         sum+=determinant(t[i],t[i+1])
     sum+=determinant(t[i+1],t[0])
-    return sum/2
+    return abs(sum/2)
 
 #one liner  sorted(range(len(a)), key=lambda i: a[i], reverse=True)[:2]
 
-def sortByArea(s):
-    return s[0] #area
-
-def sortByCentroidY(s):
+def sortBySpY(s):
     return s[0][1] #y value of the touple (x,y)
 
-def sortByCentroidX(s):
+def sortBySpX(s):
     return s[0][0] #x value of the touple (x,y)
 
-def sortBySugestionRatio(r):
-    return r[0]# valupe of ration in the touple (ratio, suggestion)
+
+def getWordsByLinesAndBlocks(dfs):
+    blocks=[]
+    block=[]
+    oldW=""
+    oldW = None
+    for index, w in dfs.iterrows():
+        if w['index'] > 0:
+            if w['index'] > 1:
+                if areWordsInDifferentLines(w, oldW):
+                    blocks.append(block)
+                    block=[]
+            oldW = w
+            block.append(oldW)
+    blocks.append(block)
+    return blocks
+
+# for the words to be in same line all the slopes must be almost equal
+def areWordsInDifferentLines(w1, w2):
+    print(w1['description']+" vs "+w2['description'])
+    tuples=[]
+    tuples.append(w1['sp'])
+    tuples.append(w1['ep'])
+    tuples.append(w2['sp'])
+    tuples.append(w2['ep'])
+    a=getPolygonAreaByTouples(tuples)
+    d=wordDistance(w1,w2)
+    print(a)
+    print(d)
+    #s1=getSlope(w1['sp'],w1['ep'])
+    #s2=getSlope(w2['sp'],w2['ep'])
+
+
+
+    #print( min(s1, s2, s3, s4, s5))
+
+    return a>400 or d>50
+
+
+def wordDistance(w1, w2):
+    d1=getPointDistance(w1['ep'],w2['sp'])
+    d2=getPointDistance(w2['ep'],w1['sp'])
+    return min(d1,d2)
+
+def getPointDistance(p1,p2):
+    return math.sqrt(((p1[0] - p2[0]) ** 2) + ((p1[1] - p2[1]) ** 2))
+
+def getSlope(p1,p2):
+    if (p2[0]-p1[0]==0):
+        return (p2[1]-p1[1])*100 #infinite
+    return (p2[1]-p1[1])/(p2[0]-p1[0])

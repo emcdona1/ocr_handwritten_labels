@@ -1,3 +1,6 @@
+from algorithmicMethods import getWordsByLinesAndBlocks
+
+
 class categories(object):
     Unknown = "Unknown"
     Location = "Location"
@@ -25,7 +28,6 @@ def initializeCategories(root):
 
 
 
-from getWordsInformation import getWordsByLinesAndBlocks
 
 months=["jan","january","feb","february","mar","march","apr","april",
             "may","jun","june","jul","july","aug","august","sep","sept","september",

@@ -114,7 +114,6 @@ class ClassificationApp():
             imagePath = filedialog.askopenfilename(
                 filetypes=(("PNG", "*.png"), ("JPG", "*.jpg"))
             )
-            #df=processTagImage(imagePath,  root.minimumConfidence)
             df=processTagImage(imagePath,  root.minimumConfidence)
             displayClassificationEditor(root,imagePath,df)
 

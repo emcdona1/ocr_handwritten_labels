@@ -1,12 +1,12 @@
 import sys
 from algorithmicMethods import getSerealizedData
 from applyCorrection import applyCorrection
-from cetectWrongWords import detectWrongWords
+from detectWrongWords import detectWrongWords
 from initializeDataFromImage import initializeDataFromImage
 from wordCategories import autoClassifyWords
 
 def processTagImage(imagePath, minimumConfidence):
-    df=initializeDataFromImage(imagePath,minimumConfidence)
+    df=initializeDataFromImage(imagePath)
     df = getSerealizedData(df)
     detectWrongWords(df, minimumConfidence)
     try:
@@ -17,4 +17,5 @@ def processTagImage(imagePath, minimumConfidence):
     autoClassifyWords(df)
     return df
     pass
+
 
