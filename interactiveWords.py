@@ -11,6 +11,7 @@ def markWordsInImage(root):
 def drawBoxesInImage(root,canvas, word):
     word['canvas']=canvas
     word['polygon']=canvas.create_polygon(word['tupleVertices'])
+    canvas.create_line(word['sp'][0],word['sp'][1], word['ep'][0],word['ep'][1],dash=(4, 2))
     updateWordOutline(word)
     canvas.tag_bind(word.polygon, "<Button-1>", lambda x: word_button1(root,word))
     canvas.tag_bind(word.polygon, "<Enter>", lambda x: polygon_enter(root,word))

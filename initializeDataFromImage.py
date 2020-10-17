@@ -6,29 +6,26 @@ from google.api_core.exceptions import ServiceUnavailable
 from google.cloud import vision
 from grpc._channel import _InactiveRpcError
 
-from algorithmicMethods import getPolygonAreaByTouples
 
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = r'serviceAccountToken.json'
 client = vision.ImageAnnotatorClient()
 
 
-def getWordProperties(index, text, full_text_annotation,minimumConfidence):
+def getWordProperties(index, text, full_text_annotation):
     found = False
-    tupleVertices=centroid=area=conf=y_list=x_list =None,
-    charsAboveMinimumConfidence=""
+    t=ep=sp=confidence=""
     if index>0:#skip the evaluation of first node
         for page in full_text_annotation.pages:
             for block in page.blocks:
                 for paragraph in block.paragraphs:
                     for word in paragraph.words:
                         if text.bounding_poly==word.bounding_box:
-                            fullAnnotation=word
+                            confidence = word.confidence
                             found = True
-                            for symbol in word.symbols:
-                                if symbol.confidence>minimumConfidence:
-                                    charsAboveMinimumConfidence +=symbol.text
-                                else:
-                                    charsAboveMinimumConfidence=charsAboveMinimumConfidence+"?"
+                            t=[(v.x,v.y) for v in word.bounding_box.vertices]
+                            sp = ((t[0][0] + t[3][0]) // 2, (t[0][1] + t[3][1]) // 2)
+                            ep = ((t[1][0] + t[2][0]) // 2, (t[1][1] + t[2][1]) // 2)
+
                             break;
                         if found:
                             break;
@@ -38,20 +35,9 @@ def getWordProperties(index, text, full_text_annotation,minimumConfidence):
                     break;
             if found:
                 break;
-        #adding more information
-        #if needed pass the fullAnnotation as well.print(fullAnnotation)
-        conf=fullAnnotation.confidence
-        tupleVertices=[(v.x,v.y) for v in fullAnnotation.bounding_box.vertices]
-        x_list = [v.x for v in fullAnnotation.bounding_box.vertices]
-        y_list = [v.y for v in fullAnnotation.bounding_box.vertices]
-        #x_list=x_list.sort()
-        #y_list=y_list.sort()
-        #centroid= (sum(x_list)/len(x_list), sum(y_list)/len(y_list ))
-        centroid = ((min(x_list)+max(x_list))/ 2, (min(y_list)+max(y_list)) / 2)
-        area = getPolygonAreaByTouples(tupleVertices)
-    return tupleVertices,x_list,y_list,centroid,area, conf, charsAboveMinimumConfidence
+    return t,confidence,sp,ep
 
-def initializeDataFromImage(imagePath,minimumConfidence):
+def initializeDataFromImage(imagePath):
     global client
     with io.open(imagePath, 'rb') as image_file:
         content = image_file.read()
@@ -75,49 +61,29 @@ def initializeDataFromImage(imagePath,minimumConfidence):
         print("Unexpected error:", sys.exc_info()[0])
         raise
 
-    df = pd.DataFrame(columns=['index',
-                               'description',
-                               'suggestedDescription',
-                               'suggestedLatinDescription',
-                               'replacement',
-                               'isIncorrectWord',
-                               'color',
-                               'centroid',
-                               'tupleVertices',
-                               'x_list',
-                               'y_list',
-                               'confidence',
-                               'charsAboveMinimumConfidence',
-                               'area',
-                               'polygon',
-                               'canvas',
-                               'category'])
-    index=0
+    #columns with boolean values, int values must be here
+    df = pd.DataFrame(columns=['index','isIncorrectWord'])
+    index = 0
     texts = response.text_annotations
     for text in texts:
-        tupleVertices,x_list,y_list,centroid,area, conf, charsAboveMinimumConfidence = getWordProperties(index, text, response.full_text_annotation,minimumConfidence)
+        tupleVertices, confidence, sp, ep = getWordProperties(index, text, response.full_text_annotation)
         df = df.append(
             dict(
-                index=index,#can be used to ignore the word, if set to -1 in future
-                description=text.description,#ocr detected word
-                suggestedDescription=[],#later to be corrected if needed
-                suggestedLatinDescription=[],#later to be corrected for latin words possibility
-                replacement=text.description,#replacement by bert or manual, initially it is the samedf
-                isIncorrectWord = False,#ocr is not matching with bert or manual
-                color="green",#red: ocr<>bert, yellow: manual entry, green replacement=OCR
-                centroid = centroid,#we would need this to serialize alogrithm
-                tupleVertices = tupleVertices,#for gui
-                confidence=conf,#confidence
-                charsAboveMinimumConfidence=charsAboveMinimumConfidence,
-                area=area,#area covered by the word, needed to sort
-                polygon=None,#for the gui placeholder
-                canvas=None,#for the gui placeholder
-                category="Unknown",#for the classification of the word
-                x_list=x_list,
-                y_list=y_list
+                index=index,
+                description=text.description,
+                replacement=text.description,
+                category="Unknown",
+                tupleVertices=tupleVertices,
+                sp=sp,
+                ep=ep,
+                suggestedDescription=[],
+                polygon=None,
+                canvas=None,
+                confidence=confidence,
+                isIncorrectWord = False,
+                color="green"
             ),
             ignore_index=True
         )
-        index=index+1
-
+        index = index + 1
     return df

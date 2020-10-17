@@ -1,10 +1,13 @@
+import math
 
 from shapely.geometry import Point
 from shapely.geometry.polygon import Polygon
 
 import re
 
-#return the categories in order
+from algorithmicMethods import areWordsInDifferentLines
+
+
 def getCalssifiedCategoriesInOrder(mainCategories, classifiedCategories):
     categories=[]
     for c in mainCategories:
@@ -74,20 +77,6 @@ def debugDF(df):
     for index, w in df.iterrows():
         print(str(w['index']) + ":" + w['description'])
 
-# current word's centroid is bigger then previous word's y values
-# current word's y values are bigger then previous words' centroid
-# ignore x by
-def areWordsInDifferentLines(w1, w2):
-   cymin = min(w1['y_list'])
-   ccy = w1['centroid'][1]
-   pymin = min(w2['y_list'])
-   pcy = w2['centroid'][1]
-   centroidGapY = abs(ccy - pcy)
-
-   centroidYRatioCw=abs(centroidGapY/(ccy-cymin))
-   centroidYRatioPw=abs(centroidGapY/(pcy-pymin))
-   lineGapFactor=min(centroidYRatioCw,centroidYRatioPw)
-   return lineGapFactor>0.3 # heat and trial line gap factor to be 0.3
 
 def getWordByPolygon(dfs, polygon):
     for index, w in dfs.iterrows():
@@ -116,35 +105,16 @@ def replaceExtraSpace(text):
     pattern = re.compile("|".join(rep.keys()))
     text = pattern.sub(lambda m: rep[re.escape(m.group(0))], text)
     return text
+'''
+ab >> false
+a
+.  >> true
+b
+'''
 
-def getWordsByLinesAndBlocks(dfs):
-    blocks=[]
-    block=[]
-    oldW=""
-    oldW = None
-    for index, w in dfs.iterrows():
-        if w['index'] > 0:
-            if w['index'] > 1:
-                if isCurrentWordInNextBlock(currentWord=w, previousWord=oldW):
-                    blocks.append(block)
-                    block=[]
-            oldW = w
-            block.append(oldW)
-    blocks.append(block)
-    return blocks
 
-#next block is defined by the horizontal space between two words
-def isCurrentWordInNextBlock(currentWord,previousWord):
-    pw_xmin=min(previousWord['x_list'])
-    pw_xmax=max(previousWord['x_list'])
-    cw_xmin=min(currentWord['x_list'])
-    cw_xmax=max(currentWord['x_list'])
 
-    pwSpaceFactor=(pw_xmax-pw_xmin)//(len(previousWord['description']))
-    cwSpaceFactor=(cw_xmax - cw_xmin) // (len(currentWord['description']))
 
-    spaceFactor=max(pwSpaceFactor+1,cwSpaceFactor+1)*4
-    return abs((cw_xmin-pw_xmax)) > spaceFactor or areWordsInDifferentLines(currentWord, previousWord)
 
 
 
