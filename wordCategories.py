@@ -1,4 +1,4 @@
-from algorithmicMethods import getWordsByLinesAndBlocks
+from algorithmicMethods import getSequentialDataBlocks
 
 
 class categories(object):
@@ -115,11 +115,10 @@ def classifyRemainingWordsAsLocation(blocks):
     pass
 
 
-def autoClassifyWords(dfs):
+def autoClassifyWords(sdb):
     print("wip: autoClassifyWords in wordCategories.py")
-    blocks=getWordsByLinesAndBlocks(dfs)
     classified=[]
-    for block in blocks:
+    for block in sdb:
         detectedCurrentBlock=False
         if not detectedCurrentBlock and categories.Description not in classified:
            detectedCurrentBlock= detectDescription(block,classified)
@@ -131,10 +130,10 @@ def autoClassifyWords(dfs):
             detectedCurrentBlock = detectRegistrationNumber(block,classified)
 
         if not detectedCurrentBlock and categories.ScientificName not in classified:
-            detectScienteficName(blocks,classified)
+            detectScienteficName(sdb,classified)
     #location is seperate detection if everyting is detected.
     if set([categories.Description,categories.Collector,categories.Date,categories.RegistrationNumber,categories.ScientificName]).issubset( classified ):
-        detectLocation(blocks)
+        detectLocation(sdb)
 
 def isItScientificName(text):
     return True
