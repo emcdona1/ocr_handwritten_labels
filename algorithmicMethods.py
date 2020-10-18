@@ -1,13 +1,19 @@
 
 import math
 
+def algorithm1(x,y):
+    return areWordsInAcceptableOffsetDistance(x,y)
+
+
+def areWordsInSameBlock(x,y):
+    return algorithm1(x,y)
+
 def addWordInProperLine(lines,w):
         for line in reversed(lines):
             for lWord in reversed(line):
-                if areWordsInAcceptableDistance(lWord,w):
-                    if areWordsInAcceptableAngle(w,lWord):
-                        line.append(w)
-                        return
+                if areWordsInSameBlock(lWord,w):
+                    line.append(w)
+                    return
         lines.append([w])
 
 def sortBySp(line):
@@ -42,29 +48,35 @@ def getSequentialDataBlocks(df):
 
 ##########################sub methods#########################
 
-def areWordsInAcceptableDistance(w1, w2):
-    maxDist=100
-    d = wordDistance(w1, w2)
-    return  d<maxDist
+def meetHorizontalAlignment(x, y, maxGap=80):
+    if(y['sp'][0]<x['sp'][0]):
+        t=x
+        x=y
+        y=t
+    l1= x['ep'][0] - x['sp'][0]
+    l2=y['ep'][0]-y['sp'][0]
+    tl=y['ep'][0]-x['sp'][0]
+    g = y['sp'][0] - x['ep'][0]
+    ldiff=abs(tl-l1-l2-g)
 
-def areWordsInAcceptableAngle(x, y):
-    a1 = getThreePointAngle(x['sp'], x['ep'], y['sp'])
-    a2 = getThreePointAngle(x['sp'], x['ep'], y['ep'])
-    a3 = getThreePointAngle(x['ep'], x['sp'], y['sp'])
-    a4 = getThreePointAngle(x['ep'], x['sp'], y['ep'])
-    a5 = getThreePointAngle(y['sp'], y['ep'], x['sp'])
-    a6 = getThreePointAngle(y['sp'], y['ep'], x['ep'])
-    a7 = getThreePointAngle(y['ep'], y['sp'], x['sp'])
-    a8 = getThreePointAngle(y['ep'], y['sp'], x['ep'])
-    a=min(a1,a2,a3,a4,a5,a6,a7,a8)
-    angleFactor=3
-    if 0<=a<=angleFactor:
-        return True
-    if (180-angleFactor)<=a<=(180+angleFactor):
-        return True
-    if (360-angleFactor)<=a<=360:
-        return True
-    return False
+    return ldiff==0 and g<=maxGap
+
+def meetVerticalAlignment(w1,w2, verticleOffset=15):
+    v = w2['sp'][1] - w1['ep'][1]
+    return abs(v)<=verticleOffset
+
+
+
+def areWordsInAcceptableOffsetDistance(w1, w2):
+    return meetHorizontalAlignment(w1, w2) and meetVerticalAlignment(w1,w2)
+
+def areWordsInAcceptableAngle(x,y):
+    return True
+    #x...y (perfect line 180 degrees)
+    a = getThreePointAngle(x['sp'], x['ep'], y['sp'])
+    print(x['description'] + "vs" + y['description'] +" : "+ str(a))
+    angleFactor=45
+    return 180-angleFactor<=a<=180+angleFactor
 
 def wordDistance(w1, w2):
     d1=getPointDistance(w1['ep'],w2['sp'])

@@ -1,6 +1,5 @@
 from algorithmicMethods import getSequentialDataBlocks
 
-
 class categories(object):
     Unknown = "Unknown"
     Location = "Location"
@@ -25,9 +24,6 @@ def initializeCategories(root):
     root.categories.append(categories.Collector)
     root.categories.append(categories.Label)
     root.categories.append(categories.Unknown)
-
-
-
 
 months=["jan","january","feb","february","mar","march","apr","april",
             "may","jun","june","jul","july","aug","august","sep","sept","september",
@@ -83,8 +79,6 @@ def detectRegistrationNumber(wordBlock, classified):
 
 
 def detectScienteficName(wordBlocks,classified):
-    print("To Do:\n1. Load latin words data \n2.run 1 gram model to find if given words are latin")
-    text=""
     for wordBlock in wordBlocks:
         for w in wordBlock:
             if w['category'] == categories.Unknown:
@@ -106,7 +100,6 @@ def applyCategoryToWordBlock(wordBlock, category, labelIndex=-1):
         else:
             w['category'] = category
 
-
 def classifyRemainingWordsAsLocation(blocks):
     for wordBlock in blocks:
         for w in wordBlock:
@@ -116,7 +109,6 @@ def classifyRemainingWordsAsLocation(blocks):
 
 
 def autoClassifyWords(sdb):
-    print("wip: autoClassifyWords in wordCategories.py")
     classified=[]
     for block in sdb:
         detectedCurrentBlock=False
