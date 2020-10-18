@@ -4,9 +4,10 @@ import math
 def addWordInProperLine(lines,w):
         for line in reversed(lines):
             for lWord in reversed(line):
-                if areWordsInAcceptableAngle(w,lWord):
-                    line.append(w)
-                    return
+                if areWordsInAcceptableDistance(lWord,w):
+                    if areWordsInAcceptableAngle(w,lWord):
+                        line.append(w)
+                        return
         lines.append([w])
 
 def sortBySp(line):
@@ -14,26 +15,16 @@ def sortBySp(line):
     return int(w['sp'][0])
   return sorted(line, key=sortKey)
 
-def addBlocksBrokenByDist(blocks, line):
-    newLine=[]
-    for w in line:
-        if(len(newLine)==0):
-            newLine.append(w)
-        else:
-            if areWordsInAcceptableDistance(newLine[-1],w):
-                newLine.append(w)
-            else:
-                blocks.append(newLine)
-                newLine=[w]
-    if(len(newLine)>0):
-        blocks.append(newLine)
+def sortByFirstY(blocks):
+    def sortKey(line):
+        return int(line[0]['sp'][1])
+    return sorted(blocks, key=sortKey)
 
 def getSequentialBlocks(lines):
     blocks=[]
     for line in lines:
-        line=sortBySp(line)
-        addBlocksBrokenByDist(blocks, line)
-    return blocks
+        blocks.append(sortBySp(line))
+    return sortByFirstY(blocks)
 
 def getSequencialDataList(d):
     lines=[]
@@ -57,9 +48,19 @@ def areWordsInAcceptableDistance(w1, w2):
     return  d<maxDist
 
 def areWordsInAcceptableAngle(x, y):
-    a=getThreePointAngle(x['sp'], x['ep'], y['sp'])
-    angleFactor=10
+    a1 = getThreePointAngle(x['sp'], x['ep'], y['sp'])
+    a2 = getThreePointAngle(x['sp'], x['ep'], y['ep'])
+    a3 = getThreePointAngle(x['ep'], x['sp'], y['sp'])
+    a4 = getThreePointAngle(x['ep'], x['sp'], y['ep'])
+    a5 = getThreePointAngle(y['sp'], y['ep'], x['sp'])
+    a6 = getThreePointAngle(y['sp'], y['ep'], x['ep'])
+    a7 = getThreePointAngle(y['ep'], y['sp'], x['sp'])
+    a8 = getThreePointAngle(y['ep'], y['sp'], x['ep'])
+    a=min(a1,a2,a3,a4,a5,a6,a7,a8)
+    angleFactor=3
     if 0<=a<=angleFactor:
+        return True
+    if (180-angleFactor)<=a<=(180+angleFactor):
         return True
     if (360-angleFactor)<=a<=360:
         return True
