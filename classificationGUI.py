@@ -98,15 +98,15 @@ class ClassificationApp():
                 filetypes=(("PNG", "*.png"), ("JPG", "*.jpg"))
             )
             if len(singleImagePath)>1:
-                imagePath,df=extractAndProcessTagFromImagePath(singleImagePath,root.destinationFolder, root.minimumConfidence)
-                displayClassificationEditor(root,imagePath,df)
+                imagePath,sdb=extractAndProcessTagFromImagePath(singleImagePath,root.destinationFolder, root.minimumConfidence)
+                displayClassificationEditor(root,imagePath,sdb)
             pass
 
 
         def extractFromImageUrl():
             imageUrl = simpledialog.askstring("Input", "Enter the image URL: ",parent=root)
-            imagePath,df=extractAndProcessTagFromImagePath(imageUrl,root.destinationFolder, root.minimumConfidence)
-            displayClassificationEditor(root,imagePath,df)
+            imagePath,sdb=extractAndProcessTagFromImagePath(imageUrl,root.destinationFolder, root.minimumConfidence)
+            displayClassificationEditor(root,imagePath,sdb)
             pass
 
         #will not save to database
@@ -114,13 +114,13 @@ class ClassificationApp():
             imagePath = filedialog.askopenfilename(
                 filetypes=(("PNG", "*.png"), ("JPG", "*.jpg"))
             )
-            df=processTagImage(imagePath,  root.minimumConfidence)
-            displayClassificationEditor(root,imagePath,df)
+            sdb=processTagImage(imagePath,  root.minimumConfidence)
+            displayClassificationEditor(root,imagePath,sdb)
 
-        def displayClassificationEditor(root,imagePath,df):
+        def displayClassificationEditor(root,imagePath,sdb):
             removeOldData(root)
             root.imagePath=imagePath
-            root.df=df
+            root.sdb=sdb
             root.scrollableImage = ScrollableImage(root.imageCanvasFrame, root=root, scrollbarwidth=6, width=root.imageWidth,
                                                    height=root.imageHeight)
             markWordsInImage(root)

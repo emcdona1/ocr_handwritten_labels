@@ -62,12 +62,12 @@ def initializeDataFromImage(imagePath):
         raise
 
     #columns with boolean values, int values must be here
-    df = pd.DataFrame(columns=['index','isIncorrectWord'])
+    dataFrame = pd.DataFrame(columns=['index','isIncorrectWord'])
     index = 0
     texts = response.text_annotations
     for text in texts:
         tupleVertices, confidence, sp, ep = getWordProperties(index, text, response.full_text_annotation)
-        df = df.append(
+        dataFrame = dataFrame.append(
             dict(
                 index=index,
                 description=text.description,
@@ -86,4 +86,4 @@ def initializeDataFromImage(imagePath):
             ignore_index=True
         )
         index = index + 1
-    return df
+    return dataFrame

@@ -1,21 +1,21 @@
 import sys
-from algorithmicMethods import getSerealizedData
+from algorithmicMethods import getSequentialDataBlocks
 from applyCorrection import applyCorrection
 from detectWrongWords import detectWrongWords
 from initializeDataFromImage import initializeDataFromImage
 from wordCategories import autoClassifyWords
 
 def processTagImage(imagePath, minimumConfidence):
-    df=initializeDataFromImage(imagePath)
-    df = getSerealizedData(df)
-    detectWrongWords(df, minimumConfidence)
+    dataFrame=initializeDataFromImage(imagePath)
+    sdb = getSequentialDataBlocks(dataFrame)
+    detectWrongWords(sdb, minimumConfidence)
     try:
-        applyCorrection(dfs=df)
+        applyCorrection(sdb)
     except:
         print("Could not apply the correction from bert")
         print(sys.exc_info())
-    autoClassifyWords(df)
-    return df
+    autoClassifyWords(sdb)
+    return sdb
     pass
 
 

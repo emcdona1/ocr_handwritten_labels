@@ -5,12 +5,12 @@ from difflib import SequenceMatcher
 import re
 from transformers import AutoTokenizer, AutoModelWithLMHead, pipeline
 
-from getWordsInformation import getDescriptionFromDataFrame, debugDF
+from getWordsInformation import getDescriptionFromDataBlocks
 
 
-def applyCorrection(dfs):
+def applyCorrection(sdb):
     return ""
-    maskedTextStream = getDescriptionFromDataFrame("MASKED", dfs)
+    maskedTextStream = getDescriptionFromDataBlocks("MASKED", sdb)
 
     tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
 
@@ -23,7 +23,7 @@ def applyCorrection(dfs):
 
 def applyCorrection2(dfs):
 
-    maskedTextStream=getDescriptionFromDataFrame("MASKED", dfs)
+    maskedTextStream=getDescriptionFromDataBlocks("MASKED", dfs)
     #print (maskedTextStream)
 
     # Load, train and predict using pre-trained model

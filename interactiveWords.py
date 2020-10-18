@@ -4,9 +4,10 @@ from wordOutline import updateWordOutline
 
 
 def markWordsInImage(root):
-    for index, w in root.df.iterrows():
-        if w['index'] > 0:
-            drawBoxesInImage(root,root.scrollableImage.cnvs,w)
+    for db in root.sdb:
+        for w in db:
+            if w['index'] > 0:
+                drawBoxesInImage(root,root.scrollableImage.cnvs,w)
 
 def drawBoxesInImage(root,canvas, word):
     word['canvas']=canvas

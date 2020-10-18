@@ -5,7 +5,6 @@ from shapely.geometry.polygon import Polygon
 
 import re
 
-from algorithmicMethods import areWordsInDifferentLines
 
 
 def getCalssifiedCategoriesInOrder(mainCategories, classifiedCategories):
@@ -21,39 +20,37 @@ def getCalssifiedCategoriesInOrder(mainCategories, classifiedCategories):
     pass
 
 
-def getDescriptionFromDataFrame(type, dfs, hint=0, mainCategories=[]):
+def getDescriptionFromDataBlocks(type, sdb, hint=0, mainCategories=[]):
     text = ""
-    if type=="raw":
-        text= dfs['description'][0]
     if type=="corrected":
-        oldW=None
-        for index, w in dfs.iterrows():
-            if w['index'] > 0:
-                if w['index']>1:
-                    if areWordsInDifferentLines(w, oldW):
-                        text+="\n"
-                oldW=w
+        for db in sdb:
+            for w in db:
+                if w['index'] > 0:
+                    if w['isIncorrectWord']:
+                        if (hint==1):
+                            text+="["+w['description']+"]->"
+                        text += w['replacement']+" "
+                    else:
+                        text += w['description'] + " "
+            text+="\n"
+
+    if type=="OCR":
+        for db in sdb:
+            for w in db:
+                if w['index'] > 0:
+                    text += w['description'] + " "
+            text+="\n"
+
+    if type=="MASKED":
+        for db in sdb:
+            for w in db:
                 if w['isIncorrectWord']:
-                    if (hint==1):
-                        text+="["+w['description']+"]->"
-                    text += w['replacement']+" "
+                    text += "[MASK] "
                 else:
                     text += w['description'] + " "
 
-    if type=="OCR":
-        for index, w in dfs.iterrows():
-            if w['index'] > 0:
-                text += w['description'] + " "
-
-    if type=="MASKED":
-        for index, w in dfs.iterrows():
-            if w['isIncorrectWord']:
-                text += "[MASK] "
-            else:
-                text += w['description'] + " "
-
     if type=="classified":
-        classifiedData = getClassifiedDataTuples(dfs)
+        classifiedData = getClassifiedDataTuples(sdb)
         classifiedCategories=[c[0] for c in classifiedData]
         classifiedCategories = list(set(classifiedCategories))
         categories=getCalssifiedCategoriesInOrder(mainCategories,classifiedCategories)
@@ -66,16 +63,13 @@ def getDescriptionFromDataFrame(type, dfs, hint=0, mainCategories=[]):
                 text+="\n"
     return replaceExtraSpace(text)
 
-def getClassifiedDataTuples(dfs):
+def getClassifiedDataTuples(sdb):
     classifiedData = []
-    for index, w in dfs.iterrows():
-        if w['index'] > 0:
-            classifiedData.append((w['category'], w['replacement']))
+    for db in sdb:
+        for w in db:
+            if w['index'] > 0:
+                classifiedData.append((w['category'], w['replacement']))
     return classifiedData
-
-def debugDF(df):
-    for index, w in df.iterrows():
-        print(str(w['index']) + ":" + w['description'])
 
 
 def getWordByPolygon(dfs, polygon):
@@ -105,12 +99,6 @@ def replaceExtraSpace(text):
     pattern = re.compile("|".join(rep.keys()))
     text = pattern.sub(lambda m: rep[re.escape(m.group(0))], text)
     return text
-'''
-ab >> false
-a
-.  >> true
-b
-'''
 
 
 

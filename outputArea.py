@@ -1,7 +1,7 @@
 from tkinter import *
 from tkinter.scrolledtext import ScrolledText
 
-from getWordsInformation import getDescriptionFromDataFrame
+from getWordsInformation import getDescriptionFromDataBlocks
 
 
 def createOutputFrameToDisplayInfo(root, outputFrame):
@@ -17,10 +17,10 @@ def updateOutput(root,**kw):
     clearOutput(root)
     type=kw.pop('type',"corrected")
     useHint=kw.pop('useHint',0)
-    data="######### Data #########\n"+ \
-                getDescriptionFromDataFrame(type, root.df, useHint)
+    data= "######### Data #########\n" + \
+          getDescriptionFromDataBlocks(type, root.sdb, useHint)
     classifiedData= "\n\n######### Classified Information #########\n" + \
-                 getDescriptionFromDataFrame('classified', root.df, 1,root.categories)
+                    getDescriptionFromDataBlocks('classified', root.sdb, 1, root.categories)
     appendToOutputArea(root, data)
     appendToOutputArea(root, classifiedData)
 

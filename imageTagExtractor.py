@@ -109,8 +109,8 @@ def extractAndProcessTagFromImagePath(imagePath, destinationFolder, minimumConfi
     tagImage=getTagImageFromTheImagePath(imagePath)
     saveTagImageToTheDestinationFolder(tagImage,destinationFolder,fileName)
     tagPath=os.path.join(destinationFolder, fileName)
-    df=processTagImage(tagPath, minimumConfidence)
-    return tagPath,df
+    sdb=processTagImage(tagPath, minimumConfidence)
+    return tagPath,sdb
 
 
 # process images inside the folder
@@ -132,5 +132,5 @@ def processImagesFromTheUrlsInTheTextFile(textFile, destinationFolder, minimumCo
         processImageAndSaveToDatabase(url, destinationFolder, minimumConfidence)
 
 def processImageAndSaveToDatabase(imagePath, destinationFolder, minimumConfidence):
-    tagPath, df = extractAndProcessTagFromImagePath(imagePath, destinationFolder,minimumConfidence)
-    saveTagtoDatabase(tagPath, df)
+    tagPath, sdb = extractAndProcessTagFromImagePath(imagePath, destinationFolder,minimumConfidence)
+    saveTagtoDatabase(tagPath, sdb)
