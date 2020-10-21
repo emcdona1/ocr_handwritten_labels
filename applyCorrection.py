@@ -9,8 +9,8 @@ from getWordsInformation import getDescriptionFromDataBlocks
 
 
 def applyCorrection(sdb):
-    return ""
     maskedTextStream = getDescriptionFromDataBlocks("MASKED", sdb)
+    print(maskedTextStream)
 
     tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
 
@@ -21,17 +21,8 @@ def applyCorrection(sdb):
     print(result)
 
 
-def applyCorrection2(dfs):
-
-    maskedTextStream=getDescriptionFromDataBlocks("MASKED", dfs)
-    #print (maskedTextStream)
-
-    # Load, train and predict using pre-trained model
-    #(bert-base-uncased, bert-large-uncased, bert-base-cased, bert-large-cased,
-    # bert-base-multilingual-uncased, bert-base-multilingual-cased, bert-base-chinese).
-
-
-
+def applyCorrection2(sdb):
+    maskedTextStream=getDescriptionFromDataBlocks("MASKED", sdb)
     tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
     tokenized_text = tokenizer.tokenize(maskedTextStream)
     indexed_tokens = tokenizer.convert_tokens_to_ids(tokenized_text)
@@ -55,9 +46,7 @@ def applyCorrection2(dfs):
     with torch.no_grad():
         predictions = model(tokens_tensor, segments_tensors)
 
-    predict_wordUsingBert(dfs,predictions, MASKIDS, tokenizer, maskedTextStream)
-
-    return ""
+    predict_wordUsingBert(sdb,predictions, MASKIDS, tokenizer, maskedTextStream)
 
 
 # cleanup text
@@ -84,23 +73,25 @@ def get_personslist(text):
 
 #Predict words for mask using BERT;
 #refine prediction by matching with proposals from SpellChecker
-def predict_wordUsingBert(dfs,predictions, MASKIDS, tokenizer, maskedTextStream):
+def predict_wordUsingBert(sdb,predictions, MASKIDS, tokenizer, maskedTextStream):
     i=0
-    for index, w in dfs.iterrows():
-        if w['index']>0:
-            if w['description'] not in w['suggestedDescription']:
-                w['suggestedDescription'].append(w['description']) #make sure OCR is listed in drop down
-            if w['isIncorrectWord']:
-                preds = torch.topk(predictions[0, MASKIDS[i]], k=50)
-                i+=1
-                indices = preds.indices.tolist()
-                list1 = tokenizer.convert_ids_to_tokens(indices)
-                simmax = 0
-                predicted_token = ''
-                for word1 in list1:
-                    for word2 in w['suggestedDescription']:
-                        s = SequenceMatcher(None, word1, word2).ratio()
-                        if s is not None and s > simmax:
-                            simmax = s
-                            predicted_token = word1
-                w['replacement'] = predicted_token
+    for block in sdb:
+        for w in block:
+            if w['index']>0:
+                if w['description'] not in w['suggestedDescription']:
+                    w['suggestedDescription'].append(w['description']) #make sure OCR is listed in drop down
+                if w['isIncorrectWord']:
+                    preds = torch.topk(predictions[0, MASKIDS[i]], k=50)
+                    print("here")
+                    indices = preds.indices.tolist()
+                    list1 = tokenizer.convert_ids_to_tokens(indices)
+                    simmax = 0
+                    predicted_token = ''
+                    for word1 in list1:
+                        for word2 in w['suggestedDescription']:
+                            s = SequenceMatcher(None, word1, word2).ratio()
+                            if s is not None and s > simmax:
+                                simmax = s
+                                predicted_token = word1
+                    w['replacement'] = predicted_token
+                    i += 1

@@ -51,9 +51,9 @@ class ClassificationApp():
 
         #ExtractTag
         smExtractTag = Menu(root.menuBar)
-        root.menuBar.add_cascade(label="Batch Processing", menu=smExtractTag)
-        smExtractTag.add_command(label="Process Tags from Folder",command=lambda: extractFromFolder())
-        smExtractTag.add_command(label="Process Tags from Text file containing urls", command=lambda: extractFromTxtFileUrls())
+        root.menuBar.add_cascade(label="Batch Tag Extraction", menu=smExtractTag)
+        smExtractTag.add_command(label="Folder Containing Images",command=lambda: extractFromFolder())
+        smExtractTag.add_command(label="Text File With Urls of Images", command=lambda: extractFromTxtFileUrls())
 
         #Tools
         smTools=Menu(root.menuBar)
@@ -77,7 +77,7 @@ class ClassificationApp():
         #################################################################
         def changeDestination(index,menuItem):
             root.destinationFolder = filedialog.askdirectory()+"/"
-            menuItem.entryconfigure(index,label="Change Destination: "+ root.destinationFolder)
+            menuItem.entryconfigure(index,label="Extract Tags To Destination: "+ root.destinationFolder)
             pass
         def extractFromFolder():
             imageSourceFolder = filedialog.askdirectory() + "/"

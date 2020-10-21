@@ -1,6 +1,10 @@
+import enchant
+
 from algorithmicMethods import getSequentialDataBlocks
 
+
 class categories(object):
+    plantDict = ""#enchant.PyPWL("InputResources/genusspecies_data.txt")
     Unknown = "Unknown"
     Location = "Location"
     ScientificName = "Scientific Name"
@@ -85,9 +89,40 @@ def detectScienteficName(wordBlocks,classified):
                 replacement = (''.join((filter(lambda i: i not in bad_chars, w['replacement'])))).lower()
                 if isItScientificName(replacement):
                    applyCategoryToWordBlock(wordBlock, categories.ScientificName)
+                   #joinWordBlock(wordBlock)
                    classified.append(categories.ScientificName)
                    return True;
     return False
+
+def joinWordBlock(wordBlock):
+    w=wordBlock[0]
+    for n in wordBlock[1:]:
+        n['index']=-1;
+        w['description']=w['description']+" "+n['description']
+        w['tupleVertices'][0]=(min(w['tupleVertices'][0][0],n['tupleVertices'][0][0]),min(w['tupleVertices'][0][1],n['tupleVertices'][0][1]))
+
+        w['tupleVertices'][1] =(max(w['tupleVertices'][1][0],n['tupleVertices'][1][0]),min(w['tupleVertices'][1][1],n['tupleVertices'][1][1]))
+
+        w['tupleVertices'][2] =(max(w['tupleVertices'][2][0],n['tupleVertices'][2][0]),max(w['tupleVertices'][2][1],n['tupleVertices'][2][1]))
+
+        w['tupleVertices'][3] =(min(w['tupleVertices'][3][0],n['tupleVertices'][3][0]),max(w['tupleVertices'][3][1],n['tupleVertices'][3][1]))
+
+        w['sp']=((w['tupleVertices'][0][0]+w['tupleVertices'][3][0])//2,(w['tupleVertices'][0][1]+w['tupleVertices'][3][1])//2)
+        w['ep']=((w['tupleVertices'][1][0]+w['tupleVertices'][2][0])//2,(w['tupleVertices'][1][1]+w['tupleVertices'][2][1])//2)
+
+        w['replacement']=w['replacement']+n['replacement']
+    suggestScienteficWords(w)
+def suggestScienteficWords(w):
+    if categories.plantDict.check(w['description']):
+        w['suggestedDescription'] = [w['description']]
+        w['isIncorrectWord'] = False
+        w['color'] = "green"
+        return
+    else:
+        w['suggestedDescription'] = categories.plantDict.suggest(w['description'])
+        w['isIncorrectWord'] = True
+        w['color'] = "yellow"
+
 
 def detectLocation(wordBlocks):
     classifyRemainingWordsAsLocation(wordBlocks)
@@ -99,6 +134,9 @@ def applyCategoryToWordBlock(wordBlock, category, labelIndex=-1):
             w['category']=categories.Label
         else:
             w['category'] = category
+
+def applyCategoryToWord(w,category):
+    w['category']=category
 
 def classifyRemainingWordsAsLocation(blocks):
     for wordBlock in blocks:
