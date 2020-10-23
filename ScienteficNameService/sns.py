@@ -1,32 +1,52 @@
+
 from datetime import datetime
-import enchant
 
-plantDict = None
-snFilePath = "ScienteficNameService/test.txt"
+from ScienteficNameService.similarityUsingEnchant import WordSearcherWithEnchant
+from ScienteficNameService.similarityUsingTrieNode import WordSearcherWithTrieNode
+from ScienteficNameService.similarityUsingFuzzy import WordSearcherWithFuzzy
+"""
+SNS: Scientefic Name Service
+"""
+class SuggestEngine:
+    suggestEngine = None
+    def __init__(self,WORDS_FILE_PATH,ENGINE_NAME='TRIE'):
+        print(datetime.now().strftime("%H:%M:%S") + " Initializing Suggest engine("+ENGINE_NAME+") for path: " + WORDS_FILE_PATH)
+        if ENGINE_NAME=='TRIE':
+            self.suggestEngine = WordSearcherWithTrieNode(WORDS_FILE_PATH)
 
+        if ENGINE_NAME=='FUZZY':
+            self.suggestEngine = WordSearcherWithFuzzy(WORDS_FILE_PATH)
 
-def initializeDictionary(filePath=snFilePath):
-    global plantDict
-    print(datetime.now().strftime("%H:%M:%S") + " Initializing dictionary from path: " + filePath)
-    plantDict = enchant.PyPWL(filePath)
-    print(datetime.now().strftime("%H:%M:%S") + " Dictionary initialized!")
+        if ENGINE_NAME=='ENCHANT':
+            self.suggestEngine = WordSearcherWithEnchant(WORDS_FILE_PATH)
 
+        print(datetime.now().strftime("%H:%M:%S") + " Suggest engine("+ENGINE_NAME+") initialized!")
 
-def getSuggestions(data):
+    def suggest(self, word):
+        return self.suggestEngine.suggest(word)
+
+def getSuggestions(data,suggestEngine):
     print(datetime.now().strftime("%H:%M:%S") + " getting suggestions for : " + data)
-    suggestions = getSuggestionsFromDictionary(data,plantDict)
+    suggestions = suggestEngine.suggest(data)
     print(datetime.now().strftime("%H:%M:%S") + " suggestions : " +str(suggestions))
     return suggestions
-
-def getSuggestionsFromDictionary(data,dict=plantDict):
-    return dict.suggest(data)
 
 
 
 def startLocalTest():
-    initializeDictionary("test.txt")
-    for i in range(100):
-        getSuggestions("Aalius assimillis")
+    filePath="genusspecies_data.txt"
+    se1= SuggestEngine(filePath,'FUZZY')
+    se2= SuggestEngine(filePath,'ENCHANT')
+    se3 = SuggestEngine(filePath, 'TRIE')
+
+    word='zygopetalum wailesianum'
+    print(datetime.now().strftime("%H:%M:%S") + " getting suggestions(FUZZY) for : " + word)
+    se1.suggest(word)
+    print(datetime.now().strftime("%H:%M:%S") + " getting suggestions(ENCHANT) for : " + word)
+    se2.suggest(word)
+    print(datetime.now().strftime("%H:%M:%S") + " getting suggestions(TRIE) for : " + word)
+    se3.suggest(word)
+    print(datetime.now().strftime("%H:%M:%S") + " Complete! ")
 
 #startLocalTest()
 
