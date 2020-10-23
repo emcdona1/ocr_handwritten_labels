@@ -1,5 +1,6 @@
 import os
 
+from ScienteficNameService.sns import getSuggestions
 from getWordsInformation import getDescriptionFromDataBlocks
 from tagProcessor import processTagImage
 
@@ -31,4 +32,8 @@ def startUnitTesting(imageFolder="UnitTesting/Images/",resultFolder="UnitTesting
            ExpectedOutput=createOrGetExpectedOutputForFileName(resultFolder+filename+".txt",ActualOutput)
         if not compareActualAndExpected(ActualOutput,ExpectedOutput,filename):
             totalFails+=1
+
+    if not getSuggestions("Aalius brevipe")[0]=='Aalius brevipes':
+        totalFails+=1
+        print("Suggestion failed!")
     print("Total Fails: "+str(totalFails))

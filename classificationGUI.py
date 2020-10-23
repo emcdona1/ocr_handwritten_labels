@@ -1,7 +1,7 @@
 
 from tkinter import filedialog, simpledialog
 
-from buildPlantDictionary import buildPlantDictionary
+from ScienteficNameService.buildPlantDictionary import buildPlantDictionary
 from imageTagExtractor import *
 from interactiveWords import markWordsInImage
 from outputArea import createOutputFrameToDisplayInfo, updateOutput
