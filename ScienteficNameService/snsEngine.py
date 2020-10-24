@@ -4,6 +4,8 @@ from datetime import datetime
 from ScienteficNameService.similarityUsingEnchant import WordSearcherWithEnchant
 from ScienteficNameService.similarityUsingTrieNode import WordSearcherWithTrieNode
 from ScienteficNameService.similarityUsingFuzzy import WordSearcherWithFuzzy
+from ScienteficNameService.similarityUsingTrieServer import WordSearcherWithTrieServer
+
 """
 SNS: Scientefic Name Service
 """
@@ -20,6 +22,9 @@ class SuggestEngine:
         if ENGINE_NAME=='ENCHANT':
             self.suggestEngine = WordSearcherWithEnchant(WORDS_FILE_PATH)
 
+        if ENGINE_NAME=='TRIE_SERVER':
+            self.suggestEngine=WordSearcherWithTrieServer()
+
         print(datetime.now().strftime("%H:%M:%S") + " Suggest engine("+ENGINE_NAME+") initialized!")
 
     def suggest(self, word):
@@ -34,18 +39,21 @@ def getSuggestions(data,suggestEngine):
 
 
 def startLocalTest():
-    filePath="genusspecies_data.txt"
+    filePath= "../InputResources/genusspecies_data.txt"
     se1= SuggestEngine(filePath,'FUZZY')
     se2= SuggestEngine(filePath,'ENCHANT')
     se3 = SuggestEngine(filePath, 'TRIE')
+    se4=  SuggestEngine(filePath,'TRIE_SERVER')
 
     word='zygopetalum wailesianum'
     print(datetime.now().strftime("%H:%M:%S") + " getting suggestions(FUZZY) for : " + word)
-    se1.suggest(word)
+    print(se1.suggest(word))
     print(datetime.now().strftime("%H:%M:%S") + " getting suggestions(ENCHANT) for : " + word)
-    se2.suggest(word)
+    print(se2.suggest(word))
     print(datetime.now().strftime("%H:%M:%S") + " getting suggestions(TRIE) for : " + word)
-    se3.suggest(word)
+    print(se3.suggest(word))
+    print(datetime.now().strftime("%H:%M:%S") + " Complete! ")
+    print(se3.suggest(word))
     print(datetime.now().strftime("%H:%M:%S") + " Complete! ")
 
 #startLocalTest()

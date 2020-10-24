@@ -2,6 +2,7 @@
 from tkinter import filedialog, simpledialog
 
 from ScienteficNameService.buildPlantDictionary import buildPlantDictionary
+from ScienteficNameService.snsEngine import SuggestEngine
 from imageTagExtractor import *
 from interactiveWords import markWordsInImage
 from outputArea import createOutputFrameToDisplayInfo, updateOutput
@@ -29,7 +30,7 @@ class ClassificationApp():
         # conf=0.90 ignore the words that have confidance more than 0.75%
         root.minimumConfidence = .99
         root.plantDictionaryPath="InputResources/genusspecies_data.txt"
-
+        root.suggestEngine=SuggestEngine(root.plantDictionaryPath,"TRIE_SERVER")
         #################################################################
 
         root.wm_geometry(root.geometry)
@@ -82,7 +83,7 @@ class ClassificationApp():
         def extractFromFolder():
             imageSourceFolder = filedialog.askdirectory() + "/"
             if len(imageSourceFolder)>2:
-                processImagesInTheFolder(imageSourceFolder, root.destinationFolder, root.minimumConfidence)
+                processImagesInTheFolder(root,imageSourceFolder, root.destinationFolder, root.minimumConfidence)
             pass
 
         def extractFromTxtFileUrls():
@@ -90,7 +91,7 @@ class ClassificationApp():
                 filetypes=(("TXT", "*.txt"), ("text", "*.txt"))
             )
             if len(txtFileContainingUrls)>0:
-                processImagesFromTheUrlsInTheTextFile(txtFileContainingUrls, root.destinationFolder, root.minimumConfidence)
+                processImagesFromTheUrlsInTheTextFile(root,txtFileContainingUrls, root.destinationFolder, root.minimumConfidence)
             pass
 
         def extractFromImagePath():
@@ -98,14 +99,14 @@ class ClassificationApp():
                 filetypes=(("PNG", "*.png"), ("JPG", "*.jpg"))
             )
             if len(singleImagePath)>1:
-                imagePath,sdb=extractAndProcessTagFromImagePath(singleImagePath,root.destinationFolder, root.minimumConfidence)
+                imagePath,sdb=extractAndProcessTagFromImagePath(root,singleImagePath,root.destinationFolder, root.minimumConfidence)
                 displayClassificationEditor(root,imagePath,sdb)
             pass
 
 
         def extractFromImageUrl():
             imageUrl = simpledialog.askstring("Input", "Enter the image URL: ",parent=root)
-            imagePath,sdb=extractAndProcessTagFromImagePath(imageUrl,root.destinationFolder, root.minimumConfidence)
+            imagePath,sdb=extractAndProcessTagFromImagePath(root,imageUrl,root.destinationFolder, root.minimumConfidence)
             displayClassificationEditor(root,imagePath,sdb)
             pass
 
@@ -114,7 +115,7 @@ class ClassificationApp():
             imagePath = filedialog.askopenfilename(
                 filetypes=(("PNG", "*.png"), ("JPG", "*.jpg"))
             )
-            sdb=processTagImage(imagePath,  root.minimumConfidence)
+            sdb=processTagImage(root,imagePath,  root.minimumConfidence)
             displayClassificationEditor(root,imagePath,sdb)
 
         def displayClassificationEditor(root,imagePath,sdb):

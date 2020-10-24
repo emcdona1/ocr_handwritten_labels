@@ -1,10 +1,8 @@
-from ScienteficNameService.sns import initializeDictionary
-from classificationGUI import ClassificationApp, processTagImage
-from unitTesting import startUnitTesting
+from UnitTesting.unitTesting import startUnitTesting
+from classificationGUI import ClassificationApp
 
 if __name__ == '__main__':
-    initializeDictionary("ScienteficNameService/test.txt")#genusspecies_data.txt")
-    startUnitTesting()
+    #startUnitTesting()
 
     classificationApp = ClassificationApp()
 

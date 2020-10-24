@@ -104,24 +104,24 @@ def saveTagImageToTheDestinationFolder(image, destinationFolder, fileName):
     cv2.imwrite(os.path.join(destinationFolder, fileName), image)
 
 # extract tag from larger image and save to destination and return destinaitonPath
-def extractAndProcessTagFromImagePath(imagePath, destinationFolder, minimumConfidence):
+def extractAndProcessTagFromImagePath(root,imagePath, destinationFolder, minimumConfidence):
     fileName = imagePath.split('/')[-1]
     tagImage=getTagImageFromTheImagePath(imagePath)
     saveTagImageToTheDestinationFolder(tagImage,destinationFolder,fileName)
     tagPath=os.path.join(destinationFolder, fileName)
-    sdb=processTagImage(tagPath, minimumConfidence)
+    sdb=processTagImage(root,tagPath, minimumConfidence)
     return tagPath,sdb
 
 
 # process images inside the folder
-def processImagesInTheFolder(imageFolder, destinationFolder, minimumConfidence):
+def processImagesInTheFolder(root,imageFolder, destinationFolder, minimumConfidence):
     for filename in sorted(os.listdir(imageFolder)):
         if filename.endswith(".jpg"):
-           processImageAndSaveToDatabase(os.path.join(imageFolder, filename),destinationFolder, minimumConfidence)
+           processImageAndSaveToDatabase(root,os.path.join(imageFolder, filename),destinationFolder, minimumConfidence)
 
 
 # process images from the provided urls inside the text file
-def processImagesFromTheUrlsInTheTextFile(textFile, destinationFolder, minimumConfidence):
+def processImagesFromTheUrlsInTheTextFile(root,textFile, destinationFolder, minimumConfidence):
     if not os.path.exists(destinationFolder):
         os.makedirs(destinationFolder)
 
@@ -129,8 +129,8 @@ def processImagesFromTheUrlsInTheTextFile(textFile, destinationFolder, minimumCo
         lines = f.readlines()
     for line in lines:
         url = line.replace("\n", "")
-        processImageAndSaveToDatabase(url, destinationFolder, minimumConfidence)
+        processImageAndSaveToDatabase(root,url, destinationFolder, minimumConfidence)
 
-def processImageAndSaveToDatabase(imagePath, destinationFolder, minimumConfidence):
-    tagPath, sdb = extractAndProcessTagFromImagePath(imagePath, destinationFolder,minimumConfidence)
+def processImageAndSaveToDatabase(root,imagePath, destinationFolder, minimumConfidence):
+    tagPath, sdb = extractAndProcessTagFromImagePath(root,imagePath, destinationFolder,minimumConfidence)
     saveTagtoDatabase(tagPath, sdb)

@@ -23,8 +23,8 @@ class WordSearcherWithTrieNode:
 
     def suggest(self, word):
         currentRow = range( len(word) + 1 )
-        maxCost = len(word) // 4 #dynamic value to adjust the max cost.
-        if (maxCost > 8): maxCost = 5
+        maxCost = len(word) // 2 #dynamic value to adjust the max cost.
+        if (maxCost > 8): maxCost = 8
         if (maxCost < 2): maxCost = 2
         results = []
 
