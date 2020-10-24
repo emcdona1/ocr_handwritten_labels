@@ -5,12 +5,12 @@ from detectWrongWords import detectWrongWords
 from initializeDataFromImage import initializeDataFromImage
 from wordCategories import autoClassifyWords
 
-def processTagImage(imagePath, minimumConfidence):
+def processTagImage(root,imagePath, minimumConfidence):
     print("tagProcessor.py- Now processing: "+imagePath)
     dataFrame=initializeDataFromImage(imagePath)
 
     sdb = getSequentialDataBlocks(dataFrame)
-    detectWrongWords(sdb, minimumConfidence)
+    detectWrongWords(root,sdb, minimumConfidence)
     try:
         #applyCorrection2(sdb)
         print("correction skipped for now")

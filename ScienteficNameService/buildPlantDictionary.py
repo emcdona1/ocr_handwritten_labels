@@ -11,14 +11,14 @@ def getSearchXpathResult(searchUrlWithKey, xpath):
     response = requests.get(searchUrlWithKey)
     doc = html.fromstring(response.content)
     print(searchUrlWithKey)
-    result = []
+    result = set()
     try:
         rawResult = doc.xpath(xpath)
         for g, s in zip(rawResult[0::2], rawResult[1::2]):
-            result.append(g+" "+s)
+            result.add(g+" "+s)
     except:
         print(" xpath error :")
-    return list(set(result))
+    return list(result)
 
 
 def buildPlantDictionary(destination):

@@ -1,6 +1,6 @@
 import os
 
-from ScienteficNameService.sns import getSuggestions
+from ScienteficNameService.snsEngine import getSuggestions, SuggestEngine
 from getWordsInformation import getDescriptionFromDataBlocks
 from tagProcessor import processTagImage
 
@@ -25,15 +25,18 @@ def compareActualAndExpected(ActualOutput,ExpectedOutput,filename):
 
 def startUnitTesting(imageFolder="UnitTesting/Images/",resultFolder="UnitTesting/ExpectedResults/"):
     totalFails=0
-    for filename in sorted(os.listdir(imageFolder)):
-        if filename.endswith(".jpg"):
-           sdb=processTagImage(os.path.join(imageFolder, filename), .99)
-           ActualOutput=getDescriptionFromDataBlocks("OCR",sdb)
-           ExpectedOutput=createOrGetExpectedOutputForFileName(resultFolder+filename+".txt",ActualOutput)
-        if not compareActualAndExpected(ActualOutput,ExpectedOutput,filename):
-            totalFails+=1
+    if 1==0:
+        for filename in sorted(os.listdir(imageFolder)):
+            if filename.endswith(".jpg"):
+               sdb=processTagImage(os.path.join(imageFolder, filename), .99)
+               ActualOutput=getDescriptionFromDataBlocks("OCR",sdb)
+               ExpectedOutput=createOrGetExpectedOutputForFileName(resultFolder+filename+".txt",ActualOutput)
+            if not compareActualAndExpected(ActualOutput,ExpectedOutput,filename):
+                totalFails+=1
 
-    if not getSuggestions("Aalius brevipe")[0]=='Aalius brevipes':
+
+    suggestEngine=SuggestEngine("Resources/test.txt","TRIE_SERVER")
+    if not suggestEngine.suggest("Aalius brevipe")[0]=='Aalius brevipes':
         totalFails+=1
         print("Suggestion failed!")
     print("Total Fails: "+str(totalFails))
