@@ -58,10 +58,12 @@ def getRunningServerEngineOrCreateLocalForSuggestion(plantDictionaryPath,engineT
     se=SuggestEngine("",'TRIE_SERVER')
     try:
         print("Checking if suggest server for SNS is available!")
-        if(se.suggest('') is None):
+        if(se.suggest('ServerTest') is None):
             print("suggest server (SNS) is not available!")
             print("Creating new SNS engine with the Engine Type of:",engineTypeToUseWhenNotFound)
             se=SuggestEngine(plantDictionaryPath,engineTypeToUseWhenNotFound)
+        else:
+            print("SNS server is available, SNS server would be used to suggest Scientific words!")
     except:
         print("Unknown error! when creating suggest engine for Scientific Names! creating new  with the Engine Type of:",engineTypeToUseWhenNotFound)
         se = SuggestEngine(plantDictionaryPath, engineTypeToUseWhenNotFound)
