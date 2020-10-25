@@ -11,10 +11,7 @@ SERVER_PORT_DEFAULT=1234
 
 
 def startSNSServer(wordFilePath=GENUS_SPECIES_FILE, hostName_server=socket.gethostname(), portNo_server=SERVER_PORT_DEFAULT, queueSize=3, bufferSize=1024):
-    print(datetime.now().strftime("%H:%M:%S") + " Initializing Suggest Engine(TRIE) with for filePath: "+wordFilePath)
     se = SuggestEngine(wordFilePath, 'TRIE')
-    print(datetime.now().strftime("%H:%M:%S") + " Suggest Engine Initialized!")
-
     s = socket.socket()
     s.bind((hostName_server, portNo_server))
     s.listen(queueSize)

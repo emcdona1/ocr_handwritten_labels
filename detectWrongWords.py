@@ -29,7 +29,8 @@ def checkAndSuggestEngWord(w):
 
 
 def detectWrongWords(root,sdb, minimumConfidence):
-    detectSuggestScienteficWords(root,sdb)
+    if not detectSuggestScienteficWords(root,sdb):
+        print("Could not suggest any scientific words!")
 
     rawText2 = getDescriptionFromDataBlocks("OCR", sdb, 0)
     personslist = get_personslist(rawText2)

@@ -22,9 +22,6 @@ class SuggestEngine:
         if ENGINE_NAME=='ENCHANT':
             self.suggestEngine = WordSearcherWithEnchant(WORDS_FILE_PATH)
 
-        if ENGINE_NAME=='TRIE_SERVER':
-            self.suggestEngine=WordSearcherWithTrieServer()
-
         print(datetime.now().strftime("%H:%M:%S") + " Suggest engine("+ENGINE_NAME+") initialized!")
 
     def suggest(self, word):
@@ -55,17 +52,17 @@ def startLocalTest():
     print(datetime.now().strftime("%H:%M:%S") + " Complete! ")
 
 def getRunningServerEngineOrCreateLocalForSuggestion(plantDictionaryPath,engineTypeToUseWhenNotFound):
-    se=SuggestEngine("",'TRIE_SERVER')
+    se=None
     try:
         print("Checking if suggest server for SNS is available!")
+        se=WordSearcherWithTrieServer()
         if(se.suggest('ServerTest') is None):
             print("suggest server (SNS) is not available!")
-            print("Creating new SNS engine with the Engine Type of:",engineTypeToUseWhenNotFound)
             se=SuggestEngine(plantDictionaryPath,engineTypeToUseWhenNotFound)
         else:
             print("SNS server is available, SNS server would be used to suggest Scientific words!")
     except:
-        print("Unknown error! when creating suggest engine for Scientific Names! creating new  with the Engine Type of:",engineTypeToUseWhenNotFound)
+        print("Unknown error! when initializing suggest engine! Trying again!")
         se = SuggestEngine(plantDictionaryPath, engineTypeToUseWhenNotFound)
 
     return se
