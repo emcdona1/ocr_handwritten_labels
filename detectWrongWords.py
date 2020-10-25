@@ -1,36 +1,26 @@
-import enchant
-import aspell
+
 from enchant.checker import SpellChecker
 
-from ScienteficNameService.DetectAndSuggestScienteficNames import detectAndSuggestScienteficWords
+from Detection_Date.DetectAndSuggestDates import DetectAndSuggestDates
+from Detection_ScienteficName.DetectAndSuggestScienteficNames import detectAndSuggestScienteficWords
 from applyCorrection import get_personslist
 from getWordsInformation import getDescriptionFromDataBlocks
 
-#plantDict = enchant.PyPWL("InputResources/genusspecies_data.txt")
-#plantDict=enchant.request_pwl_dict("InputResources/genusspecies_data.txt")
 from wordCategories import categories
 
 engSpellCheck = SpellChecker("en_US")
-'''
-def checkAndSuggestScienteficName(w):
-    if plantDict.check(w['description']):
-        w['category']='ScientificName'
-        w['suggestedDescription']=[w['description']]
-    else:
-        w['suggestedDescription'] = plantDict.suggest(w['description'])
-    pass
-'''
+
 def checkAndSuggestEngWord(w):
     if not engSpellCheck.check(w['description']):
         w['suggestedDescription'] = engSpellCheck.suggest(w['description'])
     pass
 
-
-
-
 def detectWrongWords(suggestEngine,sdb, minimumConfidence):
     if not detectAndSuggestScienteficWords(suggestEngine, sdb):
         print("Could not suggest any scientific words!")
+
+    if not DetectAndSuggestDates(sdb):
+        print("Could not detect Dates!")
 
     rawText2 = getDescriptionFromDataBlocks("OCR", sdb, 0)
     personslist = get_personslist(rawText2)

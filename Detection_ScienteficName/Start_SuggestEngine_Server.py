@@ -5,7 +5,7 @@ import socket
 import pickle
 from datetime import datetime
 
-from ScienteficNameService.Get_SuggestEngine import getLocalSuggestEngine
+from Detection_ScienteficName.Get_SuggestEngine import getLocalSuggestEngine
 
 GENUS_SPECIES_FILE="../InputResources/genusspecies_data.txt"
 SERVER_PORT_DEFAULT=1234

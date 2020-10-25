@@ -1,8 +1,8 @@
 import os
 from datetime import datetime
 
-from ScienteficNameService.SuggestEngine_Client import SuggestEngineClient
-from ScienteficNameService.Get_SuggestEngine import getLocalSuggestEngine
+from Detection_ScienteficName.SuggestEngine_Client import SuggestEngineClient
+from Detection_ScienteficName.Get_SuggestEngine import getLocalSuggestEngine
 from getWordsInformation import getDescriptionFromDataBlocks
 from tagProcessor import processTagImage
 

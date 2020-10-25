@@ -1,8 +1,9 @@
 
 from tkinter import filedialog, simpledialog
 
-from ScienteficNameService.BuildPlantDictionary import buildPlantDictionary
-from ScienteficNameService.Get_SuggestEngine import getRunningServerEngineOrCreateLocalForSuggestion
+from Detection_ScienteficName.BuildPlantDictionary import buildPlantDictionary
+from Detection_ScienteficName.Get_SuggestEngine import getRunningServerEngineOrCreateLocalForSuggestion, \
+    getLocalSuggestEngine
 from imageTagExtractor import *
 from interactiveWords import markWordsInImage
 from outputArea import createOutputFrameToDisplayInfo, updateOutput
@@ -28,7 +29,8 @@ class ClassificationApp():
         initializeTemplates() #initialize templates
         # conf=1 even if the confidence is 100% check the word if it is actual word or not
         # conf=0.90 ignore the words that have confidance more than 0.75%
-        root.minimumConfidence = .99
+        root.minimumConfidence = 1
+        #suggestEnginesInitializations
         root.plantDictionaryPath="InputResources/genusspecies_data.txt"
         root.suggestEngine=getRunningServerEngineOrCreateLocalForSuggestion(root.plantDictionaryPath,"TRIE")
         #################################################################

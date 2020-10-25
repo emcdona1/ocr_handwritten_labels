@@ -1,9 +1,9 @@
 '''would initialize engine of any kind, and would contain method to invoke the respective method'''
 from datetime import datetime
-from ScienteficNameService.SuggestEngine_Enchant import SuggestEngineWithEnchant
-from ScienteficNameService.SuggestEngine_Client import SuggestEngineClient
-from ScienteficNameService.SuggestEngine_Trie import WordSearcherWithTrieNode
-from ScienteficNameService.SuggestEngine_Fuzzy import SuggestEngineWithFuzzy
+from Detection_ScienteficName.SuggestEngine_Enchant import SuggestEngineWithEnchant
+from Detection_ScienteficName.SuggestEngine_Client import SuggestEngineClient
+from Detection_ScienteficName.SuggestEngine_Trie import WordSearcherWithTrieNode
+from Detection_ScienteficName.SuggestEngine_Fuzzy import SuggestEngineWithFuzzy
 
 def getLocalSuggestEngine(WORDS_FILE_PATH, ENGINE_NAME='TRIE'):
     suggestEngine = None
