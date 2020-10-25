@@ -1,13 +1,13 @@
 '''would initialize engine of any kind, and would contain method to invoke the respective method'''
 from datetime import datetime
-from Detection_ScienteficName.SuggestEngine_Enchant import SuggestEngineWithEnchant
-from Detection_ScienteficName.SuggestEngine_Client import SuggestEngineClient
-from Detection_ScienteficName.SuggestEngine_Trie import WordSearcherWithTrieNode
-from Detection_ScienteficName.SuggestEngine_Fuzzy import SuggestEngineWithFuzzy
+from SuggestEngine.SuggestEngine_Enchant import SuggestEngineWithEnchant
+from SuggestEngine.SuggestEngine_Client import SuggestEngineClient
+from SuggestEngine.SuggestEngine_Trie import WordSearcherWithTrieNode
+from SuggestEngine.SuggestEngine_Fuzzy import SuggestEngineWithFuzzy
 
-def getLocalSuggestEngine(WORDS_FILE_PATH, ENGINE_NAME='TRIE'):
+def GetLocalSuggestEngine(WORDS_FILE_PATH, ENGINE_NAME='TRIE'):
     suggestEngine = None
-    print(datetime.now().strftime("%H:%M:%S") + " Initializing Suggest engine("+ENGINE_NAME+") for path: " + WORDS_FILE_PATH)
+    print(datetime.now().strftime("%H:%M:%S") + " Initializing Suggest engine("+ENGINE_NAME+") for path: " + str(WORDS_FILE_PATH))
     if ENGINE_NAME=='TRIE':
         suggestEngine = WordSearcherWithTrieNode(WORDS_FILE_PATH)
     if ENGINE_NAME=='FUZZY':
@@ -18,7 +18,7 @@ def getLocalSuggestEngine(WORDS_FILE_PATH, ENGINE_NAME='TRIE'):
 
     return suggestEngine
 
-def getRunningServerEngineOrCreateLocalForSuggestion(plantDictionaryPath,engineTypeToUseWhenNotFound):
+def GetRunningServerEngineOrCreateLocalForSuggestion(plantDictionaryPath, engineTypeToUseWhenNotFound):
     se=None
     serverFound=False
     try:
@@ -32,7 +32,7 @@ def getRunningServerEngineOrCreateLocalForSuggestion(plantDictionaryPath,engineT
     except:
         print("Unknown error! when using the SNS server!")
     if not serverFound:
-        se = getLocalSuggestEngine(plantDictionaryPath, engineTypeToUseWhenNotFound)
+        se = GetLocalSuggestEngine(plantDictionaryPath, engineTypeToUseWhenNotFound)
     return se
 
 

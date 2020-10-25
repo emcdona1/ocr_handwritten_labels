@@ -5,11 +5,11 @@ from difflib import SequenceMatcher
 import re
 from transformers import AutoTokenizer, AutoModelWithLMHead, pipeline
 
-from getWordsInformation import getDescriptionFromDataBlocks
+from Helper.GetWordsInformation import GetDescriptionFromDataBlocks
 
 
 def applyCorrection(sdb):
-    maskedTextStream = getDescriptionFromDataBlocks("MASKED", sdb)
+    maskedTextStream = GetDescriptionFromDataBlocks("MASKED", sdb)
     print(maskedTextStream)
 
     tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
@@ -22,7 +22,7 @@ def applyCorrection(sdb):
 
 
 def applyCorrection2(sdb):
-    maskedTextStream=getDescriptionFromDataBlocks("MASKED", sdb)
+    maskedTextStream=GetDescriptionFromDataBlocks("MASKED", sdb)
     tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
     tokenized_text = tokenizer.tokenize(maskedTextStream)
     indexed_tokens = tokenizer.convert_tokens_to_ids(tokenized_text)

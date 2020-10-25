@@ -1,12 +1,12 @@
 import os
 from datetime import datetime
 
-from Detection_ScienteficName.SuggestEngine_Client import SuggestEngineClient
-from Detection_ScienteficName.Get_SuggestEngine import getLocalSuggestEngine
-from getWordsInformation import getDescriptionFromDataBlocks
-from tagProcessor import processTagImage
+from SuggestEngine.SuggestEngine_Client import SuggestEngineClient
+from SuggestEngine.Get_SuggestEngine import GetLocalSuggestEngine
+from Helper.GetWordsInformation import GetDescriptionFromDataBlocks
+from ImageProcessor.TagProcessorReadDetectCorrectClassifySave import processTagImage
 
-def createOrGetExpectedOutputForFileName(filePath,ActualOutput):
+def CreateOrGetExpectedOutputForFileName(filePath, ActualOutput):
     result=""
     try:
         file = open(filePath, 'r')
@@ -17,7 +17,7 @@ def createOrGetExpectedOutputForFileName(filePath,ActualOutput):
         file.close()
         return ActualOutput
 
-def compareActualAndExpected(ActualOutput,ExpectedOutput,filename):
+def CompareActualAndExpected(ActualOutput, ExpectedOutput, filename):
     if not ActualOutput==ExpectedOutput:
         print("\nUnitTest:("+filename+")")
         print("======Expected:=====\n"+ExpectedOutput)
@@ -25,23 +25,23 @@ def compareActualAndExpected(ActualOutput,ExpectedOutput,filename):
         return False
     return True
 
-def startUnitTesting(imageFolder="UnitTesting/Images/",resultFolder="UnitTesting/ExpectedResults/"):
-    suggestEngineTest("UnitTesting/Resources/test.txt")
-    suggestEngine = getLocalSuggestEngine("InputResources/genusspecies_data.txt", "TRIE")
+def StartUnitTesting(imageFolder="UnitTesting/Images/", resultFolder="UnitTesting/ExpectedResults/"):
+    SuggestEngineTest("UnitTesting/Resources/test.txt")
+    suggestEngine = GetLocalSuggestEngine("InputResources/genusspecies_data.txt", "TRIE")
     totalFails=0
     if 1==1:
         for filename in sorted(os.listdir(imageFolder)):
             if filename.endswith(".jpg"):
                sdb=processTagImage(suggestEngine,os.path.join(imageFolder, filename), .99)
-               ActualOutput=getDescriptionFromDataBlocks("OCR",sdb)
-               ExpectedOutput=createOrGetExpectedOutputForFileName(resultFolder+filename+".txt",ActualOutput)
-            if not compareActualAndExpected(ActualOutput,ExpectedOutput,filename):
+               ActualOutput=GetDescriptionFromDataBlocks("OCR", sdb)
+               ExpectedOutput=CreateOrGetExpectedOutputForFileName(resultFolder + filename + ".txt", ActualOutput)
+            if not CompareActualAndExpected(ActualOutput, ExpectedOutput, filename):
                 totalFails+=1
 
-def suggestEngineTest(filePath):
-    se1= getLocalSuggestEngine(filePath,'FUZZY')
-    se2= getLocalSuggestEngine(filePath,'ENCHANT')
-    se3 = getLocalSuggestEngine(filePath, 'TRIE')
+def SuggestEngineTest(filePath):
+    se1= GetLocalSuggestEngine(filePath, 'FUZZY')
+    se2= GetLocalSuggestEngine(filePath, 'ENCHANT')
+    se3 = GetLocalSuggestEngine(filePath, 'TRIE')
     se4 = SuggestEngineClient()
 
     word='zygopetalum wailesianum'

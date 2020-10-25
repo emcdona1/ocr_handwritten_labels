@@ -1,15 +1,14 @@
 
 from tkinter import filedialog, simpledialog
 
-from Detection_ScienteficName.BuildPlantDictionary import buildPlantDictionary
-from Detection_ScienteficName.Get_SuggestEngine import getRunningServerEngineOrCreateLocalForSuggestion, \
-    getLocalSuggestEngine
-from imageTagExtractor import *
-from interactiveWords import markWordsInImage
-from outputArea import createOutputFrameToDisplayInfo, updateOutput
-from scrollableImage import ScrollableImage
-from statusBar import *
-from wordCategories import initializeCategories
+from Helper.BuildPlantDictionary import buildPlantDictionary
+from SuggestEngine.Get_SuggestEngine import GetRunningServerEngineOrCreateLocalForSuggestion
+from ImageProcessor.ImageTagExtractor import *
+from ClassificationApp_GUI.InteractiveWords import MarkWordsInImage
+from ClassificationApp_GUI.OutputArea import CreateOutputFrameToDisplayInfo, UpdateOutput
+from ClassificationApp_GUI.ScrollableImage import ScrollableImage
+from ClassificationApp_GUI.StatusBar import *
+from Helper.WordCategories import initializeCategories
 
 
 class ClassificationApp():
@@ -32,7 +31,7 @@ class ClassificationApp():
         root.minimumConfidence = 1
         #suggestEnginesInitializations
         root.plantDictionaryPath="InputResources/genusspecies_data.txt"
-        root.suggestEngine=getRunningServerEngineOrCreateLocalForSuggestion(root.plantDictionaryPath,"TRIE")
+        root.suggestEngine=GetRunningServerEngineOrCreateLocalForSuggestion(root.plantDictionaryPath, "TRIE")
         #################################################################
 
         root.wm_geometry(root.geometry)
@@ -48,20 +47,20 @@ class ClassificationApp():
         #file
         smFile = Menu(root.menuBar)
         root.menuBar.add_cascade(label="File", menu=smFile)
-        smFile.add_command(label="Process Tag (As is)", command=lambda: openImage())
-        smFile.add_command(label="Extract and Process Image with Tag", command=lambda: extractFromImagePath())
-        smFile.add_command(label="Extract and Process Image url",command=lambda: extractFromImageUrl())
+        smFile.add_command(label="Process Tag (As is)", command=lambda: OpenImage())
+        smFile.add_command(label="Extract and Process Image with Tag", command=lambda: ExtractFromImagePath())
+        smFile.add_command(label="Extract and Process Image url",command=lambda: ExtractFromImageUrl())
 
         #ExtractTag
         smExtractTag = Menu(root.menuBar)
         root.menuBar.add_cascade(label="Batch Tag Extraction", menu=smExtractTag)
-        smExtractTag.add_command(label="Folder Containing Images",command=lambda: extractFromFolder())
-        smExtractTag.add_command(label="Text File With Urls of Images", command=lambda: extractFromTxtFileUrls())
+        smExtractTag.add_command(label="Folder Containing Images",command=lambda: ExtractFromFolder())
+        smExtractTag.add_command(label="Text File With Urls of Images", command=lambda: ExtractFromTxtFileUrls())
 
         #Tools
         smTools=Menu(root.menuBar)
         root.menuBar.add_cascade(label="Tools",menu=smTools)
-        smTools.add_command(label="Extract Tags To Destination: " + root.destinationFolder, command=lambda: changeDestination(0, smTools))
+        smTools.add_command(label="Extract Tags To Destination: " + root.destinationFolder, command=lambda: ChangeDestination(0, smTools))
         smTools.add_command(label="Build Plant Dictionary: "+ root.plantDictionaryPath ,command=lambda: buildPlantDictionary(root.plantDictionaryPath))
 
         # Image canvas area Row#0 both column
@@ -70,66 +69,66 @@ class ClassificationApp():
         # status bar and user input Row#1 two columns
         root.hoverStatusFrame = Frame(root)
         root.hoverStatusFrame.grid(row=1, column=0, sticky='nsew')
-        createStatusBar(root)
-        setStatus(root, "\n\t\t\t  Open image file to begin !")
+        CreateStatusBar(root)
+        SetStatus(root, "\n\t\t\t  Open image file to begin !")
 
         root.outputFrame = Frame(root)
         root.outputFrame.grid(row=2, column=0, sticky='nsew')
-        createOutputFrameToDisplayInfo(root, root.outputFrame)
+        CreateOutputFrameToDisplayInfo(root, root.outputFrame)
 
         #################################################################
-        def changeDestination(index,menuItem):
+        def ChangeDestination(index,menuItem):
             root.destinationFolder = filedialog.askdirectory()+"/"
             menuItem.entryconfigure(index,label="Extract Tags To Destination: "+ root.destinationFolder)
             pass
-        def extractFromFolder():
+        def ExtractFromFolder():
             imageSourceFolder = filedialog.askdirectory() + "/"
             if len(imageSourceFolder)>2:
-                processImagesInTheFolder(root.suggestEngine,imageSourceFolder, root.destinationFolder, root.minimumConfidence)
+                ProcessImagesInTheFolder(root.suggestEngine, imageSourceFolder, root.destinationFolder, root.minimumConfidence)
             pass
 
-        def extractFromTxtFileUrls():
+        def ExtractFromTxtFileUrls():
             txtFileContainingUrls = filedialog.askopenfilename(
                 filetypes=(("TXT", "*.txt"), ("text", "*.txt"))
             )
             if len(txtFileContainingUrls)>0:
-                processImagesFromTheUrlsInTheTextFile(root.suggestEngine,txtFileContainingUrls, root.destinationFolder, root.minimumConfidence)
+                ProcessImagesFromTheUrlsInTheTextFile(root.suggestEngine, txtFileContainingUrls, root.destinationFolder, root.minimumConfidence)
             pass
 
-        def extractFromImagePath():
+        def ExtractFromImagePath():
             singleImagePath = filedialog.askopenfilename(
                 filetypes=(("PNG", "*.png"), ("JPG", "*.jpg"))
             )
             if len(singleImagePath)>1:
-                imagePath,sdb=extractAndProcessTagFromImagePath(root.suggestEngine,singleImagePath,root.destinationFolder, root.minimumConfidence)
-                displayClassificationEditor(root,imagePath,sdb)
+                imagePath,sdb=ExtractAndProcessTagFromImagePath(root.suggestEngine, singleImagePath, root.destinationFolder, root.minimumConfidence)
+                DisplayClassificationEditor(root,imagePath,sdb)
             pass
 
 
-        def extractFromImageUrl():
+        def ExtractFromImageUrl():
             imageUrl = simpledialog.askstring("Input", "Enter the image URL: ",parent=root)
-            imagePath,sdb=extractAndProcessTagFromImagePath(root.suggestEngine,imageUrl,root.destinationFolder, root.minimumConfidence)
-            displayClassificationEditor(root,imagePath,sdb)
+            imagePath,sdb=ExtractAndProcessTagFromImagePath(root.suggestEngine, imageUrl, root.destinationFolder, root.minimumConfidence)
+            DisplayClassificationEditor(root,imagePath,sdb)
             pass
 
         #will not save to database
-        def openImage():
+        def OpenImage():
             imagePath = filedialog.askopenfilename(
                 filetypes=(("PNG", "*.png"), ("JPG", "*.jpg"))
             )
             sdb=processTagImage(root.suggestEngine,imagePath,  root.minimumConfidence)
-            displayClassificationEditor(root,imagePath,sdb)
+            DisplayClassificationEditor(root,imagePath,sdb)
 
-        def displayClassificationEditor(root,imagePath,sdb):
-            removeOldData(root)
+        def DisplayClassificationEditor(root,imagePath,sdb):
+            RemoveOldData(root)
             root.imagePath=imagePath
             root.sdb=sdb
             root.scrollableImage = ScrollableImage(root.imageCanvasFrame, root=root, scrollbarwidth=6, width=root.imageWidth,
                                                    height=root.imageHeight)
-            markWordsInImage(root)
-            updateOutput(root)
+            MarkWordsInImage(root)
+            UpdateOutput(root)
 
-        def removeOldData(root):
-            clearWordStatus(root)
+        def RemoveOldData(root):
+            ClearWordStatus(root)
 
         root.mainloop()

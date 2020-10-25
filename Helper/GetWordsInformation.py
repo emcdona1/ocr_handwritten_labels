@@ -7,12 +7,12 @@ import re
 
 
 
-def getCalssifiedCategoriesInOrder(mainCategories, classifiedCategories):
+def GetClassifiedCategoriesInOrder(mainCategories, classifiedCategories):
     categories=[]
     for c in mainCategories:
         if c in classifiedCategories:
             categories.append(c)
-    #add any user added categories at the end
+    #add any user added WordCategories at the end
     for c in sorted(classifiedCategories):
         if c not in categories:
             categories.append(c)
@@ -20,7 +20,7 @@ def getCalssifiedCategoriesInOrder(mainCategories, classifiedCategories):
     pass
 
 
-def getDescriptionFromDataBlocks(type, sdb, hint=0, mainCategories=[]):
+def GetDescriptionFromDataBlocks(type, sdb, hint=0, mainCategories=[]):
     text = ""
     if type=="corrected":
         for db in sdb:
@@ -50,10 +50,10 @@ def getDescriptionFromDataBlocks(type, sdb, hint=0, mainCategories=[]):
                     text += w['description'] + " "
 
     if type=="classified":
-        classifiedData = getClassifiedDataTuples(sdb)
+        classifiedData = GetClassifiedDataTuples(sdb)
         classifiedCategories=[c[0] for c in classifiedData]
         classifiedCategories = list(set(classifiedCategories))
-        categories=getCalssifiedCategoriesInOrder(mainCategories,classifiedCategories)
+        categories=GetClassifiedCategoriesInOrder(mainCategories, classifiedCategories)
         for c in categories:
             if not c=="Unknown" and "ignore" not in c:
                 text+=c+": "
@@ -61,9 +61,9 @@ def getDescriptionFromDataBlocks(type, sdb, hint=0, mainCategories=[]):
                     if(cd[0]==c):
                         text+=str(cd[1])+" "
                 text+="\n"
-    return replaceExtraSpace(text)
+    return ReplaceExtraSpace(text)
 
-def getClassifiedDataTuples(sdb):
+def GetClassifiedDataTuples(sdb):
     classifiedData = []
     for db in sdb:
         for w in db:
@@ -72,14 +72,14 @@ def getClassifiedDataTuples(sdb):
     return classifiedData
 
 
-def getWordByPolygon(dfs, polygon):
+def GetWordByPolygon(dfs, polygon):
     for index, w in dfs.iterrows():
         if index > 0:
             if w['polygon']==polygon:
                 return w
     return w
 
-def getWordByXY(dfs, x, y):
+def GetWordByXY(dfs, x, y):
     point = (x,y)
     point = Point(x, y)
     for index, w in dfs.iterrows():
@@ -89,7 +89,7 @@ def getWordByXY(dfs, x, y):
                 return w
     return None
 
-def replaceExtraSpace(text):
+def ReplaceExtraSpace(text):
     rep = {' \'': '\'',
            ' .':'.',
            ' ,':',',

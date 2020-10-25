@@ -1,10 +1,10 @@
 from tkinter import *
 from tkinter.scrolledtext import ScrolledText
 
-from getWordsInformation import getDescriptionFromDataBlocks
+from Helper.GetWordsInformation import GetDescriptionFromDataBlocks
 
 
-def createOutputFrameToDisplayInfo(root, outputFrame):
+def CreateOutputFrameToDisplayInfo(root, outputFrame):
     outputFrame.configure(padx=10,pady=10)
     root.outputField = ScrolledText(outputFrame,height=15, width=75)
 
@@ -13,21 +13,21 @@ def createOutputFrameToDisplayInfo(root, outputFrame):
     #textfield.grid(row=0,column=0,sticky="nsew")
 
 
-def updateOutput(root,**kw):
-    clearOutput(root)
+def UpdateOutput(root, **kw):
+    ClearOutput(root)
     type=kw.pop('type',"corrected")
     useHint=kw.pop('useHint',0)
     data= "######### Data #########\n" + \
-          getDescriptionFromDataBlocks(type, root.sdb, useHint)
+          GetDescriptionFromDataBlocks(type, root.sdb, useHint)
     classifiedData= "\n\n######### Classified Information #########\n" + \
-                    getDescriptionFromDataBlocks('classified', root.sdb, 1, root.categories)
-    appendToOutputArea(root, data)
-    appendToOutputArea(root, classifiedData)
+                    GetDescriptionFromDataBlocks('classified', root.sdb, 1, root.WordCategories)
+    AppendToOutputArea(root, data)
+    AppendToOutputArea(root, classifiedData)
 
-def appendToOutputArea(root, value):
+def AppendToOutputArea(root, value):
     root.outputField.insert('insert', value)
 
-def clearOutput(root):
+def ClearOutput(root):
     root.outputField.delete('1.0', END)
 
 
