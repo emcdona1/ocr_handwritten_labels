@@ -2,7 +2,7 @@
 from tkinter import filedialog, simpledialog
 
 from ScienteficNameService.buildPlantDictionary import buildPlantDictionary
-from ScienteficNameService.snsEngine import SuggestEngine
+from ScienteficNameService.snsEngine import SuggestEngine, getRunningServerEngineOrCreateLocalForSuggestion
 from imageTagExtractor import *
 from interactiveWords import markWordsInImage
 from outputArea import createOutputFrameToDisplayInfo, updateOutput
@@ -30,7 +30,7 @@ class ClassificationApp():
         # conf=0.90 ignore the words that have confidance more than 0.75%
         root.minimumConfidence = .99
         root.plantDictionaryPath="InputResources/genusspecies_data.txt"
-        root.suggestEngine=SuggestEngine(root.plantDictionaryPath,"TRIE_SERVER")
+        root.suggestEngine=getRunningServerEngineOrCreateLocalForSuggestion(root.plantDictionaryPath,"TRIE")
         #################################################################
 
         root.wm_geometry(root.geometry)

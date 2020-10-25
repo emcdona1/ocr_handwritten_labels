@@ -1,10 +1,16 @@
+''' would initialize Trie suggest engine, and would call snsEngine to get the services
+standalone server,
+'''
 import socket
 import pickle
 from datetime import datetime
 
 from ScienteficNameService.snsEngine import SuggestEngine
+GENUS_SPECIES_FILE="../InputResources/genusspecies_data.txt"
+SERVER_PORT_DEFAULT=1234
 
-def startSNSServer(wordFilePath, hostName_server=socket.gethostname(), portNo_server=1234, queueSize=3, bufferSize=1024):
+
+def startSNSServer(wordFilePath=GENUS_SPECIES_FILE, hostName_server=socket.gethostname(), portNo_server=SERVER_PORT_DEFAULT, queueSize=3, bufferSize=1024):
     print(datetime.now().strftime("%H:%M:%S") + " Initializing Suggest Engine(TRIE) with for filePath: "+wordFilePath)
     se = SuggestEngine(wordFilePath, 'TRIE')
     print(datetime.now().strftime("%H:%M:%S") + " Suggest Engine Initialized!")
@@ -32,4 +38,4 @@ def startSNSServer(wordFilePath, hostName_server=socket.gethostname(), portNo_se
                   break;
          c.close()
 
-startSNSServer("../InputResources/genusspecies_data.txt")
+startSNSServer()

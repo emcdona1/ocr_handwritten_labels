@@ -1,17 +1,20 @@
+'''would make connection to the server and send and receive the suggested word details'''
+''' max cost is determined at server side'''
 import socket
 import pickle
 from datetime import datetime
-
+SERVER_PORT_DEFAULT=1234
+CLIENT_PORT_DEFAULT=1235
 
 class WordSearcherWithTrieServer:
-    bufferSize=1024
-    queueSize=3
-    portNo_client=1235
-    portNo_server = 1234
+    bufferSize=None
+    queueSize=None
+    portNo_client=None
+    portNo_server = None
     hostName_client=None
     hostName_server=None
     s=None
-    def __init__(self, hostName=socket.gethostname(), portNo_client=1235,hostName_server=socket.gethostname(),portNo_server=1234, queueSize=3, bufferSize=1024):
+    def __init__(self, hostName=socket.gethostname(), portNo_client=CLIENT_PORT_DEFAULT,hostName_server=socket.gethostname(),portNo_server=SERVER_PORT_DEFAULT, queueSize=3, bufferSize=1024):
         self.bufferSize=bufferSize
         self.queueSize=queueSize
         self.portNo_client=portNo_client
@@ -31,3 +34,4 @@ class WordSearcherWithTrieServer:
             return result
         except:
             print(datetime.now().strftime("%H:%M:%S") + " Unknown Error at client side ")
+            return None

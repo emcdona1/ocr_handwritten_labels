@@ -2,6 +2,7 @@ import enchant
 import aspell
 from enchant.checker import SpellChecker
 
+from ScienteficNameService.detectSuggestScienteficNames import detectSuggestScienteficWords
 from applyCorrection import get_personslist
 from getWordsInformation import getDescriptionFromDataBlocks
 
@@ -24,51 +25,25 @@ def checkAndSuggestEngWord(w):
         w['suggestedDescription'] = engSpellCheck.suggest(w['description'])
     pass
 
-def setSuggestedDescriptionCategory(w,sd,c):
-    w['replacement'] = sd[0]
-    w['suggestedDescription'] = list(set(sd))
-    w['category'] = c
-    w['isIncorrectWord']= (not w['replacement']==w['description'])
-    if w['isIncorrectWord']:
-        w['color']="red"
+
 
 
 def detectWrongWords(root,sdb, minimumConfidence):
+    detectSuggestScienteficWords(root,sdb)
 
     rawText2 = getDescriptionFromDataBlocks("OCR", sdb, 0)
     personslist = get_personslist(rawText2)
     ignorewords =personslist+ ["!", ",", ".", "\"", "?", '(', ')', '*', '\'', '\n']
 
-    foundScientefic=False
-    lastWord={'index': -1}
     for db in sdb:
         for w in db:
-            if not foundScientefic:
-                if lastWord['index']>0:
-                    suggestions=root.suggestEngine.suggest(lastWord['description']+" "+w['description'])
-                    if len(suggestions)>0:
-                        gData=[s.split(" ")[0] for s in suggestions]
-                        sData = [s.split(" ")[1] for s in suggestions]
-                        setSuggestedDescriptionCategory(lastWord,gData,categories.ScientificName)
-                        setSuggestedDescriptionCategory(w, sData, categories.ScientificName)
-                        foundScientefic = True
-                        continue;
-                if not foundScientefic:
-                    suggestions=root.suggestEngine.suggest(w['description'])
-                    if len(suggestions)>0:
-                        w['suggestedDescription']=suggestions
-                        w['replacement']=suggestions[0]
-                        foundScientefic=True
-                        continue;
-                lastWord=w
-
-            if(w['description'].isupper()):
-                ignorewords.append(w['description'])
-                w['category']=categories.Description
-            if (w['index'] > 0  and w['description'] not in ignorewords and not w['description'].isnumeric() and w['confidence'] < minimumConfidence):
-                #checkAndSuggestScienteficName2(w)
-                if(len(w['suggestedDescription'])==0):
-                    checkAndSuggestEngWord(w)
-                if(len(w['suggestedDescription'])>0):
-                    w['isIncorrectWord'] = True
-                    w['color'] = "red"
+            if (w['category']==categories.Unknown):#known categories are already detected.
+                if(w['description'].isupper()):
+                    ignorewords.append(w['description'])
+                    w['category']=categories.Description
+                if (w['index'] > 0  and w['description'] not in ignorewords and not w['description'].isnumeric() and w['confidence'] < minimumConfidence):
+                    if(len(w['suggestedDescription'])==0):
+                        checkAndSuggestEngWord(w)
+                    if(len(w['suggestedDescription'])>0):
+                        w['isIncorrectWord'] = True
+                        w['color'] = "red"
