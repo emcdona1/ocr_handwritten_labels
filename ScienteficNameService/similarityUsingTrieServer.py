@@ -26,12 +26,10 @@ class WordSearcherWithTrieServer:
         try:
             self.s = socket.socket()
             self.s.connect((self.hostName_server, self.portNo_server))
-            print(datetime.now().strftime("%H:%M:%S") + " Sending :'"+word+"' to SNS server to get suggestions!")
             self.s.send(word.encode())
             result = pickle.loads(self.s.recv(self.portNo_client))
-            print(datetime.now().strftime("%H:%M:%S") + " Suggestions: "+str(result))
             self.s.close()
             return result
         except:
-            print(datetime.now().strftime("%H:%M:%S") + " Unknown Error at client side ")
+            print(datetime.now().strftime("%H:%M:%S") + " Unknown Error when getting suggestion from SNS server!")
             return None
