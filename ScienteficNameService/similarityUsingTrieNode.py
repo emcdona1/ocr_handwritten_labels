@@ -23,14 +23,12 @@ class WordSearcherWithTrieNode:
 
     def suggest(self, word):
         currentRow = range( len(word) + 1 )
-        maxCost = len(word) // 2 #dynamic value to adjust the max cost.
-        if (maxCost > 8): maxCost = 8
-        if (maxCost < 2): maxCost = 2
+        maxCost = min((len(word) // 3)+1,8) #dynamic value to adjust the max cost.
         results = []
 
         for letter in self.trie.children:
             self.searchRecursive(self.trie.children[letter], letter, word, currentRow,results, maxCost )
-        return [suggestCostTuple[0] for suggestCostTuple in sorted(results, key=lambda x:x[1])]
+        return [suggestCostTuple[0] for suggestCostTuple in sorted(results, key=lambda x:x[1])][:5]
 
     def searchRecursive(self, node, letter, word, previousRow, results, maxCost ):
 

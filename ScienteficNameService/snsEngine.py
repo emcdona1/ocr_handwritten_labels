@@ -1,4 +1,4 @@
-
+'''would initialize engine of any kind, and would contain method to invoke the respective method'''
 from datetime import datetime
 
 from ScienteficNameService.similarityUsingEnchant import WordSearcherWithEnchant
@@ -36,8 +36,6 @@ def getSuggestions(data,suggestEngine):
     print(datetime.now().strftime("%H:%M:%S") + " suggestions : " +str(suggestions))
     return suggestions
 
-
-
 def startLocalTest():
     filePath= "../InputResources/genusspecies_data.txt"
     se1= SuggestEngine(filePath,'FUZZY')
@@ -55,6 +53,22 @@ def startLocalTest():
     print(datetime.now().strftime("%H:%M:%S") + " Complete! ")
     print(se3.suggest(word))
     print(datetime.now().strftime("%H:%M:%S") + " Complete! ")
+
+def getRunningServerEngineOrCreateLocalForSuggestion(plantDictionaryPath,engineTypeToUseWhenNotFound):
+    se=SuggestEngine("",'TRIE_SERVER')
+    try:
+        print("Checking if suggest server for SNS is available!")
+        if(se.suggest('') is None):
+            print("suggest server (SNS) is not available!")
+            print("Creating new SNS engine with the Engine Type of:",engineTypeToUseWhenNotFound)
+            se=SuggestEngine(plantDictionaryPath,engineTypeToUseWhenNotFound)
+    except:
+        print("Unknown error! when creating suggest engine for Scientific Names! creating new  with the Engine Type of:",engineTypeToUseWhenNotFound)
+        se = SuggestEngine(plantDictionaryPath, engineTypeToUseWhenNotFound)
+
+    return se
+
+
 
 #startLocalTest()
 
