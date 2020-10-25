@@ -53,3 +53,18 @@ Collector: JULIAN A. STEYERMARK, COLLECTOR
 Red: OCR detected a word that is not present in the dictionary
 Green: OCR value and replacement are same
 Yellow: User manually updated the value.
+
+#Scientific Name Detection
+a server is created which would use Trie search algorithm to find the closest match
+when application opens, it tires to connect with server (SNS), 
+if SNS server is down, it will create local engine to detect scientific words
+Local engine can be any one of three,
+1. Trie fastest engine when searching
+2. Fuzzy fastest when loading the dictionary, but slower when searching
+3. Enchant medium when searching.
+
+To avoid the situation, when application can be closed and open multiple times, and do not want to load the dictionary each time, a server can run continuesly
+execute the server by running "startSnsServer.py"
+if server is used to detect the scientefic words, it will show the client-server communication in the console!
+
+
