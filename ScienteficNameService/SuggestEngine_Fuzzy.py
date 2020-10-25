@@ -1,7 +1,7 @@
 
 from fuzzywuzzy import process
 
-class WordSearcherWithFuzzy:
+class SuggestEngineWithFuzzy:
     fuzzyChoices=None
     def __init__(self, WORDS_FILE_PATH):
         with open(WORDS_FILE_PATH, "r") as f:

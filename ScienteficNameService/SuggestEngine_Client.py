@@ -6,7 +6,7 @@ from datetime import datetime
 SERVER_PORT_DEFAULT=1234
 CLIENT_PORT_DEFAULT=1235
 
-class WordSearcherWithTrieServer:
+class SuggestEngineClient:
     bufferSize=None
     queueSize=None
     portNo_client=None
