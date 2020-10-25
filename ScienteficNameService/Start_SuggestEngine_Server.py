@@ -5,13 +5,14 @@ import socket
 import pickle
 from datetime import datetime
 
-from ScienteficNameService.snsEngine import SuggestEngine
+from ScienteficNameService.Get_SuggestEngine import getLocalSuggestEngine
+
 GENUS_SPECIES_FILE="../InputResources/genusspecies_data.txt"
 SERVER_PORT_DEFAULT=1234
 
 
 def startSNSServer(wordFilePath=GENUS_SPECIES_FILE, hostName_server=socket.gethostname(), portNo_server=SERVER_PORT_DEFAULT, queueSize=3, bufferSize=1024):
-    se = SuggestEngine(wordFilePath, 'TRIE')
+    se = getLocalSuggestEngine(wordFilePath, 'TRIE')
     s = socket.socket()
     s.bind((hostName_server, portNo_server))
     s.listen(queueSize)

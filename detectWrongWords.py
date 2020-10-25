@@ -2,7 +2,7 @@ import enchant
 import aspell
 from enchant.checker import SpellChecker
 
-from ScienteficNameService.detectSuggestScienteficNames import detectSuggestScienteficWords
+from ScienteficNameService.DetectAndSuggestScienteficNames import detectAndSuggestScienteficWords
 from applyCorrection import get_personslist
 from getWordsInformation import getDescriptionFromDataBlocks
 
@@ -28,8 +28,8 @@ def checkAndSuggestEngWord(w):
 
 
 
-def detectWrongWords(root,sdb, minimumConfidence):
-    if not detectSuggestScienteficWords(root,sdb):
+def detectWrongWords(suggestEngine,sdb, minimumConfidence):
+    if not detectAndSuggestScienteficWords(suggestEngine, sdb):
         print("Could not suggest any scientific words!")
 
     rawText2 = getDescriptionFromDataBlocks("OCR", sdb, 0)
