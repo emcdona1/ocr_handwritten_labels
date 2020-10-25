@@ -26,17 +26,17 @@ class ScrollableImage(tkinter.Frame):
         self.h_scroll.config(command=self.cnvs.xview)
         # Assign the region to be scrolled
         self.cnvs.config(scrollregion=self.cnvs.bbox('all'))
-        self.cnvs.bind_class(self.cnvs, "<MouseWheel>", self.mouse_scroll)
+        self.cnvs.bind_class(self.cnvs, "<MouseWheel>", self.MouseScroll)
         root.image_window = self
         root.image_window.grid(row=0, column=0)
 
-    def updateImage(self, root):
+    def UpdateImage(self, root):
         self.image=root.image
         self.cnvs.image = self.cnvs.create_image(0, 0, anchor='nw', image=self.image)
         root.image_window = self
         root.image_window.grid(row=0, column=0)
 
-    def mouse_scroll(self, evt):
+    def MouseScroll(self, evt):
         if evt.state == 0 :
             self.cnvs.yview_scroll(-1*(evt.delta), 'units') # For MacOS
             self.cnvs.yview_scroll(int(-1*(evt.delta/120)), 'units') # For windows

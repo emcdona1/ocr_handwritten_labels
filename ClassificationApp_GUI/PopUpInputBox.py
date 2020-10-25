@@ -1,11 +1,11 @@
 from tkinter import *
 import tkinter.ttk as ttk
 
-from outputArea import updateOutput
-from wordOutline import updateWordOutline
+from ClassificationApp_GUI.OutputArea import UpdateOutput
+from ClassificationApp_GUI.WordOutline import UpdateWordOutline
 
 
-class popupWindow(object):
+class PopupWindow(object):
     def __init__(self, master, root,word, width, height):
         top = self.top = Toplevel(master)
         self.top.grab_set()
@@ -24,31 +24,31 @@ class popupWindow(object):
 
         self.l2 = Label(top,text="Category:", justify="left", font=("Courier", 16) )
         self.l2.pack(expand=0)
-        self.categoryEntry = ttk.Combobox(top, values=root.categories, width=100, font=("Courier", 16))
+        self.categoryEntry = ttk.Combobox(top, values=root.WordCategories, width=100, font=("Courier", 16))
         self.categoryEntry.set(word['category'])
         self.categoryEntry.pack(expand=1)
-        self.u = Button(self.top, text='Update', command=lambda: self.commandUpdte(root,word), activebackground='blue')
-        self.c = Button(self.top, text='Cancel', command=self.commandCancel, activebackground="blue")
+        self.u = Button(self.top, text='Update', command=lambda: self.CommandUpdate(root, word), activebackground='blue')
+        self.c = Button(self.top, text='Cancel', command=self.CommandCancel, activebackground="blue")
         self.u.pack(side=RIGHT)
         self.c.pack(side=RIGHT)
 
-    def commandUpdte(self,root, word):
-        self.replacementUpdate(word, self.replacementEntry.get(),root)
-        self.categoriesUpdate(root,word,self.categoryEntry.get() )
-        updateWordOutline(word)
-        updateOutput(root)
+    def CommandUpdate(self, root, word):
+        self.ReplacementUpdate(word, self.replacementEntry.get(), root)
+        self.CategoriesUpdate(root, word, self.categoryEntry.get())
+        UpdateWordOutline(word)
+        UpdateOutput(root)
         self.top.grab_release()
         self.top.destroy()
 
-    def categoriesUpdate(self,root, word, categoryValue):
+    def CategoriesUpdate(self, root, word, categoryValue):
         oldValue = word['category']
         if oldValue != categoryValue:
             word['category'] = categoryValue
-            if categoryValue not in root.categories:
-                root.categories.append(categoryValue)
+            if categoryValue not in root.WordCategories:
+                root.WordCategories.append(categoryValue)
 
 
-    def replacementUpdate(self,word, replacementValue,root):
+    def ReplacementUpdate(self, word, replacementValue, root):
         oldValue = word['replacement']
         if oldValue != replacementValue:
             word['replacement'] = replacementValue
@@ -61,6 +61,6 @@ class popupWindow(object):
             if oldValue not in word['suggestedDescription']:
                 word['suggestedDescription'].append(oldValue)
 
-    def commandCancel(self):
+    def CommandCancel(self):
         self.top.grab_release()
         self.top.destroy()

@@ -1,4 +1,4 @@
-def updateWordOutline(word):
+def UpdateWordOutline(word):
     if word['index']>0:
        if(word['color']=='green'):
             word['canvas'].itemconfigure(word['polygon'], outline='', width=1,

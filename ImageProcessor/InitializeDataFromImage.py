@@ -7,11 +7,11 @@ from google.cloud import vision
 from grpc._channel import _InactiveRpcError
 
 
-os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = r'serviceAccountToken.json'
+os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = r'ImageProcessor/serviceAccountToken.json'
 client = vision.ImageAnnotatorClient()
 
 
-def getWordProperties(index, text, full_text_annotation):
+def GetWordProperties(index, text, full_text_annotation):
     found = False
     t=ep=sp=confidence=""
     if index>0:#skip the evaluation of first node
@@ -37,7 +37,7 @@ def getWordProperties(index, text, full_text_annotation):
                 break;
     return t,confidence,sp,ep
 
-def initializeDataFromImage(imagePath):
+def InitializeDataFromImage(imagePath):
     global client
     with io.open(imagePath, 'rb') as image_file:
         content = image_file.read()
@@ -66,7 +66,7 @@ def initializeDataFromImage(imagePath):
     index = 0
     texts = response.text_annotations
     for text in texts:
-        tupleVertices, confidence, sp, ep = getWordProperties(index, text, response.full_text_annotation)
+        tupleVertices, confidence, sp, ep = GetWordProperties(index, text, response.full_text_annotation)
         dataFrame = dataFrame.append(
             dict(
                 index=index,
