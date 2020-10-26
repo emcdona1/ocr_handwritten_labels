@@ -11,7 +11,7 @@ GENUS_SPECIES_FILE= "InputResources/genusspecies_data.txt"
 SERVER_PORT_DEFAULT=1234
 
 
-def startSNSServer(wordFilePath=GENUS_SPECIES_FILE, hostName_server=socket.gethostname(), portNo_server=SERVER_PORT_DEFAULT, queueSize=3, bufferSize=1024):
+def startSNSServer(wordFilePath=GENUS_SPECIES_FILE, hostName_server=socket.gethostname(), portNo_server=SERVER_PORT_DEFAULT, queueSize=10, bufferSize=1024):
     se = GetLocalSuggestEngine(wordFilePath, 'TRIE')
     s = socket.socket()
     s.bind((hostName_server, portNo_server))

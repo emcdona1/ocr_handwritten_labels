@@ -112,24 +112,38 @@ def ExtractAndProcessTagFromImagePath(suggestEngine, imagePath, destinationFolde
     sdb=processTagImage(suggestEngine,tagPath, minimumConfidence)
     return tagPath,sdb
 
-
-# process images inside the folder
 def ProcessImagesInTheFolder(suggestEngine, imageFolder, destinationFolder, minimumConfidence):
+    filePaths=[]
     for filename in sorted(os.listdir(imageFolder)):
         if filename.endswith(".jpg"):
-           ProcessImageAndSaveToDatabase(suggestEngine, os.path.join(imageFolder, filename), destinationFolder, minimumConfidence)
+            filePaths.append(os.path.join(imageFolder, filename))
+    ProcessListOfImagePaths(suggestEngine,filePaths,destinationFolder,minimumConfidence)
+    pass
 
-
-# process images from the provided urls inside the text file
+# process images from the provided urls inside the text file (ParallelExecution With Thread)
 def ProcessImagesFromTheUrlsInTheTextFile(suggestEngine, textFile, destinationFolder, minimumConfidence):
-    if not os.path.exists(destinationFolder):
-        os.makedirs(destinationFolder)
-
+    filePaths = []
     with open(textFile) as f:
         lines = f.readlines()
     for line in lines:
         url = line.replace("\n", "")
-        ProcessImageAndSaveToDatabase(suggestEngine, url, destinationFolder, minimumConfidence)
+        filePaths.append(url)
+    ProcessListOfImagePaths(suggestEngine, filePaths, destinationFolder, minimumConfidence)
+    pass
+
+def ProcessListOfImagePaths(suggestEngine,filePaths,destinationFolder,minimumConfidence):
+    if not os.path.exists(destinationFolder):
+        os.makedirs(destinationFolder)
+    for filePath in filePaths:
+        ProcessImageAndSaveToDatabase(suggestEngine, filePath, destinationFolder, minimumConfidence)
+    pass
+
+def ProcessListOfImagePaths_Parallel(suggestEngine,filePaths,destinationFolder,minimumConfidence):
+    if not os.path.exists(destinationFolder):
+        os.makedirs(destinationFolder)
+    for filePath in filePaths:
+        ProcessImageAndSaveToDatabase(suggestEngine, filePath, destinationFolder, minimumConfidence)
+    pass
 
 def ProcessImageAndSaveToDatabase(suggestEngine, imagePath, destinationFolder, minimumConfidence):
     tagPath, sdb = ExtractAndProcessTagFromImagePath(suggestEngine, imagePath, destinationFolder, minimumConfidence)
