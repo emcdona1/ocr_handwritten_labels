@@ -7,7 +7,7 @@ def DetectRegistrationNumber(sdb):
         if (db[0]['category'] == WordCategories.Unknown):
             data=" ".join([w['description']for w in db])
             label = (''.join((filter(lambda i: i.isalpha(), data)))).lower()
-            digits=(''.join((filter(lambda i: i.isdigit(), data))))
+            digits="0"+(''.join((filter(lambda i: i.isdigit(), data))))
             if(label=="no" and int(digits)>0):
                 ApplyCategoryToWordBlock(db, WordCategories.RegistrationNumber)
                 return True

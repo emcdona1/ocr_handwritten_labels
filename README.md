@@ -65,6 +65,6 @@ Local engine can be any one of three,
 
 To avoid the situation, when application can be closed and open multiple times, and do not want to load the dictionary each time, a server can run continuesly
 execute the server by running "startSnsServer.py"
-if server is used to detect the scientefic words, it will show the client-server communication in the console!
+if server is used to detect the scientific words, it will show the client-server communication in the console!
 
 

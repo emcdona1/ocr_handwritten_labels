@@ -5,6 +5,7 @@ from shapely.geometry.polygon import Polygon
 
 import re
 
+from Helper.WordCategories import WordCategories
 
 
 def GetClassifiedCategoriesInOrder(mainCategories, classifiedCategories):
@@ -40,15 +41,6 @@ def GetDescriptionFromDataBlocks(type, sdb, hint=0, mainCategories=[]):
                 if w['index'] > 0:
                     text += w['description'] + " "
             text+="\n"
-
-    if type=="MASKED":
-        for db in sdb:
-            for w in db:
-                if w['isIncorrectWord']:
-                    text += "[MASK] "
-                else:
-                    text += w['description'] + " "
-
     if type=="classified":
         classifiedData = GetClassifiedDataTuples(sdb)
         classifiedCategories=[c[0] for c in classifiedData]
@@ -62,6 +54,23 @@ def GetDescriptionFromDataBlocks(type, sdb, hint=0, mainCategories=[]):
                         text+=str(cd[1])+" "
                 text+="\n"
     return ReplaceExtraSpace(text)
+
+def GetNotCategorizedOCRData(sdb,maskedIncorrect=True):
+    streamData=""
+    for db in sdb:
+        for w in db:
+            if w['index']>0 and w['category']==WordCategories.Unknown:
+                if (not w['isIncorrectWord']):
+                    streamData+= w['description'] + " "
+                else:
+                    if maskedIncorrect:
+                        if len(w['suggestedDescription'])>0:
+                            streamData+=w['suggestedDescription'][0]+" "
+                        else:
+                            streamData+= "[MASK] "
+                    else:
+                        streamData += w['replacement'] + " "
+    return ReplaceExtraSpace(streamData)
 
 def GetClassifiedDataTuples(sdb):
     classifiedData = []

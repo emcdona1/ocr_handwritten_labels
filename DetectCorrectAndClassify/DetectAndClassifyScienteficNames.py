@@ -49,12 +49,12 @@ def ApplySuggestionToWordBlocks(suggestions, words):
     if(len(words)==2):
         gData = [s.split(" ")[0] for s in suggestions]
         sData = [s.split(" ")[1] for s in suggestions]
-        AetSuggestedDescriptionCategory(words[0], gData, WordCategories.ScientificName)
-        AetSuggestedDescriptionCategory(words[1], sData, WordCategories.ScientificName)
+        AddSuggestedDescriptionAndCategory(words[0], gData, WordCategories.ScientificName)
+        AddSuggestedDescriptionAndCategory(words[1], sData, WordCategories.ScientificName)
     if(len(words)==1):
-        AetSuggestedDescriptionCategory(words[0], suggestions, WordCategories.ScientificName)
+        AddSuggestedDescriptionAndCategory(words[0], suggestions, WordCategories.ScientificName)
 
-def AetSuggestedDescriptionCategory(w, sd, c):
+def AddSuggestedDescriptionAndCategory(w, sd, c):
     w['category'] = c
     ApplySuggestions(w, sd)
 
