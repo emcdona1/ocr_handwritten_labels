@@ -6,7 +6,7 @@ def ApplySuggestions(w, suggestions):
     if w['isIncorrectWord']:
         w['color'] = "red"
         w['replacement'] = suggestions[0]
-        w['suggestedDescription'] = suggestions
+        w['suggestedDescription'] = list(set(suggestions))
 
 def ApplyCategoryToWordBlock(wordBlock, category, labelIndex=-1):
    for w in wordBlock:
