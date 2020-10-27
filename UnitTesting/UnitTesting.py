@@ -28,6 +28,8 @@ def CompareActualAndExpected(ActualOutput, ExpectedOutput, filename):
 def StartUnitTesting(imageFolder="UnitTesting/Images/", resultFolder="UnitTesting/ExpectedResults/"):
     SuggestEngineTest("UnitTesting/Resources/test.txt")
     suggestEngine = GetLocalSuggestEngine("InputResources/genusspecies_data.txt", "TRIE")
+    MONTH_FILEPATH = 'InputResources/Months.txt'
+    monthSuggestEngine = GetLocalSuggestEngine(MONTH_FILEPATH, 'TRIE')
     totalFails=0
     if 1==1:
         for filename in sorted(os.listdir(imageFolder)):
@@ -54,6 +56,8 @@ def SuggestEngineTest(filePath):
     print(datetime.now().strftime("%H:%M:%S") + " getting suggestions using SNS TCP Server! ")
     print(se4.suggest(word))
     print(datetime.now().strftime("%H:%M:%S") + " Complete! ")
+
+
 
 
 

@@ -1,14 +1,13 @@
 import sys
 
-from DetectionCorrectAndClassify.DetectAndClassify import DetectAndClassify
+from DetectCorrectAndClassify.DetectAndClassify import DetectAndClassify
 from Helper.AlgorithmicMethods import GetSequentialDataBlocks
 from ImageProcessor.InitializeDataFromImage import InitializeDataFromImage
 
 
 def processTagImage(suggestEngine,imagePath, minimumConfidence):
-    print("TagProcessorReadDetectCorrectClassifySave.py- Now processing: "+imagePath)
+    print("Processing: " + imagePath)
     dataFrame=InitializeDataFromImage(imagePath)
-
     sdb = GetSequentialDataBlocks(dataFrame)
     DetectAndClassify(suggestEngine,sdb, minimumConfidence)
     try:

@@ -15,8 +15,16 @@ def GetLocalSuggestEngine(WORDS_FILE_PATH, ENGINE_NAME='TRIE'):
     if ENGINE_NAME=='ENCHANT':
         suggestEngine = SuggestEngineWithEnchant(WORDS_FILE_PATH)
     print(datetime.now().strftime("%H:%M:%S") + " Suggest engine("+ENGINE_NAME+") initialized!")
-
     return suggestEngine
+
+monthSuggestEngine=None
+def GetMonthSuggestEngine(monthsFilePath='InputResources/Months.txt', ENGINE_NAME='TRIE'):
+    global monthSuggestEngine
+    if not monthSuggestEngine is None:
+        return monthSuggestEngine
+    else:
+        monthSuggestEngine=GetLocalSuggestEngine(monthsFilePath,ENGINE_NAME)
+        return monthSuggestEngine
 
 def GetRunningServerEngineOrCreateLocalForSuggestion(plantDictionaryPath, engineTypeToUseWhenNotFound):
     se=None
