@@ -1,6 +1,6 @@
 from enchant.checker import SpellChecker
 
-from DetectionCorrectAndClassify.ApplyCorrection import get_personslist
+from DetectCorrectAndClassify.ApplyCorrection import get_personslist
 from Helper.GetWordsInformation import GetDescriptionFromDataBlocks
 from Helper.WordAssignment import ApplySuggestions
 from Helper.WordCategories import WordCategories

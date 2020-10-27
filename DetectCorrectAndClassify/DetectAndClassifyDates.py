@@ -1,14 +1,11 @@
 
-from SuggestEngine.Get_SuggestEngine import GetLocalSuggestEngine
+from SuggestEngine.Get_SuggestEngine import GetMonthSuggestEngine
 from Helper.WordAssignment import ApplySuggestions
 from Helper.WordCategories import WordCategories
-suggestEngine=None
-MONTH_FILEPATH='InputResources/Months.txt'
 
-def DetectAndSuggestDates(sdb,filePath=MONTH_FILEPATH):
-    #global suggestEngine
-    #if suggestEngine is None:
-    suggestEngine=GetLocalSuggestEngine(filePath, 'TRIE')
+
+def DetectAndSuggestDates(sdb):
+    suggestEngine=GetMonthSuggestEngine()
     found=DetectAndSuggestDateByBlocks(suggestEngine, sdb[-3:])
     return found
 

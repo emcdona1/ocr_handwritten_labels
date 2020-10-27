@@ -25,7 +25,6 @@ class ClassificationApp():
         root.destinationFolder=os.path.expanduser("~/Desktop/")+"Tags/"
         root.geometry = str(root.windowWidth) + "x" + str(root.windowHeight)
         initializeCategories(root)
-        initializeTemplates() #initialize templates
         # conf=1 even if the confidence is 100% check the word if it is actual word or not
         # conf=0.90 ignore the words that have confidance more than 0.75%
         root.minimumConfidence = 1
@@ -78,8 +77,10 @@ class ClassificationApp():
 
         #################################################################
         def ChangeDestination(index,menuItem):
-            root.destinationFolder = filedialog.askdirectory()+"/"
-            menuItem.entryconfigure(index,label="Extract Tags To Destination: "+ root.destinationFolder)
+            val= filedialog.askdirectory()+"/"
+            if(len(val)>1):
+                root.destinationFolder
+                menuItem.entryconfigure(index,label="Extract Tags To Destination: "+ root.destinationFolder)
             pass
         def ExtractFromFolder():
             imageSourceFolder = filedialog.askdirectory() + "/"
@@ -100,14 +101,14 @@ class ClassificationApp():
                 filetypes=(("PNG", "*.png"), ("JPG", "*.jpg"))
             )
             if len(singleImagePath)>1:
-                imagePath,sdb=ExtractAndProcessTagFromImagePath(root.suggestEngine, singleImagePath, root.destinationFolder, root.minimumConfidence)
+                imagePath,sdb=ExtractAndProcessSingleImage(root.suggestEngine, singleImagePath, root.destinationFolder, root.minimumConfidence)
                 DisplayClassificationEditor(root,imagePath,sdb)
             pass
 
 
         def ExtractFromImageUrl():
             imageUrl = simpledialog.askstring("Input", "Enter the image URL: ",parent=root)
-            imagePath,sdb=ExtractAndProcessTagFromImagePath(root.suggestEngine, imageUrl, root.destinationFolder, root.minimumConfidence)
+            imagePath,sdb=ExtractAndProcessSingleImage(root.suggestEngine, imageUrl, root.destinationFolder, root.minimumConfidence)
             DisplayClassificationEditor(root,imagePath,sdb)
             pass
 
@@ -116,8 +117,9 @@ class ClassificationApp():
             imagePath = filedialog.askopenfilename(
                 filetypes=(("PNG", "*.png"), ("JPG", "*.jpg"))
             )
-            sdb=processTagImage(root.suggestEngine,imagePath,  root.minimumConfidence)
-            DisplayClassificationEditor(root,imagePath,sdb)
+            if len(imagePath)>1:
+                imagePath,sdb=ExtractAndProcessSingleImage(root.suggestEngine,imagePath,root.destinationFolder,  root.minimumConfidence)
+                DisplayClassificationEditor(root,imagePath,sdb)
 
         def DisplayClassificationEditor(root,imagePath,sdb):
             RemoveOldData(root)
