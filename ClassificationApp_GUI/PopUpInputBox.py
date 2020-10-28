@@ -3,6 +3,7 @@ import tkinter.ttk as ttk
 
 from ClassificationApp_GUI.OutputArea import UpdateOutput
 from ClassificationApp_GUI.WordOutline import UpdateWordOutline
+from DatabaseProcessing.DatabaseProcessing import UpdateTagInDatabase
 
 
 class PopupWindow(object):
@@ -37,6 +38,7 @@ class PopupWindow(object):
         self.CategoriesUpdate(root, word, self.categoryEntry.get())
         UpdateWordOutline(word)
         UpdateOutput(root)
+        UpdateTagInDatabase(root.tagId,root.sdb)
         self.top.grab_release()
         self.top.destroy()
 
@@ -44,6 +46,7 @@ class PopupWindow(object):
         oldValue = word['category']
         if oldValue != categoryValue:
             word['category'] = categoryValue
+            UpdateTagInDatabase(root.tagId, root.sdb)
             if categoryValue not in root.WordCategories:
                 root.WordCategories.append(categoryValue)
 

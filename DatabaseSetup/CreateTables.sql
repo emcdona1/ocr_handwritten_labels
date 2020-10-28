@@ -25,7 +25,7 @@ CREATE TABLE Tag_Word
     TagId BIGINT,
     OCRDescription VARCHAR(50) NOT NULL,
     Replacement VARCHAR(50) NOT NULL,
-    Suggestions VARCHAR(500) NOT NULL,
+    Suggestions VARCHAR(1000) NOT NULL,
     Vertices VARCHAR (50) NOT NULL,
     Category VARCHAR(50) NOT NULL,
     LastUpdatedTimeStap DATETIME DEFAULT NOW(),

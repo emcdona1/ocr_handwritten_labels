@@ -48,8 +48,6 @@ def ProcessListOfImagePaths_Sequential(suggestEngine, filePaths, destinationFold
         imgProcessorObj.processImage()
     pass
 
-
-
 def ProcessListOfImagePaths_Parallel(suggestEngine, filePaths, destinationFolder, minimumConfidence):
     num_cores = multiprocessing.cpu_count()
     if not os.path.exists(destinationFolder):
@@ -62,9 +60,8 @@ def ProcessListOfImagePaths_Parallel(suggestEngine, filePaths, destinationFolder
 
 
 def ExecuteProcessImage(obj):
-    result = None
     try:
-        result = obj.processImage()
+        return obj.processImage()
     except:
         print("Unknown Error when processing image!")
-    return result
+    return None

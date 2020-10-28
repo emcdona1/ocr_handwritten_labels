@@ -41,8 +41,8 @@ class ImageProcessor():
             ImageProcessor.InitializeTemplates()
     def processImage(self):
             self.tagPath, self.sdb = self.ExtractAndProcessTagFromImagePath()
-            SaveTagtoDatabase(self.tagPath, self.sdb)
-            return self.tagPath,self.sdb
+            self.tagId= SaveTagtoDatabase(self.tagPath, self.sdb)
+            return self.tagPath,self.sdb,self.tagId
 
     def GetCoordinatesOfMatchingTemplateBetweenTwoPoints(self,cv2RgbImg, templates, xStart, yStart, xEnd, yEnd, threshold):
         img_gray = cv2.cvtColor(cv2RgbImg, cv2.COLOR_BGR2GRAY)

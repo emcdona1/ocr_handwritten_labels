@@ -101,14 +101,16 @@ class ClassificationApp():
                 filetypes=(("PNG", "*.png"), ("JPG", "*.jpg"))
             )
             if len(singleImagePath)>1:
-                imagePath,sdb=ExtractAndProcessSingleImage(root.suggestEngine, singleImagePath, root.destinationFolder, root.minimumConfidence)
+                imagePath,sdb,tagId=ExtractAndProcessSingleImage(root.suggestEngine, singleImagePath, root.destinationFolder, root.minimumConfidence)
+                root.tagId=tagId
                 DisplayClassificationEditor(root,imagePath,sdb)
             pass
 
 
         def ExtractFromImageUrl():
             imageUrl = simpledialog.askstring("Input", "Enter the image URL: ",parent=root)
-            imagePath,sdb=ExtractAndProcessSingleImage(root.suggestEngine, imageUrl, root.destinationFolder, root.minimumConfidence)
+            imagePath,sdb,tagId=ExtractAndProcessSingleImage(root.suggestEngine, imageUrl, root.destinationFolder, root.minimumConfidence)
+            root.tagId=tagId
             DisplayClassificationEditor(root,imagePath,sdb)
             pass
 
@@ -118,7 +120,8 @@ class ClassificationApp():
                 filetypes=(("PNG", "*.png"), ("JPG", "*.jpg"))
             )
             if len(imagePath)>1:
-                imagePath,sdb=ExtractAndProcessSingleImage(root.suggestEngine,imagePath,root.destinationFolder,  root.minimumConfidence)
+                imagePath,sdb,tagId=ExtractAndProcessSingleImage(root.suggestEngine,imagePath,root.destinationFolder,  root.minimumConfidence)
+                root.tagId=tagId
                 DisplayClassificationEditor(root,imagePath,sdb)
 
         def DisplayClassificationEditor(root,imagePath,sdb):
