@@ -1,30 +1,36 @@
+import binascii
 
 import pandas as pd
-import binascii
+
 from DatabaseProcessing.GetConnection import Get_Connection
-def Call_SP_AddTag(importReference,tagName,originalImagePath,img,wordsInfoAsXML):
-    conn,isConnected = Get_Connection()
-    tagId=0
+
+
+def Call_SP_AddTag(importReference, tagName, originalImagePath, img, wordsInfoAsXML):
+    conn, isConnected = Get_Connection()
+    tagId = 0
     if isConnected:
         cursor = conn.cursor()
-        cursor.callproc('SP_AddTag', [importReference,tagName,originalImagePath,binascii.hexlify(img),wordsInfoAsXML, ])
-        result=cursor.stored_results()
+        cursor.callproc('SP_AddTag',
+                        [importReference, tagName, originalImagePath, binascii.hexlify(img), wordsInfoAsXML, ])
+        result = cursor.stored_results()
         conn.commit()
-        tagId=0
+        tagId = 0
         for r in result:
             for row in r:
-                tagId=row[0]
+                tagId = row[0]
         pass
     return tagId
 
-def Call_SP_UpdateTag(tagIdUpdate,wordsInfoAsXML):
+
+def Call_SP_UpdateTag(tagIdUpdate, wordsInfoAsXML):
     conn, isConnected = Get_Connection()
     if isConnected:
         cursor = conn.cursor()
-        cursor.callproc('SP_UpdateTag', [tagIdUpdate,wordsInfoAsXML, ])
+        cursor.callproc('SP_UpdateTag', [tagIdUpdate, wordsInfoAsXML, ])
         cursor.stored_results()
         conn.commit()
         pass
+
 
 def Call_SP_DeleteTag(tagIdDelete):
     conn, isConnected = Get_Connection()
@@ -34,12 +40,13 @@ def Call_SP_DeleteTag(tagIdDelete):
         conn.commit()
         pass
 
+
 def Call_SP_GetTagList(importReferenceIn):
     conn, isConnected = Get_Connection()
     if isConnected:
         cursor = conn.cursor()
         tagList = []
-        cursor.callproc('SP_GetTagList',[importReferenceIn,])
+        cursor.callproc('SP_GetTagList', [importReferenceIn, ])
         for result in cursor.stored_results():
             for row in result:
                 tag = {
@@ -53,13 +60,14 @@ def Call_SP_GetTagList(importReferenceIn):
         return tagList
         pass
 
+
 def Call_SP_GetTagDetail(tagIdIn):
     dataFrame = pd.DataFrame(columns=['index', 'isIncorrectWord'])
     conn, isConnected = Get_Connection()
     if isConnected:
         cursor = conn.cursor()
         cursor.callproc('SP_GetTagDetail', [tagIdIn, ])
-        image=None
+        image = None
         for result in cursor.stored_results():
             for row in result:
                 if not image is None:
@@ -76,20 +84,19 @@ def Call_SP_GetTagDetail(tagIdIn):
                             polygon=None,
                             canvas=None,
                             confidence=0.0,
-                            isIncorrectWord=(not row[1]==row[2]),
-                            color="green" if not row[1]==row[2] else "red"
+                            isIncorrectWord=(not row[1] == row[2]),
+                            color="green" if not row[1] == row[2] else "red"
                         ),
                         ignore_index=True
                     )
                 else:
                     image = row[0]
         cursor.close()
-        return image,dataFrame
+        return image, dataFrame
         pass
 
-#print(Call_SP_GetTagList(''))
+# print(Call_SP_GetTagList(''))
 
-#print(Call_SP_GetTagDetail(1))
-#print(Call_SP_DeleteTag(3))
-#print(Call_SP_GetTagDetail(3))
-
+# print(Call_SP_GetTagDetail(1))
+# print(Call_SP_DeleteTag(3))
+# print(Call_SP_GetTagDetail(3))

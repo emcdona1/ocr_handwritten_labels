@@ -1,5 +1,4 @@
-
 def ApplyCorrection(sdb):
-    #maskedTextStream = GetNotCategorizedOCRData(sdb, True)
-    #print(maskedTextStream)
+    # maskedTextStream = GetNotCategorizedOCRData(sdb, True)
+    # print(maskedTextStream)
     pass

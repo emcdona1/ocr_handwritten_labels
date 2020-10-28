@@ -8,7 +8,7 @@ from DetectCorrectAndClassify.DetectWrongWords import DetectWrongWords
 
 
 def DetectAndClassify(suggestEngine, sdb, minimumConfidence):
-    notDetected=0
+    notDetected = 0
     if not DetectTitle(sdb[:2]):
         ++notDetected
         print("Could not detect Title!")
@@ -29,11 +29,8 @@ def DetectAndClassify(suggestEngine, sdb, minimumConfidence):
         ++notDetected
         print("Could not suggest any scientific words!")
 
-    DetectWrongWords(sdb,minimumConfidence)
+    DetectWrongWords(sdb, minimumConfidence)
 
     if not DetectLocation(notDetected, sdb):
         ++notDetected
         print("Could not detect location!")
-
-
-
