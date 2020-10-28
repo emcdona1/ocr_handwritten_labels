@@ -31,7 +31,7 @@ DELIMITER $$
     )
     VALUES(
 		@newTagId,
-        img
+        UNHEX(Img)
     );
     
 	SET @COUNT = (SELECT EXTRACTVALUE(wordsInfoAsXML,'COUNT(//words/word)'));
@@ -48,7 +48,7 @@ DELIMITER $$
         SET @I = @I + 1;
   
     END WHILE;
-    
+    SELECT @newTagId;
  END $$ 
  
  DELIMITER $$
@@ -89,7 +89,7 @@ DELIMITER $$
 	IN importReferenceIn nvarchar(32)
  )
  BEGIN
-	SELECT * FROM Tag_info ti
+	SELECT ti.TagId, ti.ImportReference,TagName,OriginalImagePath FROM Tag_info ti
 	WHERE importReferenceIn in ('', ti.ImportReference);
  END $$
  
@@ -98,8 +98,8 @@ DELIMITER $$
 	IN tagIdIn BIGINT
  )
  BEGIN
-	SELECT * FROM Tag_Image ti WHERE ti.TagId=tagidIn;
-    SELECT * FROM Tag_Word w Where w.TagId=tagIdIn;
+	SELECT ti.img FROM Tag_Image ti WHERE ti.TagId=tagidIn;
+    SELECT WordId,OCRDescription,Replacement,Suggestions,Vertices,Category FROM Tag_Word w Where w.TagId=tagIdIn;
  END $$
 
 DELIMITER ;
