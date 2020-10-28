@@ -1,10 +1,7 @@
-import os
 from string import ascii_lowercase
 
-from lxml import html
 import requests
-
-
+from lxml import html
 
 
 def getSearchXpathResult(searchUrlWithKey, xpath):
@@ -15,25 +12,25 @@ def getSearchXpathResult(searchUrlWithKey, xpath):
     try:
         rawResult = doc.xpath(xpath)
         for g, s in zip(rawResult[0::2], rawResult[1::2]):
-            result.add(g+" "+s)
+            result.add(g + " " + s)
     except:
         print(" xpath error :")
     return list(result)
 
 
 def buildPlantDictionary(destination):
-    searchurl="http://www.theplantlist.org/tpl1.1/search?q="
-    xpath="//td/a/span[@class='name']/*[@class='genus' or @class='species']/text()"
+    searchurl = "http://www.theplantlist.org/tpl1.1/search?q="
+    xpath = "//td/a/span[@class='name']/*[@class='genus' or @class='species']/text()"
     f = open(destination, "w")
     for a in ascii_lowercase:
         for b in ascii_lowercase:
             for c in ascii_lowercase:
-                searchKey=str(a)+str(b)+str(c)+"*"
-                result=getSearchXpathResult(searchurl + searchKey, xpath)
+                searchKey = str(a) + str(b) + str(c) + "*"
+                result = getSearchXpathResult(searchurl + searchKey, xpath)
                 if (len(result) > 0):
                     for r in result:
-                        f.write(r+"\n")
+                        f.write(r + "\n")
     f.close()
 
-#destinationFolder=os.path.expanduser("~/Desktop/")+"plantDictionary/"
-#buildPlantDictionary("InputResources/genusspecies_data.txt")
+# destinationFolder=os.path.expanduser("~/Desktop/")+"plantDictionary/"
+# buildPlantDictionary("InputResources/genusspecies_data.txt")

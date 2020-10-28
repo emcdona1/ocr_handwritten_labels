@@ -48,6 +48,7 @@ def ProcessListOfImagePaths_Sequential(suggestEngine, filePaths, destinationFold
         imgProcessorObj.processImage()
     pass
 
+
 def ProcessListOfImagePaths_Parallel(suggestEngine, filePaths, destinationFolder, minimumConfidence):
     num_cores = multiprocessing.cpu_count()
     if not os.path.exists(destinationFolder):

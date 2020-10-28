@@ -1,5 +1,5 @@
-from tkinter import *
 import tkinter.ttk as ttk
+from tkinter import *
 
 from ClassificationApp_GUI.OutputArea import UpdateOutput
 from ClassificationApp_GUI.WordOutline import UpdateWordOutline
@@ -7,7 +7,7 @@ from DatabaseProcessing.DatabaseProcessing import UpdateTagInDatabase
 
 
 class PopupWindow(object):
-    def __init__(self, master, root,word, width, height):
+    def __init__(self, master, root, word, width, height):
         top = self.top = Toplevel(master)
         self.top.grab_set()
 
@@ -19,16 +19,17 @@ class PopupWindow(object):
                                   + "\nConfidence:" + '{: <18}'.format(str(word['confidence']))
                                   + "\n\nReplacement:", justify="left", font=("Courier", 16))
         self.l1.pack(expand=1)
-        self.replacementEntry = ttk.Combobox(top, values=word['suggestedDescription'],width=100,font=("Courier", 16) )
+        self.replacementEntry = ttk.Combobox(top, values=word['suggestedDescription'], width=100, font=("Courier", 16))
         self.replacementEntry.set(word['replacement'])
         self.replacementEntry.pack(expand=1)
 
-        self.l2 = Label(top,text="Category:", justify="left", font=("Courier", 16) )
+        self.l2 = Label(top, text="Category:", justify="left", font=("Courier", 16))
         self.l2.pack(expand=0)
         self.categoryEntry = ttk.Combobox(top, values=root.WordCategories, width=100, font=("Courier", 16))
         self.categoryEntry.set(word['category'])
         self.categoryEntry.pack(expand=1)
-        self.u = Button(self.top, text='Update', command=lambda: self.CommandUpdate(root, word), activebackground='blue')
+        self.u = Button(self.top, text='Update', command=lambda: self.CommandUpdate(root, word),
+                        activebackground='blue')
         self.c = Button(self.top, text='Cancel', command=self.CommandCancel, activebackground="blue")
         self.u.pack(side=RIGHT)
         self.c.pack(side=RIGHT)
@@ -38,7 +39,7 @@ class PopupWindow(object):
         self.CategoriesUpdate(root, word, self.categoryEntry.get())
         UpdateWordOutline(word)
         UpdateOutput(root)
-        UpdateTagInDatabase(root.tagId,root.sdb)
+        UpdateTagInDatabase(root.tagId, root.sdb)
         self.top.grab_release()
         self.top.destroy()
 
@@ -49,7 +50,6 @@ class PopupWindow(object):
             UpdateTagInDatabase(root.tagId, root.sdb)
             if categoryValue not in root.WordCategories:
                 root.WordCategories.append(categoryValue)
-
 
     def ReplacementUpdate(self, word, replacementValue, root):
         oldValue = word['replacement']

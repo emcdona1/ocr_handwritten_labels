@@ -1,37 +1,31 @@
-
-from SuggestEngine.Get_SuggestEngine import GetMonthSuggestEngine
 from Helper.WordAssignment import ApplySuggestions
 from Helper.WordCategories import WordCategories
+from SuggestEngine.Get_SuggestEngine import GetMonthSuggestEngine
 
 
 def DetectAndSuggestDates(sdb):
-    suggestEngine=GetMonthSuggestEngine()
-    found=DetectAndSuggestDateByBlocks(suggestEngine, sdb[-3:])
+    suggestEngine = GetMonthSuggestEngine()
+    found = DetectAndSuggestDateByBlocks(suggestEngine, sdb[-3:])
     return found
 
+
 def DetectAndSuggestDateByBlocks(suggestEngine, sdb):
-    for db in sdb:#check on first four block
-        if(db[0]['category']==WordCategories.Unknown):
-            data=" ".join([w['description']for w in db])
+    for db in sdb:  # check on first four block
+        if (db[0]['category'] == WordCategories.Unknown):
+            data = " ".join([w['description'] for w in db])
             monthPart = (''.join((filter(lambda i: i.isalpha(), data)))).lower()
-            if (2<len(monthPart)<10 and len(monthPart)>2):
+            if (2 < len(monthPart) < 10 and len(monthPart) > 2):
                 suggestions = suggestEngine.suggest(monthPart)
-                if (not(suggestions is None)) and len(suggestions)>0:#month is found
-                    for w in db:#loop again to find exact month word
-                        masked= "".join(['M' if c.isalpha() else c for c in w['description']])
+                if (not (suggestions is None)) and len(suggestions) > 0:  # month is found
+                    for w in db:  # loop again to find exact month word
+                        masked = "".join(['M' if c.isalpha() else c for c in w['description']])
                         while 'MM' in masked:
-                            masked=masked.replace('MM','M')
+                            masked = masked.replace('MM', 'M')
                         w['category'] = WordCategories.Date
-                        suggestions=[masked.replace('M',s) for s in suggestions]
+                        suggestions = [masked.replace('M', s) for s in suggestions]
                         ApplySuggestions(w, suggestions)
                     return True
     return False
 
-
-
-
-
-
-
-#suggestEngine=GetLocalSuggestEngine("../InputResources/Months.txt", 'TRIE')
-#print(suggestEngine.suggest("jun",0))
+# suggestEngine=GetLocalSuggestEngine("../InputResources/Months.txt", 'TRIE')
+# print(suggestEngine.suggest("jun",0))

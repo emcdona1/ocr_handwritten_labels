@@ -1,5 +1,5 @@
 class WordCategories(object):
-    plantDict = ""#enchant.PyPWL("InputResources/genusspecies_data.txt")
+    plantDict = ""  # enchant.PyPWL("InputResources/genusspecies_data.txt")
     Unknown = "Unknown"
     ScientificName = "Scientific Name"
     Date = "Date"
@@ -9,12 +9,13 @@ class WordCategories(object):
     Collector = "Collector"
     Location = "Location"
 
-from string import digits
-categories=WordCategories()
+
+categories = WordCategories()
+
 
 def initializeCategories(root):
-    root.WordCategories=[]
-    #the order of the items will be used when displaying the classified data
+    root.WordCategories = []
+    # the order of the items will be used when displaying the classified data
     root.WordCategories.append(WordCategories.Title)
     root.WordCategories.append(WordCategories.ScientificName)
     root.WordCategories.append(WordCategories.RegistrationNumber)

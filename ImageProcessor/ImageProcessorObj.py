@@ -2,20 +2,23 @@
 
 import os
 from urllib.request import urlopen
-import numpy as np
+
 import cv2
+import numpy as np
 
 from DatabaseProcessing.DatabaseProcessing import SaveTagtoDatabase
 from ImageProcessor.TagProcessorReadDetectCorrectClassifySave import processTagImage
 
-class ImageProcessor():
-    topLeftTemplates=[]
-    leftEdgeTemplates=[]
-    topEdgeTemplates=[]
 
-    templatesInitialized=False
+class ImageProcessor():
+    topLeftTemplates = []
+    leftEdgeTemplates = []
+    topEdgeTemplates = []
+
+    templatesInitialized = False
+
     @classmethod
-    def GetTemplateDataListFromFolder(cls,folderPath):
+    def GetTemplateDataListFromFolder(cls, folderPath):
         template_data = []
         for filename in sorted(os.listdir(folderPath)):
             if filename.endswith(".png"):
@@ -24,27 +27,30 @@ class ImageProcessor():
         return template_data
 
     @classmethod
-    def InitializeTemplates(cls,tlt="./InputResources/EdgeTemplates/topleft/",let="./InputResources/EdgeTemplates/left/",tet="./InputResources/EdgeTemplates/top/"):
+    def InitializeTemplates(cls, tlt="./InputResources/EdgeTemplates/topleft/",
+                            let="./InputResources/EdgeTemplates/left/", tet="./InputResources/EdgeTemplates/top/"):
         cls.topLeftTemplates = cls.GetTemplateDataListFromFolder(tlt)
         cls.leftEdgeTemplates = cls.GetTemplateDataListFromFolder(let)
         cls.topEdgeTemplates = cls.GetTemplateDataListFromFolder(tet)
-        cls.templatesInitialized=True
+        cls.templatesInitialized = True
 
-    def __init__(self, suggestEngine,imagePath,destinationFolder,minimumConfidence):
+    def __init__(self, suggestEngine, imagePath, destinationFolder, minimumConfidence):
         self.suggestEngine = suggestEngine
         self.imagePath = imagePath
-        self.destinationFolder=destinationFolder
-        self.minimumConfidence=minimumConfidence
-        self.tagPath=None
-        self.sdb=None
+        self.destinationFolder = destinationFolder
+        self.minimumConfidence = minimumConfidence
+        self.tagPath = None
+        self.sdb = None
         if not ImageProcessor.templatesInitialized:
             ImageProcessor.InitializeTemplates()
-    def processImage(self):
-            self.tagPath, self.sdb = self.ExtractAndProcessTagFromImagePath()
-            self.tagId= SaveTagtoDatabase(self.tagPath, self.sdb)
-            return self.tagPath,self.sdb,self.tagId
 
-    def GetCoordinatesOfMatchingTemplateBetweenTwoPoints(self,cv2RgbImg, templates, xStart, yStart, xEnd, yEnd, threshold):
+    def processImage(self):
+        self.tagPath, self.sdb = self.ExtractAndProcessTagFromImagePath()
+        self.tagId = SaveTagtoDatabase(self.tagPath, self.sdb)
+        return self.tagPath, self.sdb, self.tagId
+
+    def GetCoordinatesOfMatchingTemplateBetweenTwoPoints(self, cv2RgbImg, templates, xStart, yStart, xEnd, yEnd,
+                                                         threshold):
         img_gray = cv2.cvtColor(cv2RgbImg, cv2.COLOR_BGR2GRAY)
         for img_template in templates:
             w, h = img_template.shape[::-1]
@@ -59,13 +65,13 @@ class ImageProcessor():
         return xStart, yStart
 
     # saves tag image to the destination folder
-    def SaveTagImageToTheDestinationFolder(self,image, fileName):
+    def SaveTagImageToTheDestinationFolder(self, image, fileName):
         if not os.path.exists(self.destinationFolder):
             os.makedirs(self.destinationFolder)
         cv2.imwrite(os.path.join(self.destinationFolder, fileName), image)
 
     # main method to find the tag on image, returns tag image from larger image
-    def GetTagImageFromTheLargeImage(self,img_rgb):
+    def GetTagImageFromTheLargeImage(self, img_rgb):
         tagMaxArea = 50000
         tagMinArea = 10000
         ih, iw, oc = img_rgb.shape
@@ -80,19 +86,22 @@ class ImageProcessor():
         yStart = int(ih // 1.5)
         yEnd = int(ih - ih // 10)
         # try to find the top left corner edge
-        x, y = self.GetCoordinatesOfMatchingTemplateBetweenTwoPoints(img_rgb,ImageProcessor.topLeftTemplates, xStart, yStart, xEnd, yEnd,
-                                                                0.8)
+        x, y = self.GetCoordinatesOfMatchingTemplateBetweenTwoPoints(img_rgb, ImageProcessor.topLeftTemplates, xStart,
+                                                                     yStart, xEnd, yEnd,
+                                                                     0.8)
         # if top left corner is not found
         if y == yStart and x == xStart:
             # try to find left edge
-            x, yTemp = self.GetCoordinatesOfMatchingTemplateBetweenTwoPoints(img_rgb, ImageProcessor.leftEdgeTemplates, xStart, yStart,
-                                                                        xEnd,
-                                                                        yEnd, 0.7)
+            x, yTemp = self.GetCoordinatesOfMatchingTemplateBetweenTwoPoints(img_rgb, ImageProcessor.leftEdgeTemplates,
+                                                                             xStart, yStart,
+                                                                             xEnd,
+                                                                             yEnd, 0.7)
             # try to find top edge
             xStart = x - int(iw // 50)  # start little left of the left edge
             yEnd = yTemp + int(iw // 50)  # End little down of the yValue value found on the edge
-            xTemp, y = self.GetCoordinatesOfMatchingTemplateBetweenTwoPoints(img_rgb, ImageProcessor.topEdgeTemplates, xStart, yStart, xEnd,
-                                                                        yEnd, 0.7)
+            xTemp, y = self.GetCoordinatesOfMatchingTemplateBetweenTwoPoints(img_rgb, ImageProcessor.topEdgeTemplates,
+                                                                             xStart, yStart, xEnd,
+                                                                             yEnd, 0.7)
         # possibly no tag is found then return original image and starting point
         tagArea = int((ih - y) * (iw - x))
         if (iw - x) < (ih - y) or tagArea < tagMinArea:
@@ -101,7 +110,7 @@ class ImageProcessor():
         else:
             return img_rgb[y:ih, x:iw]
 
-    def GetTagImageFromTheImagePath(self,imagePath):
+    def GetTagImageFromTheImagePath(self, imagePath):
         img_rgb = ""
         if ":" in imagePath:
             resp = urlopen(imagePath)
@@ -113,8 +122,8 @@ class ImageProcessor():
 
     def ExtractAndProcessTagFromImagePath(self):
         fileName = self.imagePath.split('/')[-1]
-        tagImage=self.GetTagImageFromTheImagePath(self.imagePath)
+        tagImage = self.GetTagImageFromTheImagePath(self.imagePath)
         self.SaveTagImageToTheDestinationFolder(tagImage, fileName)
-        tagPath=os.path.join(self.destinationFolder, fileName)
-        sdb=processTagImage(self.suggestEngine,tagPath, self.minimumConfidence)
-        return tagPath,sdb
+        tagPath = os.path.join(self.destinationFolder, fileName)
+        sdb = processTagImage(self.suggestEngine, tagPath, self.minimumConfidence)
+        return tagPath, sdb
