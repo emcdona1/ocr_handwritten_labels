@@ -46,8 +46,8 @@ class ImageProcessor():
 
     def processImage(self):
         self.tagPath, self.sdb = self.ExtractAndProcessTagFromImagePath()
-        self.tagId = SaveTagtoDatabase(self.tagPath, self.sdb)
-        return self.tagPath, self.sdb, self.tagId
+        self.tagId = SaveTagtoDatabase(self.imagePath, self.sdb)
+        return self.tagPath, self.sdb,self.tagId
 
     def GetCoordinatesOfMatchingTemplateBetweenTwoPoints(self, cv2RgbImg, templates, xStart, yStart, xEnd, yEnd,
                                                          threshold):

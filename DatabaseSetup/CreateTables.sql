@@ -1,33 +1,24 @@
 DROP TABLE IF EXISTS Tag_Word;
-DROP TABLE IF EXISTS Tag_Image;
 DROP TABLE IF EXISTS Tag_Info;
 
 CREATE TABLE Tag_Info
 (
 	TagId BIGINT PRIMARY KEY NOT NULL AUTO_INCREMENT,
-    ImportReference NVARCHAR(32) NOT NULL,
-    ImportedDate DATETIME NOT NULL DEFAULT NOW(),
-    LastUpdatedTimeStap DATETIME DEFAULT NOW(),
-    TagName VARCHAR(50) NOT NULL,
-    OriginalImagePath VARCHAR(255) NOT NULL
-);
-
-CREATE TABLE Tag_Image
-(
-	TagId BIGINT,
-	Img LONGBLOB NOT NULL,
-    FOREIGN KEY(TagId) REFERENCES Tag_Info(TagId)
+    ImportDate VARCHAR(10) NOT NULL DEFAULT (DATE_FORMAT(NOW(),'%Y-%m-%d')),
+    OriginalImagePath VARCHAR(255) NOT NULL,
+    Img LONGBLOB NOT NULL
 );
 
 CREATE TABLE Tag_Word
 (
-	WordId BIGINT PRIMARY KEY NOT NULL AUTO_INCREMENT,
     TagId BIGINT,
+    WordIndex INT,
     OCRDescription VARCHAR(50) NOT NULL,
     Replacement VARCHAR(50) NOT NULL,
     Suggestions VARCHAR(1000) NOT NULL,
     Vertices VARCHAR (50) NOT NULL,
     Category VARCHAR(50) NOT NULL,
     LastUpdatedTimeStap DATETIME DEFAULT NOW(),
-    FOREIGN KEY(TagId) REFERENCES Tag_Info(TagId)
+    FOREIGN KEY(TagId) REFERENCES Tag_Info(TagId),
+    PRIMARY KEY (TagId, WordIndex)
 );

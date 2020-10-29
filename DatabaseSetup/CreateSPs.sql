@@ -1,6 +1,6 @@
 
 DROP PROCEDURE IF EXISTS SP_AddTag;
-DROP PROCEDURE IF EXISTS SP_UpdateTag;
+DROP PROCEDURE IF EXISTS SP_UpdateWord;
 DROP PROCEDURE IF EXISTS SP_DeleteTag;
 DROP PROCEDURE IF EXISTS SP_GetTagList;
 DROP PROCEDURE IF EXISTS SP_GetTagDetail;
@@ -8,70 +8,47 @@ DROP PROCEDURE IF EXISTS SP_GetTagDetail;
 DELIMITER $$
 
  CREATE PROCEDURE SP_AddTag(
-	IN importReference VARCHAR (32),
-    IN tagName VARCHAR(255),
-    IN originalImagePath VARCHAR(255),
-    IN img LONGBLOB,
-    IN wordsInfoAsXML LONGTEXT
+	IN originalImagePathIn VARCHAR(255),
+    IN imgIn LONGBLOB,
+    IN wordsInfoAsXMLIn LONGTEXT
  )
  BEGIN
-	INSERT INTO Tag_Info(
-		ImportReference,
-		TagName,
-		OriginalImagePath)
-	VALUES (
-		importReference,
-		TagName,
-		OriginalImagePath);
+	INSERT INTO Tag_Info(OriginalImagePath,Img)
+	VALUES (originalImagePathIn,UNHEX(imgIn));
 	SELECT LAST_INSERT_ID() INTO @newTagId;
     
-    INSERT INTO Tag_Image(
-		TagId,
-        Img
-    )
-    VALUES(
-		@newTagId,
-        UNHEX(Img)
-    );
-    
-	SET @COUNT = (SELECT EXTRACTVALUE(wordsInfoAsXML,'COUNT(//words/word)'));
+	SET @COUNT = (SELECT EXTRACTVALUE(wordsInfoAsXMLIn,'COUNT(//words/word)'));
     SET @I = 1;
     WHILE(@I <= @COUNT) DO
 
-        INSERT INTO Tag_Word(TagId,OCRDescription,Replacement,Suggestions,Vertices,Category)
+        INSERT INTO Tag_Word(TagId,WordIndex,OCRDescription,Replacement,Suggestions,Vertices,Category)
         SELECT  @newTagId,
-				ExtractValue(wordsInfoAsXML,CONCAT('/words/word[',@I,']/description')),
-                ExtractValue(wordsInfoAsXML,CONCAT('/words/word[',@I,']/replacement')),
-                ExtractValue(wordsInfoAsXML,CONCAT('/words/word[',@I,']/suggestions')),
-                ExtractValue(wordsInfoAsXML,CONCAT('/words/word[',@I,']/vertices')),
-                ExtractValue(wordsInfoAsXML,CONCAT('/words/word[',@I,']/category'));
+				ExtractValue(wordsInfoAsXMLIn,CONCAT('/words/word[',@I,']/wordIndex')),
+				ExtractValue(wordsInfoAsXMLIn,CONCAT('/words/word[',@I,']/description')),
+                ExtractValue(wordsInfoAsXMLIn,CONCAT('/words/word[',@I,']/replacement')),
+                ExtractValue(wordsInfoAsXMLIn,CONCAT('/words/word[',@I,']/suggestions')),
+                ExtractValue(wordsInfoAsXMLIn,CONCAT('/words/word[',@I,']/vertices')),
+                ExtractValue(wordsInfoAsXMLIn,CONCAT('/words/word[',@I,']/category'));
         SET @I = @I + 1;
-  
     END WHILE;
     SELECT @newTagId;
  END $$ 
  
  DELIMITER $$
- CREATE PROCEDURE SP_UpdateTag(
-	IN tagIdUpdate BIGINT,
-    IN wordsInfoAsXML LONGTEXT
+ CREATE PROCEDURE SP_UpdateWord(
+	IN tagidIn BIGINT,
+	IN wordIndexIn INT,
+	IN replacementIn VARCHAR(50) ,
+    IN suggestionsIn VARCHAR(1000),
+    IN categoryIn VARCHAR(50)
  )
  BEGIN
-	SELECT tagIdUpdate into @updateTagId;
-	DELETE FROM Tag_Word WHERE TagId=@updateTagId;
-    SET @COUNT = (SELECT EXTRACTVALUE(wordsInfoAsXML,'COUNT(//words/word)'));
-    SET @I = 1;
-    WHILE(@I <= @COUNT) DO
-        INSERT INTO Tag_Word(TagId,OCRDescription,Replacement,Suggestions,Vertices,Category)
-        SELECT  @updateTagId,
-				ExtractValue(wordsInfoAsXML,CONCAT('/words/word[',@I,']/description')),
-                ExtractValue(wordsInfoAsXML,CONCAT('/words/word[',@I,']/replacement')),
-                ExtractValue(wordsInfoAsXML,CONCAT('/words/word[',@I,']/suggestions')),
-                ExtractValue(wordsInfoAsXML,CONCAT('/words/word[',@I,']/vertices')),
-                ExtractValue(wordsInfoAsXML,CONCAT('/words/word[',@I,']/category'));
-        SET @I = @I + 1;
-  
-    END WHILE;
+	UPDATE Tag_Word tw
+    SET tw.Replacement=replacementIn,
+		tw.Suggestions=suggestionsIn,
+		tw.Category=categoryIn,
+        tw.LastUpdatedTimeStap=NOW()
+    WHERE tw.WordIndex=wordIndexIn and tw.TagId=tagidIn;
  END $$
  
 DELIMITER $$
@@ -80,17 +57,16 @@ DELIMITER $$
  )
  BEGIN
 	DELETE FROM Tag_Word WHERE TagId=tagIdDelete;
-    DELETE FROM Tag_Image WHERE TagId=tagIdDelete;
     DELETE FROM Tag_Info WHERE TagId=tagIdDelete;
 END $$
 
 DELIMITER $$
  CREATE PROCEDURE SP_GetTagList(
-	IN importReferenceIn nvarchar(32)
+	IN  importDateIn VARCHAR(10) 
  )
  BEGIN
-	SELECT ti.TagId, ti.ImportReference,TagName,OriginalImagePath FROM Tag_info ti
-	WHERE importReferenceIn in ('', ti.ImportReference);
+	SELECT ti.TagId, ti.ImportDate,ti.OriginalImagePath FROM Tag_info ti
+	WHERE ti.ImportDate in ('', ti.importDateIn);
  END $$
  
  DELIMITER $$
@@ -98,8 +74,8 @@ DELIMITER $$
 	IN tagIdIn BIGINT
  )
  BEGIN
-	SELECT ti.img FROM Tag_Image ti WHERE ti.TagId=tagidIn;
-    SELECT WordId,OCRDescription,Replacement,Suggestions,Vertices,Category FROM Tag_Word w Where w.TagId=tagIdIn;
+	SELECT ti.Img FROM Tag_Info ti WHERE ti.TagId=tagidIn;
+	SELECT WordIndex,OCRDescription,Replacement,Suggestions,Vertices,Category FROM Tag_Word w Where w.TagId=tagIdIn;
  END $$
-
+ 
 DELIMITER ;
