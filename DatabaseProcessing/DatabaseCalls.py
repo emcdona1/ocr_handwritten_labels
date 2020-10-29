@@ -5,13 +5,13 @@ import pandas as pd
 from DatabaseProcessing.GetConnection import Get_Connection
 
 
-def Call_SP_AddTag(importReference, tagName, originalImagePath, img, wordsInfoAsXML):
+def Call_SP_AddTag(originalImagePath, img, wordsInfoAsXML):
     conn, isConnected = Get_Connection()
     tagId = 0
     if isConnected:
         cursor = conn.cursor()
         cursor.callproc('SP_AddTag',
-                        [importReference, tagName, originalImagePath, binascii.hexlify(img), wordsInfoAsXML, ])
+                        [originalImagePath, binascii.hexlify(img), wordsInfoAsXML, ])
         result = cursor.stored_results()
         conn.commit()
         tagId = 0
@@ -22,11 +22,11 @@ def Call_SP_AddTag(importReference, tagName, originalImagePath, img, wordsInfoAs
     return tagId
 
 
-def Call_SP_UpdateTag(tagIdUpdate, wordsInfoAsXML):
+def Call_SP_UpdateWord(tagId,wordIndexUpdate, replacement,suggestions,category):
     conn, isConnected = Get_Connection()
     if isConnected:
         cursor = conn.cursor()
-        cursor.callproc('SP_UpdateTag', [tagIdUpdate, wordsInfoAsXML, ])
+        cursor.callproc('SP_UpdateWord', [tagId,wordIndexUpdate, replacement, str(suggestions),category,])
         cursor.stored_results()
         conn.commit()
         pass
@@ -41,19 +41,18 @@ def Call_SP_DeleteTag(tagIdDelete):
         pass
 
 
-def Call_SP_GetTagList(importReferenceIn):
+def Call_SP_GetTagList(importDateIn):
     conn, isConnected = Get_Connection()
     if isConnected:
         cursor = conn.cursor()
         tagList = []
-        cursor.callproc('SP_GetTagList', [importReferenceIn, ])
+        cursor.callproc('SP_GetTagList', [importDateIn, ])
         for result in cursor.stored_results():
             for row in result:
                 tag = {
                     'TagId': row[0],
-                    'ImportReference': row[1],
-                    'TagName': row[2],
-                    'OriginalImagePath': row[3]
+                    'ImportDate': row[1],
+                    'OriginalImagePath': row[2]
                 }
                 tagList.append(tag)
         cursor.close()

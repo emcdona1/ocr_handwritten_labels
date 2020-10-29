@@ -1,4 +1,4 @@
-from DatabaseProcessing.DatabaseCalls import Call_SP_AddTag, Call_SP_UpdateTag
+from DatabaseProcessing.DatabaseCalls import Call_SP_AddTag, Call_SP_UpdateWord
 
 
 def LoadTagFromDatabase():
@@ -7,21 +7,17 @@ def LoadTagFromDatabase():
     return tagId, df
     pass
 
-
 def SaveTagtoDatabase(imagePath, df):
     imgBlob = GetBlob(imagePath)
-    tagName = imagePath.split("/")[-1]
     wordsInfoAsXML = DFToWordsXml(df)
     return Call_SP_AddTag(
-        importReference='codeTest2132',
-        tagName=tagName,
         originalImagePath=imagePath,
         img=imgBlob,
         wordsInfoAsXML=wordsInfoAsXML)
 
 
-def UpdateTagInDatabase(tagId, df):
-    Call_SP_UpdateTag(tagId, (DFToWordsXml(df)))
+def UpdateWordInDatabase(tagId,word):
+    Call_SP_UpdateWord(tagId,word['index'], word['replacement'],word['suggestedDescription'],word['category'])
     pass
 
 
@@ -37,6 +33,7 @@ def DFToWordsXml(df):
         for w in ws:
             if w['index'] > 0:
                 xml.append('<word>')
+                xml.append('<wordIndex>' + str(w['index']) + '</wordIndex>')
                 xml.append('<description>' + str(w['description']) + '</description>')
                 xml.append('<replacement>' + str(w['replacement']) + '</replacement>')
                 xml.append('<vertices>' + str(w['tupleVertices']) + '</vertices>')

@@ -3,6 +3,7 @@ import os
 
 from joblib import Parallel
 
+from DatabaseProcessing.DatabaseCalls import Call_SP_GetTagDetail
 from ImageProcessor.ImageProcessorObj import ImageProcessor
 
 ParallelProcessingSizeDefault = 4
@@ -38,6 +39,7 @@ def ProcessImagesFromTheUrlsInTheTextFile(suggestEngine, textFile, destinationFo
 def ExtractAndProcessSingleImage(suggestEngine, imagePath, destinationFolder, minimumConfidence):
     imgProcessorObj = ImageProcessor(suggestEngine, imagePath, destinationFolder, minimumConfidence)
     return imgProcessorObj.processImage()
+
 
 
 def ProcessListOfImagePaths_Sequential(suggestEngine, filePaths, destinationFolder, minimumConfidence):
