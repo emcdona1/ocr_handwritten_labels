@@ -9,20 +9,20 @@ from ImageProcessor.ImageProcessorObj import ImageProcessor
 ParallelProcessingSizeDefault = 4
 
 
-def ProcessImagesInTheFolder(suggestEngine, imageFolder, destinationFolder, minimumConfidence):
+def ProcessImagesInTheFolder(suggestEngine, imageFolder, minimumConfidence,extractTag):
     filePaths = []
     for filename in sorted(os.listdir(imageFolder)):
         if filename.endswith(".jpg"):
             filePaths.append(os.path.join(imageFolder, filename))
     try:
-        ProcessListOfImagePaths_Parallel(suggestEngine, filePaths, destinationFolder, minimumConfidence)
+        ProcessListOfImagePaths_Parallel(suggestEngine, filePaths, minimumConfidence,extractTag)
     except:
         pass
     pass
 
 
 # process images from the provided urls inside the text file (ParallelExecution With Thread)
-def ProcessImagesFromTheUrlsInTheTextFile(suggestEngine, textFile, destinationFolder, minimumConfidence):
+def ProcessImagesFromTheUrlsInTheTextFile(suggestEngine, textFile, minimumConfidence,extractTag):
     filePaths = []
     with open(textFile) as f:
         lines = f.readlines()
@@ -30,32 +30,29 @@ def ProcessImagesFromTheUrlsInTheTextFile(suggestEngine, textFile, destinationFo
         url = line.replace("\n", "")
         filePaths.append(url)
     try:
-        ProcessListOfImagePaths_Parallel(suggestEngine, filePaths, destinationFolder, minimumConfidence)
+        ProcessListOfImagePaths_Parallel(suggestEngine, filePaths, minimumConfidence,extractTag)
     except:
         pass
     pass
 
 
-def ExtractAndProcessSingleImage(suggestEngine, imagePath, destinationFolder, minimumConfidence):
-    imgProcessorObj = ImageProcessor(suggestEngine, imagePath, destinationFolder, minimumConfidence)
+def ExtractAndProcessSingleImage(suggestEngine, imagePath, minimumConfidence,extractTag):
+    imgProcessorObj = ImageProcessor(suggestEngine, imagePath, minimumConfidence,extractTag)
     return imgProcessorObj.processImage()
 
 
 
-def ProcessListOfImagePaths_Sequential(suggestEngine, filePaths, destinationFolder, minimumConfidence):
-    if not os.path.exists(destinationFolder):
-        os.makedirs(destinationFolder)
+def ProcessListOfImagePaths_Sequential(suggestEngine, filePaths, minimumConfidence,extractTag):
+
     for filePath in filePaths:
-        imgProcessorObj = ImageProcessor(suggestEngine, filePath, destinationFolder, minimumConfidence)
+        imgProcessorObj = ImageProcessor(suggestEngine, filePath, minimumConfidence,extractTag)
         imgProcessorObj.processImage()
     pass
 
 
-def ProcessListOfImagePaths_Parallel(suggestEngine, filePaths, destinationFolder, minimumConfidence):
+def ProcessListOfImagePaths_Parallel(suggestEngine, filePaths, minimumConfidence,extractTag):
     num_cores = multiprocessing.cpu_count()
-    if not os.path.exists(destinationFolder):
-        os.makedirs(destinationFolder)
-    imgObjListToprocess = [ImageProcessor(suggestEngine, filePath, destinationFolder, minimumConfidence) for filePath in
+    imgObjListToprocess = [ImageProcessor(suggestEngine, filePath, minimumConfidence,extractTag) for filePath in
                            filePaths]
     executor = Parallel(n_jobs=num_cores, backend='multiprocessing')
     tasks = (ExecuteProcessImage(imgObj) for imgObj in imgObjListToprocess)

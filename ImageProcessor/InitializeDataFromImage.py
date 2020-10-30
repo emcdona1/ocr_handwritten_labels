@@ -38,11 +38,9 @@ def GetWordProperties(index, text, full_text_annotation):
     return t, confidence, sp, ep
 
 
-def InitializeDataFromImage(imagePath):
+def InitializeDataFromImage(imageContent):
     global client
-    with io.open(imagePath, 'rb') as image_file:
-        content = image_file.read()
-    image = vision.types.Image(content=content)
+    image = vision.types.Image(content=imageContent)
     # response = client.text_detection(image=image)
     response = None
     try:

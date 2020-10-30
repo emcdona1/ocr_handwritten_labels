@@ -23,7 +23,6 @@ class ClassificationApp():
         root.popUpWidth = 350
         root.popUpHeight = 200
         root.wordHovered = ""
-        root.destinationFolder = os.path.expanduser("~/Desktop/") + "Tags/"
         root.geometry = str(root.windowWidth) + "x" + str(root.windowHeight)
         initializeCategories(root)
         # conf=1 even if the confidence is 100% check the word if it is actual word or not
@@ -47,21 +46,19 @@ class ClassificationApp():
         # file
         smFile = Menu(root.menuBar)
         root.menuBar.add_cascade(label="File", menu=smFile)
-        smFile.add_command(label="Process Tag (As is)", command=lambda: OpenImage())
-        smFile.add_command(label="Extract and Process Image with Tag", command=lambda: ExtractFromImagePath())
-        smFile.add_command(label="Extract and Process Image url", command=lambda: ExtractFromImageUrl())
+        smFile.add_command(label="Process Tag (As is)", command=lambda: ExtractFromImagePath(False))
+        smFile.add_command(label="Extract and Process Image with Tag", command=lambda: ExtractFromImagePath(True))
+        smFile.add_command(label="Extract and Process Image url", command=lambda: ExtractFromImageUrl(True))
 
         # ExtractTag
         smExtractTag = Menu(root.menuBar)
         root.menuBar.add_cascade(label="Batch Tag Extraction", menu=smExtractTag)
-        smExtractTag.add_command(label="Folder Containing Images", command=lambda: ExtractFromFolder())
-        smExtractTag.add_command(label="Text File With Urls of Images", command=lambda: ExtractFromTxtFileUrls())
+        smExtractTag.add_command(label="Folder Containing Images", command=lambda: ExtractFromFolder(True))
+        smExtractTag.add_command(label="Text File With Urls of Images", command=lambda: ExtractFromTxtFileUrls(True))
 
         # Tools
         smTools = Menu(root.menuBar)
         root.menuBar.add_cascade(label="Tools", menu=smTools)
-        smTools.add_command(label="Extract Tags To Destination: " + root.destinationFolder,
-                            command=lambda: ChangeDestination(0, smTools))
         smTools.add_command(label="Build Plant Dictionary: " + root.plantDictionaryPath,
                             command=lambda: buildPlantDictionary(root.plantDictionaryPath))
 
@@ -79,65 +76,45 @@ class ClassificationApp():
         CreateOutputFrameToDisplayInfo(root, root.outputFrame)
 
         #################################################################
-        def ChangeDestination(index, menuItem):
-            val = filedialog.askdirectory() + "/"
-            if (len(val) > 1):
-                root.destinationFolder
-                menuItem.entryconfigure(index, label="Extract Tags To Destination: " + root.destinationFolder)
-            pass
-
-        def ExtractFromFolder():
+        def ExtractFromFolder(extractTag):
             imageSourceFolder = filedialog.askdirectory() + "/"
             if len(imageSourceFolder) > 2:
-                ProcessImagesInTheFolder(root.suggestEngine, imageSourceFolder, root.destinationFolder,
-                                         root.minimumConfidence)
+                ProcessImagesInTheFolder(root.suggestEngine, imageSourceFolder,
+                                         root.minimumConfidence,extractTag)
             pass
 
-        def ExtractFromTxtFileUrls():
+        def ExtractFromTxtFileUrls(extractTag):
             txtFileContainingUrls = filedialog.askopenfilename(
                 filetypes=(("TXT", "*.txt"), ("text", "*.txt"))
             )
             if len(txtFileContainingUrls) > 0:
-                ProcessImagesFromTheUrlsInTheTextFile(root.suggestEngine, txtFileContainingUrls, root.destinationFolder,
-                                                      root.minimumConfidence)
+                ProcessImagesFromTheUrlsInTheTextFile(root.suggestEngine, txtFileContainingUrls,
+                                                      root.minimumConfidence,extractTag)
             pass
 
-        def ExtractFromImagePath():
+        def ExtractFromImagePath(extractTag):
             singleImagePath = filedialog.askopenfilename(
                 filetypes=(("PNG", "*.png"), ("JPG", "*.jpg"))
             )
             if len(singleImagePath) > 1:
-                imagePath, sdb, tagId = ExtractAndProcessSingleImage(root.suggestEngine, singleImagePath,
-                                                                     root.destinationFolder, root.minimumConfidence)
-                root.tagId = tagId
-                DisplayClassificationEditor(root, imagePath, sdb)
+                root.imagePath = singleImagePath
+                root.tagPath, root.sdb, root.tagId = ExtractAndProcessSingleImage(root.suggestEngine, root.imagePath,
+                                                                     root.minimumConfidence,extractTag)
+                DisplayClassificationEditor()
             pass
 
-        def ExtractFromImageUrl():
+        def ExtractFromImageUrl(extractTag):
             imageUrl = simpledialog.askstring("Input", "Enter the image URL: ", parent=root)
-            imagePath, sdb, tagId = ExtractAndProcessSingleImage(root.suggestEngine, imageUrl, root.destinationFolder,
-                                                                 root.minimumConfidence)
-            root.tagId = tagId
-            DisplayClassificationEditor(root, imagePath, sdb)
+            if len(imageUrl>1):
+                root.imagePath = imageUrl
+                root.tagPath, root.sdb, root.tagId = ExtractAndProcessSingleImage(root.suggestEngine, root.imagePath,
+                                                                 root.minimumConfidence,extractTag)
+                DisplayClassificationEditor()
             pass
 
-        # will not save to database
-        def OpenImage():
-            imagePath = filedialog.askopenfilename(
-                filetypes=(("PNG", "*.png"), ("JPG", "*.jpg"))
-            )
-            if len(imagePath) > 1:
-                imagePath, sdb, tagId = ExtractAndProcessSingleImage(root.suggestEngine, imagePath,
-                                                                     root.destinationFolder, root.minimumConfidence)
-                root.tagId = tagId
-                DisplayClassificationEditor(root, imagePath, sdb)
 
-        def DisplayClassificationEditor(root, imagePath, sdb):
+        def DisplayClassificationEditor():
             RemoveOldData(root)
-            root.tagList=Call_SP_GetTagList('')
-            root.imagePath = imagePath
-            #root.sdb = sdb
-            img,root.sdb=GetImgAndSDBFromTagId(root.tagId) #test only
             root.scrollableImage = ScrollableImage(root.imageCanvasFrame, root=root, scrollbarwidth=6,
                                                    width=root.imageWidth,
                                                    height=root.imageHeight)
@@ -147,4 +124,8 @@ class ClassificationApp():
         def RemoveOldData(root):
             ClearWordStatus(root)
 
+        def OpenTagId(tagId):
+            root.tagId=tagId
+            root.tagPath,root.sdb=GetImgAndSDBFromTagId(root.tagId)
+            DisplayClassificationEditor()
         root.mainloop()

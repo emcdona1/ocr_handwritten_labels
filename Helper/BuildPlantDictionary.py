@@ -32,5 +32,4 @@ def buildPlantDictionary(destination):
                         f.write(r + "\n")
     f.close()
 
-# destinationFolder=os.path.expanduser("~/Desktop/")+"plantDictionary/"
 # buildPlantDictionary("InputResources/genusspecies_data.txt")

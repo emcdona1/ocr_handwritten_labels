@@ -1,3 +1,5 @@
+import tempfile
+
 from shapely.geometry import Point
 from shapely.geometry.polygon import Polygon
 
@@ -86,3 +88,9 @@ def MeetVerticalAlignment(w1, w2, verticleOffset=15):
 
 def AreWordsInAcceptableOffsetDistance(w1, w2):
     return MeetHorizontalAlignment(w1, w2) and MeetVerticalAlignment(w1, w2)
+
+def GetTempFilePath():
+    tf = tempfile.NamedTemporaryFile()
+    return tf.name + "_temp.png"
+    pass
+

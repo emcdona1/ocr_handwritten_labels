@@ -98,11 +98,4 @@ def Call_SP_GetTagDetail(tagIdIn):
         cursor.close()
         return image, dataFrame
         pass
-def GetTupleVerticesFromStringTuples(stringTuples):
-    return []
 
-# print(Call_SP_GetTagList(''))
-
-# print(Call_SP_GetTagDetail(1))
-# print(Call_SP_DeleteTag(3))
-# print(Call_SP_GetTagDetail(3))

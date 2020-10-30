@@ -7,7 +7,7 @@ from PIL.ImageTk import PhotoImage
 class ScrollableImage(tkinter.Frame):
     def __init__(self, master=None, **kw):
         root = kw.pop('root', None)
-        self.image = PhotoImage(file=root.imagePath)
+        self.image = PhotoImage(file=root.tagPath)
         sw = kw.pop('scrollbarwidth', 10)
         super(ScrollableImage, self).__init__(master=master, **kw)
         self.cnvs = tkinter.Canvas(self, highlightthickness=0, background="gray", **kw)

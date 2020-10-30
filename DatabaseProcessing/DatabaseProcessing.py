@@ -1,32 +1,17 @@
 from DatabaseProcessing.DatabaseCalls import Call_SP_AddTag, Call_SP_UpdateWord, Call_SP_GetTagDetail
-from Helper.AlgorithmicMethods import GetSequentialDataBlocks
+from Helper.AlgorithmicMethods import GetTempFilePath
 
-
-def LoadTagFromDatabase():
-    print("place holder to load oldTag from the db")
-    tagId = df = ""
-    return tagId, df
-    pass
-
-def SaveTagtoDatabase(imagePath, df):
-    imgBlob = GetBlob(imagePath)
+def SaveTagtoDatabase(imagePath,imageContent, df):
     wordsInfoAsXML = DFToWordsXml(df)
-    return Call_SP_AddTag(
+    tagId=Call_SP_AddTag(
         originalImagePath=imagePath,
-        img=imgBlob,
+        img=imageContent,
         wordsInfoAsXML=wordsInfoAsXML)
-
+    return tagId
 
 def UpdateWordInDatabase(tagId,word):
     Call_SP_UpdateWord(tagId,word['index'], word['replacement'],word['suggestedDescription'],word['category'])
     pass
-
-
-def GetBlob(tagPath):
-    with open(tagPath, 'rb') as file:
-        binaryData = file.read()
-    return binaryData
-
 
 def DFToWordsXml(df):
     xml = ['<words>']
@@ -45,9 +30,16 @@ def DFToWordsXml(df):
     return '\n'.join(xml)
 
 def GetImgAndSDBFromTagId(tagId):
-    img,df=Call_SP_GetTagDetail(tagId)
+    imgBlob,df=Call_SP_GetTagDetail(tagId)
     d = []
     for index, w in df.iterrows():
         if (w['index'] > 0):
             d.append(w)
-    return img,[d] #GetSequentialDataBlocks(df)
+
+    tempFile = GetTempFilePath()
+    with open(tempFile, "wb") as fh:
+        fh.write(imgBlob)
+
+    return tempFile,[d]
+
+

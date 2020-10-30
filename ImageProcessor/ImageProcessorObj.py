@@ -1,13 +1,18 @@
 '''used to process multiple images'''
-
+import io
 import os
+import tempfile
 from urllib.request import urlopen
 
 import cv2
 import numpy as np
 
 from DatabaseProcessing.DatabaseProcessing import SaveTagtoDatabase
-from ImageProcessor.TagProcessorReadDetectCorrectClassifySave import processTagImage
+
+from DetectCorrectAndClassify.ApplyCorrection import ApplyCorrection
+from DetectCorrectAndClassify.DetectAndClassify import DetectAndClassify
+from Helper.AlgorithmicMethods import GetSequentialDataBlocks, GetTempFilePath
+from ImageProcessor.InitializeDataFromImage import InitializeDataFromImage
 
 
 class ImageProcessor():
@@ -34,19 +39,25 @@ class ImageProcessor():
         cls.topEdgeTemplates = cls.GetTemplateDataListFromFolder(tet)
         cls.templatesInitialized = True
 
-    def __init__(self, suggestEngine, imagePath, destinationFolder, minimumConfidence):
+    def __init__(self, suggestEngine, imagePath, minimumConfidence, extractTag):
         self.suggestEngine = suggestEngine
         self.imagePath = imagePath
-        self.destinationFolder = destinationFolder
+        self.tagPath=imagePath #can be overwritten when tag is extracted.
         self.minimumConfidence = minimumConfidence
-        self.tagPath = None
         self.sdb = None
+        self.extractTag=extractTag
         if not ImageProcessor.templatesInitialized:
             ImageProcessor.InitializeTemplates()
+        self.InitializeImageContentAndTempTagPath()
+
 
     def processImage(self):
-        self.tagPath, self.sdb = self.ExtractAndProcessTagFromImagePath()
-        self.tagId = SaveTagtoDatabase(self.imagePath, self.sdb)
+        print("Processing: " + self.imagePath)
+        dataFrame = InitializeDataFromImage(self.imageContent)
+        self.sdb = GetSequentialDataBlocks(dataFrame)
+        DetectAndClassify(self.suggestEngine, self.sdb, self.minimumConfidence)
+        ApplyCorrection(self.sdb)
+        self.tagId = SaveTagtoDatabase(self.imagePath, self.imageContent, self.sdb)
         return self.tagPath, self.sdb,self.tagId
 
     def GetCoordinatesOfMatchingTemplateBetweenTwoPoints(self, cv2RgbImg, templates, xStart, yStart, xEnd, yEnd,
@@ -64,14 +75,8 @@ class ImageProcessor():
                     return xval, yval
         return xStart, yStart
 
-    # saves tag image to the destination folder
-    def SaveTagImageToTheDestinationFolder(self, image, fileName):
-        if not os.path.exists(self.destinationFolder):
-            os.makedirs(self.destinationFolder)
-        cv2.imwrite(os.path.join(self.destinationFolder, fileName), image)
-
     # main method to find the tag on image, returns tag image from larger image
-    def GetTagImageFromTheLargeImage(self, img_rgb):
+    def ExtractTagRGBFromTheLargeImageRGB(self, img_rgb):
         tagMaxArea = 50000
         tagMinArea = 10000
         ih, iw, oc = img_rgb.shape
@@ -110,20 +115,18 @@ class ImageProcessor():
         else:
             return img_rgb[y:ih, x:iw]
 
-    def GetTagImageFromTheImagePath(self, imagePath):
-        img_rgb = ""
-        if ":" in imagePath:
-            resp = urlopen(imagePath)
-            image = np.asarray(bytearray(resp.read()), dtype="uint8")
-            img_rgb = cv2.imdecode(image, cv2.IMREAD_COLOR)
-        else:
-            img_rgb = cv2.imread(imagePath)
-        return self.GetTagImageFromTheLargeImage(img_rgb)
+    def InitializeImageContentAndTempTagPath(self):
+        if (self.extractTag): #overwrite the tagPath if the tag is extracted
+            if ":" in self.imagePath:
+                resp = urlopen(self.imagePath)
+                image = np.asarray(bytearray(resp.read()), dtype="uint8")
+                img_rgb = cv2.imdecode(image, cv2.IMREAD_COLOR)
+            else:
+                img_rgb = cv2.imread(self.imagePath)
+            img_rgb=self.ExtractTagRGBFromTheLargeImageRGB(img_rgb)
+            tempFile=GetTempFilePath()
+            cv2.imwrite(tempFile, img_rgb)
+            self.tagPath=tempFile
 
-    def ExtractAndProcessTagFromImagePath(self):
-        fileName = self.imagePath.split('/')[-1]
-        tagImage = self.GetTagImageFromTheImagePath(self.imagePath)
-        self.SaveTagImageToTheDestinationFolder(tagImage, fileName)
-        tagPath = os.path.join(self.destinationFolder, fileName)
-        sdb = processTagImage(self.suggestEngine, tagPath, self.minimumConfidence)
-        return tagPath, sdb
+        with io.open(self.tagPath, 'rb') as image_file:
+            self.imageContent = image_file.read()
