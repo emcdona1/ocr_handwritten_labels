@@ -4,7 +4,7 @@ import os
 from joblib import Parallel
 
 from DatabaseProcessing.DatabaseCalls import Call_SP_GetTagDetail
-from ImageProcessor.ImageProcessorObj import ImageProcessor
+from ImageProcessor.ImageProcessor import ImageProcessor
 
 ParallelProcessingSizeDefault = 4
 
@@ -21,7 +21,6 @@ def ProcessImagesInTheFolder(suggestEngine, imageFolder, minimumConfidence,extra
     pass
 
 
-# process images from the provided urls inside the text file (ParallelExecution With Thread)
 def ProcessImagesFromTheUrlsInTheTextFile(suggestEngine, textFile, minimumConfidence,extractTag):
     filePaths = []
     with open(textFile) as f:
@@ -39,7 +38,6 @@ def ProcessImagesFromTheUrlsInTheTextFile(suggestEngine, textFile, minimumConfid
 def ExtractAndProcessSingleImage(suggestEngine, imagePath, minimumConfidence,extractTag):
     imgProcessorObj = ImageProcessor(suggestEngine, imagePath, minimumConfidence,extractTag)
     return imgProcessorObj.processImage()
-
 
 
 def ProcessListOfImagePaths_Sequential(suggestEngine, filePaths, minimumConfidence,extractTag):
