@@ -66,7 +66,7 @@ DELIMITER $$
  )
  BEGIN
 	SELECT ti.TagId, ti.ImportDate,ti.OriginalImagePath FROM Tag_info ti
-	WHERE ti.ImportDate in ('', ti.importDateIn);
+	WHERE importDateIn in ('', ti.ImportDate);
  END $$
  
  DELIMITER $$

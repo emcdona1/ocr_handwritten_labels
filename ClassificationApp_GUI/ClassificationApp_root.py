@@ -4,6 +4,8 @@ from ClassificationApp_GUI.InteractiveWords import MarkWordsInImage
 from ClassificationApp_GUI.OutputArea import CreateOutputFrameToDisplayInfo, UpdateOutput
 from ClassificationApp_GUI.ScrollableImage import ScrollableImage
 from ClassificationApp_GUI.StatusBar import *
+from DatabaseProcessing.DatabaseCalls import Call_SP_GetTagList
+from DatabaseProcessing.DatabaseProcessing import GetImgAndSDBFromTagId
 from Helper.BuildPlantDictionary import buildPlantDictionary
 from Helper.WordCategories import initializeCategories
 from ImageProcessor.ImageTagExtractor import *
@@ -132,8 +134,10 @@ class ClassificationApp():
 
         def DisplayClassificationEditor(root, imagePath, sdb):
             RemoveOldData(root)
+            root.tagList=Call_SP_GetTagList('')
             root.imagePath = imagePath
-            root.sdb = sdb
+            #root.sdb = sdb
+            img,root.sdb=GetImgAndSDBFromTagId(root.tagId) #test only
             root.scrollableImage = ScrollableImage(root.imageCanvasFrame, root=root, scrollbarwidth=6,
                                                    width=root.imageWidth,
                                                    height=root.imageHeight)
