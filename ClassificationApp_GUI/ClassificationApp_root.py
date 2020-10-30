@@ -8,7 +8,7 @@ from DatabaseProcessing.DatabaseCalls import Call_SP_GetTagList
 from DatabaseProcessing.DatabaseProcessing import GetImgAndSDBFromTagId
 from Helper.BuildPlantDictionary import buildPlantDictionary
 from Helper.WordCategories import initializeCategories
-from ImageProcessor.ImageTagExtractor import *
+from ImageProcessor.ImageProcessorDriver import *
 from SuggestEngine.Get_SuggestEngine import GetRunningServerEngineOrCreateLocalForSuggestion
 
 

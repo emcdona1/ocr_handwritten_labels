@@ -15,11 +15,14 @@ def Call_SP_AddTag(originalImagePath, img, wordsInfoAsXML):
                         [originalImagePath, binascii.hexlify(img), wordsInfoAsXML, ])
         result = cursor.stored_results()
         conn.commit()
+        cursor.close()
+        conn.close()
         tagId = 0
         for r in result:
             for row in r:
                 tagId = row[0]
         pass
+
     return tagId
 
 
@@ -30,6 +33,8 @@ def Call_SP_UpdateWord(tagId,wordIndexUpdate, replacement,suggestions,category):
         cursor.callproc('SP_UpdateWord', [tagId,wordIndexUpdate, replacement, str(suggestions),category,])
         cursor.stored_results()
         conn.commit()
+        cursor.close()
+        conn.close()
         pass
 
 
@@ -39,6 +44,8 @@ def Call_SP_DeleteTag(tagIdDelete):
         cursor = conn.cursor()
         cursor.callproc('SP_DeleteTag', [tagIdDelete, ])
         conn.commit()
+        cursor.close()
+        conn.close()
         pass
 
 
@@ -57,6 +64,7 @@ def Call_SP_GetTagList(importDateIn):
                 }
                 tagList.append(tag)
         cursor.close()
+        conn.close()
         return tagList
         pass
 
@@ -96,6 +104,7 @@ def Call_SP_GetTagDetail(tagIdIn):
                 else:
                     image = row[0]
         cursor.close()
+        conn.close()
         return image, dataFrame
         pass
 
