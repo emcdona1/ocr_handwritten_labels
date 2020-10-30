@@ -14,16 +14,15 @@ def SetStatus(root, val):
 
 
 def SetWordStatus(root, word):
-    SetWordStatusByValue(root, word['description'], str(word['confidence']), word['replacement'], word['category'])
+    SetWordStatusByValue(root, word['description'], word['replacement'], word['category'])
 
 
 def ClearWordStatus(root):
     root.oldWord = root.activeWord = {'index': 0}
-    SetWordStatusByValue(root, '', '', '', '')
+    SetWordStatusByValue(root, '', '', '')
 
 
-def SetWordStatusByValue(root, w, c, r, cat):
+def SetWordStatusByValue(root, w, r, cat):
     SetStatus(root, (" word       : {w}\n"
-                     " confidence : {c} \n"
                      " replacement: {r}\n"
-                     " category   : {cat}\n").format(w=w, c=c, r=r, cat=cat))
+                     " category   : {cat}\n").format(w=w, r=r, cat=cat))

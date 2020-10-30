@@ -16,7 +16,7 @@ class PopupWindow(object):
         self.top.wm_title("Manual update: " + word['description'])
         self.top.configure(padx=10, pady=10)
         self.l1 = Label(top, text="Word      :" + word['description']
-                                  + "\nConfidence:" + '{: <18}'.format(str(word['confidence']))
+                                 # + "\nConfidence:" + '{: <18}'.format(str(word['confidence']))
                                   + "\n\nReplacement:", justify="left", font=("Courier", 16))
         self.l1.pack(expand=1)
         self.replacementEntry = ttk.Combobox(top, values=word['suggestedDescription'], width=100, font=("Courier", 16))
