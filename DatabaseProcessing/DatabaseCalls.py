@@ -1,3 +1,4 @@
+import ast
 import binascii
 
 import pandas as pd
@@ -61,7 +62,7 @@ def Call_SP_GetTagList(importDateIn):
 
 
 def Call_SP_GetTagDetail(tagIdIn):
-    dataFrame = pd.DataFrame(columns=['index', 'isIncorrectWord'])
+    dataFrame = pd.DataFrame(columns=['index', 'isIncorrectWord','tupleVertices'])
     conn, isConnected = Get_Connection()
     if isConnected:
         cursor = conn.cursor()
@@ -70,21 +71,25 @@ def Call_SP_GetTagDetail(tagIdIn):
         for result in cursor.stored_results():
             for row in result:
                 if not image is None:
+                    isIncorrectWord = (not row[1].lower() == row[2].lower())
+                    color = "green" if not isIncorrectWord else "red"
+                    suggestions=ast.literal_eval(row[3])
+                    tupleVertices=ast.literal_eval(row[4])
                     dataFrame = dataFrame.append(
                         dict(
                             index=row[0],
                             description=row[1],
                             replacement=row[2],
                             category=row[5],
-                            tupleVertices=row[4],
+                            tupleVertices=tupleVertices,
                             sp=0,
                             ep=0,
-                            suggestedDescription=row[3],
+                            suggestedDescription=suggestions,
                             polygon=None,
                             canvas=None,
                             confidence=0.0,
-                            isIncorrectWord=(not row[1] == row[2]),
-                            color="green" if not row[1] == row[2] else "red"
+                            isIncorrectWord=isIncorrectWord,
+                            color=color
                         ),
                         ignore_index=True
                     )
@@ -93,6 +98,8 @@ def Call_SP_GetTagDetail(tagIdIn):
         cursor.close()
         return image, dataFrame
         pass
+def GetTupleVerticesFromStringTuples(stringTuples):
+    return []
 
 # print(Call_SP_GetTagList(''))
 

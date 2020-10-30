@@ -1,4 +1,5 @@
-from DatabaseProcessing.DatabaseCalls import Call_SP_AddTag, Call_SP_UpdateWord
+from DatabaseProcessing.DatabaseCalls import Call_SP_AddTag, Call_SP_UpdateWord, Call_SP_GetTagDetail
+from Helper.AlgorithmicMethods import GetSequentialDataBlocks
 
 
 def LoadTagFromDatabase():
@@ -42,3 +43,11 @@ def DFToWordsXml(df):
                 xml.append('</word>')
     xml.append('</words>')
     return '\n'.join(xml)
+
+def GetImgAndSDBFromTagId(tagId):
+    img,df=Call_SP_GetTagDetail(tagId)
+    d = []
+    for index, w in df.iterrows():
+        if (w['index'] > 0):
+            d.append(w)
+    return img,[d] #GetSequentialDataBlocks(df)
