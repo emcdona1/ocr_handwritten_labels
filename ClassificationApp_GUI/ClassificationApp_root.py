@@ -1,7 +1,6 @@
 from ClassificationApp_GUI.LayoutGUI import CreateLayout, AddElementSelectDate, AddElementSelectTag, \
-    InitializeImportedListCBox, InitializeTagListBox, AddElementStatusBar
+    InitializeImportedListCBox, InitializeTagListBox, AddElementStatusBar, AddElementOutputArea
 from ClassificationApp_GUI.MenuAndSubMenuAndFunctional import AddMenuAndSubMenu
-from ClassificationApp_GUI.OutputArea import CreateOutputFrameToDisplayInfo
 from ClassificationApp_GUI.ScrollableImage import AddElementImageCanvas, Tk
 from ClassificationApp_GUI.StatusBar import *
 from DatabaseProcessing.DatabaseProcessing import GetImportedTagTuples
@@ -28,8 +27,9 @@ class ClassificationApp():
 
         AddElementSelectTag(root)
         InitializeTagListBox(root)
-
         AddElementStatusBar(root)
+
+        AddElementOutputArea(root)
 
         root.mainloop()
 
@@ -39,7 +39,6 @@ class ClassificationApp():
         # output Area
         root.outputFrame = Frame(root)
         root.outputFrame.grid(row=2, column=1, sticky='nsew')
-        CreateOutputFrameToDisplayInfo(root, root.outputFrame)
 
         #################################################################
 

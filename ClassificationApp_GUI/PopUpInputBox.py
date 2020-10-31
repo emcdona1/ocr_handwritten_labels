@@ -7,32 +7,55 @@ from DatabaseProcessing.DatabaseProcessing import UpdateWordInDatabase
 
 
 class PopupWindow(object):
-    def __init__(self, master, root, word, width, height):
+    def __init__(self, master, root, word):
+        rowHeight=35
+        padding=2
+        width = 365
+        height=rowHeight*4-padding*8
         top = self.top = Toplevel(master)
         self.top.grab_set()
 
         self.top.geometry(str(width) + "x" + str(height))
         self.top.resizable(0, 0)
         self.top.wm_title("Manual update: " + word['description'])
-        self.top.configure(padx=10, pady=10)
-        self.l1 = Label(top, text="Word      :" + word['description']
-                                 # + "\nConfidence:" + '{: <18}'.format(str(word['confidence']))
-                                  + "\n\nReplacement:", justify="left", font=("Courier", 16))
-        self.l1.pack(expand=1)
-        self.replacementEntry = ttk.Combobox(top, values=word['suggestedDescription'], width=100, font=("Courier", 16))
-        self.replacementEntry.set(word['replacement'])
-        self.replacementEntry.pack(expand=1)
+        self.top.configure(padx=padding, pady=padding)
 
-        self.l2 = Label(top, text="Category:", justify="left", font=("Courier", 16))
-        self.l2.pack(expand=0)
-        self.categoryEntry = ttk.Combobox(top, values=root.WordCategories, width=100, font=("Courier", 16))
+        #pop up box layout
+        wordDiscriptionFrame=Frame(top, height=rowHeight, pady=padding)
+        wordDiscriptionFrame.grid(row=0, column=0, sticky='nsew')
+
+        replacementFrame = Frame(top, height=rowHeight,  pady=padding)
+        replacementFrame.grid(row=1, column=0, sticky='nsew')
+
+        categoryFrame = Frame(top, height=rowHeight,  pady=padding)
+        categoryFrame.grid(row=2, column=0, sticky='nsew')
+
+        buttonFrame = Frame(top, height=rowHeight, width=width, pady=padding)
+        buttonFrame.grid(row=3, column=0, sticky='se')
+
+        l1 = Label(wordDiscriptionFrame, text="Word       : " + word['description'], justify="left", font=("Courier", 16))
+        l1.grid(row=0,column=0,sticky='nw')
+
+        l2 = Label(replacementFrame, text="Replacement:", justify="left", font=("Courier", 16))
+        l2.grid(row=0, column=0, sticky='nw')
+
+        self.replacementEntry = ttk.Combobox(replacementFrame, values=word['suggestedDescription'], width=20, font=("Courier", 16))
+        self.replacementEntry.set(word['replacement'])
+        self.replacementEntry.grid(row=0, column=1, sticky='ne')
+
+
+        l3 = Label(categoryFrame, text="Category   :", justify="left", font=("Courier", 16))
+        l3.grid(row=0, column=0, sticky='nw')
+
+        self.categoryEntry = ttk.Combobox(categoryFrame, values=root.WordCategories, width=20, font=("Courier", 16))
         self.categoryEntry.set(word['category'])
-        self.categoryEntry.pack(expand=1)
-        self.u = Button(self.top, text='Update', command=lambda: self.CommandUpdate(root, word),
+        self.categoryEntry.grid(row=0, column=1, sticky='ne')
+
+        u = Button(buttonFrame, text='Update', command=lambda: self.CommandUpdate(root, word),
                         activebackground='blue')
-        self.c = Button(self.top, text='Cancel', command=self.CommandCancel, activebackground="blue")
-        self.u.pack(side=RIGHT)
-        self.c.pack(side=RIGHT)
+        u.grid(row=0, column=0, sticky='se')
+        c = Button(buttonFrame, text='Cancel', command=self.CommandCancel, activebackground="blue")
+        c.grid(row=0, column=1, sticky='se')
 
     def CommandUpdate(self, root, word):
         self.ReplacementUpdate(word, self.replacementEntry.get(), root)

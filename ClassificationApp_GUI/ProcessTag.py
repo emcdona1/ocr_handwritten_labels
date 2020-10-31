@@ -1,4 +1,4 @@
-from ClassificationApp_GUI.InteractiveWords import MarkWordsInImage
+from ClassificationApp_GUI.InteractiveWords import CreateButtonsFromTheWords
 
 from ClassificationApp_GUI.OutputArea import UpdateOutput
 from ClassificationApp_GUI.ScrollableImage import ScrollableImage, AddElementImageCanvas
@@ -17,7 +17,7 @@ def DisplayClassificationEditor(root):
     RemoveOldData(root)
     AddElementImageCanvas(root)
 
-    MarkWordsInImage(root)
+    CreateButtonsFromTheWords(root)
     UpdateOutput(root)
     pass
 
