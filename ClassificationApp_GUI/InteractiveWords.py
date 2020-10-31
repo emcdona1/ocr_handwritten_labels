@@ -3,7 +3,7 @@ from ClassificationApp_GUI.StatusBar import *
 from ClassificationApp_GUI.WordOutline import UpdateWordOutline
 
 
-def MarkWordsInImage(root):
+def CreateButtonsFromTheWords(root):
     for db in root.sdb:
         for w in db:
             if w['index'] > 0:
@@ -57,7 +57,7 @@ def ProcessActiveWord(root, word):
 
 
 def GetUserUpdatesForTheActiveWord(root, activeWord):
-    root.popUp = PopupWindow(root.master, root, activeWord, root.popUpWidth, root.popUpHeight)
+    root.popUp = PopupWindow(root.master, root, activeWord)
     root.wait_window(root.popUp.top)
     if root.popUp.top:
         root.popUp.top.destroy()

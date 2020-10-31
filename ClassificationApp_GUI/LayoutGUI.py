@@ -1,12 +1,12 @@
 import tkinter
 from tkinter import *
 from tkinter import ttk
+from tkinter.scrolledtext import ScrolledText
 from tkinter.ttk import Style, Combobox
 
 from django.conf.locale import tk
 
 from ClassificationApp_GUI.ProcessTag import OpenTagId
-from ClassificationApp_GUI.ToolTip import ToolTip
 
 
 def CreateLayout(root):
@@ -29,16 +29,16 @@ def CreateLayout(root):
     #main window
     root.geometry = str(windowWidth) + "x" + str(windowHeight)
     root.wm_geometry(root.geometry)
-    root.resizable(0,0)
+    root.resizable(1,1)
     root.config(background="white")
     #Left Panel for the tag list
-    leftPanelFrame = Frame(root, height=windowHeight, width=leftPanelWidthForTagList_width,background="gray")
+    leftPanelFrame = Frame(root, width=leftPanelWidthForTagList_width,background="gray")
     leftPanelFrame.pack(anchor=NW, expand=True, side=LEFT )
     # Left Panel DDL frame
-    root.selectDateFrame = Frame(leftPanelFrame, height=ddlBoxHeight, width=leftPanelWidthForTagList_width, background="gray34")
+    root.selectDateFrame = Frame(leftPanelFrame, width=leftPanelWidthForTagList_width, background="gray34")
     root.selectDateFrame.pack(anchor=NW, expand=True, side=TOP)
     # Left Panel Tag List frame
-    root.selectTagFrame = Frame(leftPanelFrame, height=(windowHeight - ddlBoxHeight), width=leftPanelWidthForTagList_width,
+    root.selectTagFrame = Frame(leftPanelFrame, width=leftPanelWidthForTagList_width,
                                 background="gray90")
     root.selectTagFrame.pack(anchor=SW, expand=True, side=BOTTOM)
 
@@ -61,20 +61,20 @@ def CreateLayout(root):
     root.outputAreaFrame.pack(anchor=SW, expand=True, side=BOTTOM)
 
 def AddElementSelectDate(root):
-    root.selectDateCBox = Combobox(root.selectDateFrame, values=[], font=("Courier", 14), width=19, state="readonly")
+    root.selectDateCBox = Combobox(root.selectDateFrame, values=[], font=("Courier", 14), state="readonly")
     root.selectDateCBox.bind('<<ComboboxSelected>>', lambda event, x=root: RefreshFilteredList(event, x))
     root.selectDateCBox.pack()
     pass
 
 def AddElementSelectTag(root):
-    root.selectTagListBox=Listbox(root.selectTagFrame,font=("Courier", 15), width=19, height=34,bd=0,background=None)
-    root.selectTagListBox.pack(side=LEFT, fill=None, padx=1, pady=1,expand=True)
+    root.selectTagListBox=Listbox(root.selectTagFrame,font=("Courier", 15), height=1000,bd=0,background=None)
+    root.selectTagListBox.pack(side=LEFT, fill=BOTH, padx=0, pady=1,expand=True)
     root.selectTagListBox.bind('<<ListboxSelect>>', lambda event, x=root:TagSelected(event,x))
 
     scrollbar = Scrollbar(root.selectTagFrame, bd=0, width=5)
     root.selectTagListBox.config(yscrollcommand=scrollbar.set)
     scrollbar.config(command=root.selectTagListBox.yview)
-    scrollbar.pack(side=RIGHT, fill=BOTH)
+    scrollbar.pack(side=RIGHT, fill=BOTH, expand=True)
     pass
 
 def TagSelected(evt,root):
@@ -125,32 +125,6 @@ def AddElementStatusBar(root):
     pass
 
 def AddElementOutputArea(root):
+    root.outputField = ScrolledText(root.outputAreaFrame, font=("Courier", 16),bd=0,highlightthickness=0)
+    root.outputField.pack(padx=0, pady=2, fill=BOTH, expand=True)
     pass
-
-class CreateToolTip(object):
-    '''
-    create a tooltip for a given widget
-    '''
-    def __init__(self, widget, text='widget info'):
-        self.widget = widget
-        self.text = text
-        self.widget.bind("<Enter>", self.enter)
-        self.widget.bind("<Leave>", self.close)
-    def enter(self, event=None):
-        x = y = 0
-        x, y, cx, cy = self.widget.bbox("insert")
-        x += self.widget.winfo_rootx() + 25
-        y += self.widget.winfo_rooty() + 20
-        # creates a toplevel window
-        self.tw = tk.Toplevel(self.widget)
-        # Leaves only the label and removes the app window
-        self.tw.wm_overrideredirect(True)
-        self.tw.wm_geometry("+%d+%d" % (x, y))
-        label = tk.Label(self.tw, text=self.text, justify='left',
-                       background='yellow', relief='solid', borderwidth=1,
-                       font=("times", "8", "normal"))
-        label.pack(ipadx=1)
-    def close(self, event=None):
-        if self.tw:
-            self.tw.destroy()
-
