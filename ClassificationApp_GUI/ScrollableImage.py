@@ -9,8 +9,10 @@ class ScrollableImage(tkinter.Frame):
         root = kw.pop('root', None)
         self.image = PhotoImage(file=root.tagPath)
         sw = kw.pop('scrollbarwidth', 10)
+        w = kw.pop('width', 0)
+        h = kw.pop('height', 0)
         super(ScrollableImage, self).__init__(master=master, **kw)
-        self.cnvs = tkinter.Canvas(self, highlightthickness=0, background="gray", **kw)
+        self.cnvs = tkinter.Canvas(self, highlightthickness=0, background="gray", width=w-sw,height=h-sw, **kw)
         self.cnvs.image = self.cnvs.create_image(0, 0, anchor='nw', image=self.image)
         # Vertical and Horizontal scrollbars
         self.v_scroll = tkinter.Scrollbar(self, orient='vertical', width=sw)
@@ -47,5 +49,8 @@ class ScrollableImage(tkinter.Frame):
             self.cnvs.xview_scroll(-1 * (evt.delta), 'units')  # For MacOS
             self.cnvs.xview_scroll(int(-1 * (evt.delta / 120)), 'units')  # For windows
 
-    # def moved(self, event):
-    # self.cnvs.itemconfigure(self.cnvs.tag, text="(%r, %r)" % (event.x, event.y))
+def AddElementImageCanvas(root):
+    root.scrollableImage = ScrollableImage(root.imageCanvasFrame, root=root, scrollbarwidth=5,
+                                           width=root.canvasWidth,
+                                           height=root.canvasHeight)
+    pass

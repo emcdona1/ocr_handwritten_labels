@@ -57,12 +57,7 @@ def Call_SP_GetTagList(importDateIn):
         cursor.callproc('SP_GetTagList', [importDateIn, ])
         for result in cursor.stored_results():
             for row in result:
-                tag = {
-                    'TagId': row[0],
-                    'ImportDate': row[1],
-                    'OriginalImagePath': row[2]
-                }
-                tagList.append(tag)
+                tagList.append((row[0],row[1],row[2]))
         cursor.close()
         conn.close()
         return tagList
