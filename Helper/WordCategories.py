@@ -13,14 +13,15 @@ class WordCategories(object):
 categories = WordCategories()
 
 
-def initializeCategories(root):
-    root.WordCategories = []
+def GetWordCategories():
+    wc = []
     # the order of the items will be used when displaying the classified data
-    root.WordCategories.append(WordCategories.Title)
-    root.WordCategories.append(WordCategories.ScientificName)
-    root.WordCategories.append(WordCategories.RegistrationNumber)
-    root.WordCategories.append(WordCategories.Date)
-    root.WordCategories.append(WordCategories.Collector)
-    root.WordCategories.append(WordCategories.Label)
-    root.WordCategories.append(WordCategories.Unknown)
-    root.WordCategories.append(WordCategories.Location)
+    wc.append(WordCategories.Title)
+    wc.append(WordCategories.ScientificName)
+    wc.append(WordCategories.RegistrationNumber)
+    wc.append(WordCategories.Date)
+    wc.append(WordCategories.Collector)
+    wc.append(WordCategories.Label)
+    wc.append(WordCategories.Unknown)
+    wc.append(WordCategories.Location)
+    return wc
