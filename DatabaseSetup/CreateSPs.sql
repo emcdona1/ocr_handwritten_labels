@@ -9,12 +9,13 @@ DELIMITER $$
 
  CREATE PROCEDURE SP_AddTag(
 	IN originalImagePathIn VARCHAR(255),
+    IN processingTimeIn DECIMAL(9,3),
     IN imgIn LONGBLOB,
     IN wordsInfoAsXMLIn LONGTEXT
  )
  BEGIN
-	INSERT INTO Tag_Info(OriginalImagePath,Img)
-	VALUES (originalImagePathIn,UNHEX(imgIn));
+	INSERT INTO Tag_Info(OriginalImagePath,ProcessingTime,Img)
+	VALUES (originalImagePathIn,processingTimeIn,UNHEX(imgIn));
 	SELECT LAST_INSERT_ID() INTO @newTagId;
     
 	SET @COUNT = (SELECT EXTRACTVALUE(wordsInfoAsXMLIn,'COUNT(//words/word)'));
@@ -74,7 +75,7 @@ DELIMITER $$
 	IN tagIdIn BIGINT
  )
  BEGIN
-	SELECT ti.Img FROM Tag_Info ti WHERE ti.TagId=tagidIn;
+	SELECT ti.Img, ti.OriginalImagePath,ti.ProcessingTime FROM Tag_Info ti WHERE ti.TagId=tagidIn;
 	SELECT WordIndex,OCRDescription,Replacement,Suggestions,Vertices,Category FROM Tag_Word w Where w.TagId=tagIdIn;
  END $$
  

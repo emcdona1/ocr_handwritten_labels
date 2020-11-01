@@ -2,13 +2,13 @@ from ClassificationApp_GUI.InteractiveWords import CreateButtonsFromTheWords
 
 from ClassificationApp_GUI.OutputArea import UpdateOutput
 from ClassificationApp_GUI.ScrollableImage import ScrollableImage, AddElementImageCanvas
-from ClassificationApp_GUI.StatusBar import ClearWordStatus
+from ClassificationApp_GUI.StatusBar import ClearWordStatus, SetFileInfo
 from DatabaseProcessing.DatabaseProcessing import GetImgAndSDBFromTagId
 
 
 def OpenTagId(root, tagId):
     root.tagId = tagId
-    root.tagPath, root.sdb = GetImgAndSDBFromTagId(root.tagId)
+    root.tagPath, root.sdb,root.imagePath,root.processingTime = GetImgAndSDBFromTagId(root.tagId)
     DisplayClassificationEditor(root)
     pass
 
@@ -16,7 +16,7 @@ def OpenTagId(root, tagId):
 def DisplayClassificationEditor(root):
     RemoveOldData(root)
     AddElementImageCanvas(root)
-
+    SetFileInfo(root,root.imagePath,root.processingTime)
     CreateButtonsFromTheWords(root)
     UpdateOutput(root)
     pass
