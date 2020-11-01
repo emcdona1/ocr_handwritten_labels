@@ -51,7 +51,7 @@ def AddMenuAndSubMenu(root):
         )
         if len(singleImagePath) > 1:
             root.imagePath = singleImagePath
-            root.tagPath, root.sdb, root.tagId = ExtractAndProcessSingleImage(root.suggestEngine, root.imagePath,
+            root.tagPath, root.sdb, root.tagId,root.processingTime = ExtractAndProcessSingleImage(root.suggestEngine, root.imagePath,
                                                                               root.minimumConfidence, extractTag)
             DisplayClassificationEditor(root)
         pass
@@ -60,7 +60,7 @@ def AddMenuAndSubMenu(root):
         imageUrl = simpledialog.askstring("Input", "Enter the image URL: ", parent=root)
         if len(imageUrl > 1):
             root.imagePath = imageUrl
-            root.tagPath, root.sdb, root.tagId = ExtractAndProcessSingleImage(root.suggestEngine, root.imagePath,
+            root.tagPath, root.sdb, root.tagId,root.processingTime = ExtractAndProcessSingleImage(root.suggestEngine, root.imagePath,
                                                                               root.minimumConfidence, extractTag)
             DisplayClassificationEditor(root)
         pass

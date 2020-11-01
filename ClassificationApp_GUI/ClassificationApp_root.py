@@ -35,7 +35,7 @@ class ClassificationApp():
 
         # status bar and user input Row#1 two columns
 
-        SetStatus(root, "\n\t\t\t  Open image file to begin !")
+        SetStatusForWord(root, "\n\t\t\t  Open image file to begin !")
         # output Area
         root.outputFrame = Frame(root)
         root.outputFrame.grid(row=2, column=1, sticky='nsew')

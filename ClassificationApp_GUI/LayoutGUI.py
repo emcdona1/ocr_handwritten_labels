@@ -29,7 +29,7 @@ def CreateLayout(root):
     #main window
     root.geometry = str(windowWidth) + "x" + str(windowHeight)
     root.wm_geometry(root.geometry)
-    root.resizable(1,1)
+    root.resizable(0,0)
     root.config(background="white")
     #Left Panel for the tag list
     leftPanelFrame = Frame(root, width=leftPanelWidthForTagList_width,background="gray")
@@ -43,22 +43,19 @@ def CreateLayout(root):
     root.selectTagFrame.pack(anchor=SW, expand=True, side=BOTTOM)
 
     #Right Panel for the image Area, status, and output area
-    rightPanelFrame = Frame(root, height=windowHeight, width=rightPanelForImageStatusAndOutput_width, background="green")
-    rightPanelFrame.pack(anchor=NE, expand=True, side=RIGHT)
+    rightPanelFrame = Frame(root, height=windowHeight, background="yellow")
+    rightPanelFrame.pack(anchor=NE, expand=TRUE,fill=BOTH, side=RIGHT)
     #Right Panel canvas frame
-    root.imageCanvasFrame = Frame(rightPanelFrame, height=imageCanvasAreaHeight, width=rightPanelForImageStatusAndOutput_width,
+    root.imageCanvasFrame = Frame(rightPanelFrame, height=imageCanvasAreaHeight,
                               background="gray")
-    root.imageCanvasFrame.pack(anchor=NE, expand=True, side=TOP)
+    root.imageCanvasFrame.pack(anchor=NE, expand=True, fill=BOTH,side=TOP)
     # Left Panel Tag List frame
-    root.statusBarFrame = Frame(rightPanelFrame, height=statusAreaHeight,
-                                  width=rightPanelForImageStatusAndOutput_width,
-                                  background="gray94")
-    root.statusBarFrame.pack(anchor=N, expand=True, side=TOP)
+    root.statusBarFrame = Frame(rightPanelFrame, height=statusAreaHeight,background="gray94")
+    root.statusBarFrame.pack(anchor=NW, expand=True,fill=BOTH, side=TOP)
 
     root.outputAreaFrame = Frame(rightPanelFrame, height=(windowHeight - imageCanvasAreaHeight-statusAreaHeight),
-                                width=rightPanelForImageStatusAndOutput_width,
                                 background="white")
-    root.outputAreaFrame.pack(anchor=SW, expand=True, side=BOTTOM)
+    root.outputAreaFrame.pack(anchor=SW, expand=True,fill=BOTH, side=BOTTOM)
 
 def AddElementSelectDate(root):
     root.selectDateCBox = Combobox(root.selectDateFrame, values=[], font=("Courier", 14), state="readonly")
@@ -78,6 +75,7 @@ def AddElementSelectTag(root):
     pass
 
 def TagSelected(evt,root):
+    try:
         w = evt.widget
         index=int(w.curselection()[0])
         selectedItem=(root.importedTags[index])
@@ -85,6 +83,9 @@ def TagSelected(evt,root):
         root.importedDate=selectedItem[1]
         root.imagePath=selectedItem[2]
         OpenTagId(root,root.tagId)
+    except:
+        pass
+    pass
 
 def InitializeImportedListCBox(root):
     root.selectDateCBox['values']=GetImportedDates(root)
@@ -116,11 +117,19 @@ def UpdateTagListBySelection(root,selected):
     pass
 
 def AddElementStatusBar(root):
-    root.statusBar = Label(root.statusBarFrame, text="", background="light gray", justify="left", bd=1, anchor="nw",
-                           width=0,
-                           height=4,
-                           font=("Courier", 16))
-    root.statusBar.pack(expand=True)
+    wordStatusFrame = Frame(root.statusBarFrame, height=50, bd=1, background="gray95")
+    wordStatusFrame.pack(anchor=NW, expand=False, fill=BOTH, side=TOP)
+
+    root.wordStatusLabel = Label(wordStatusFrame, text="Please import or open image file to continue!",background="gray95", justify="left", bd=1, anchor="nw",
+                           font=("Courier", 14))
+    root.wordStatusLabel.pack(expand=True,fill=BOTH, side=LEFT)
+
+    fileInfoFrame = Frame(root.statusBarFrame, height=50, bd=1, background="gray88")
+    fileInfoFrame.pack(anchor=NW, expand=False, fill=X, side=BOTTOM)
+    root.fileInfoLabel = Label(fileInfoFrame, text="", background="gray88", justify="left", bd=1, anchor="nw",
+                                 font=("Courier", 14))
+    root.fileInfoLabel.pack(expand=True, fill=BOTH, side=LEFT)
+
 
     pass
 

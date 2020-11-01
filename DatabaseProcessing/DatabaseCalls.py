@@ -6,13 +6,13 @@ import pandas as pd
 from DatabaseProcessing.GetConnection import Get_Connection
 
 
-def Call_SP_AddTag(originalImagePath, img, wordsInfoAsXML):
+def Call_SP_AddTag(originalImagePath, processingTime,img, wordsInfoAsXML):
     conn, isConnected = Get_Connection()
     tagId = 0
     if isConnected:
         cursor = conn.cursor()
         cursor.callproc('SP_AddTag',
-                        [originalImagePath, binascii.hexlify(img), wordsInfoAsXML, ])
+                        [originalImagePath, processingTime,binascii.hexlify(img), wordsInfoAsXML, ])
         result = cursor.stored_results()
         conn.commit()
         cursor.close()
@@ -98,8 +98,10 @@ def Call_SP_GetTagDetail(tagIdIn):
                     )
                 else:
                     image = row[0]
+                    imagePath=row[1]
+                    processingTime=row[2]
         cursor.close()
         conn.close()
-        return image, dataFrame
+        return image,imagePath,processingTime, dataFrame
         pass
 

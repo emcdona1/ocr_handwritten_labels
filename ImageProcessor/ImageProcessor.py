@@ -6,6 +6,7 @@ from urllib.request import urlopen
 
 import cv2
 import numpy as np
+from datetime import datetime
 
 from DatabaseProcessing.DatabaseProcessing import SaveTagtoDatabase
 
@@ -40,6 +41,7 @@ class ImageProcessor():
         cls.templatesInitialized = True
 
     def __init__(self, suggestEngine, imagePath, minimumConfidence, extractTag):
+        self.startTime=datetime.now()
         self.suggestEngine = suggestEngine
         self.imagePath = imagePath
         self.tagPath=imagePath #can be overwritten when tag is extracted.
@@ -57,8 +59,10 @@ class ImageProcessor():
         self.sdb = GetSequentialDataBlocks(dataFrame)
         DetectAndClassify(self.suggestEngine, self.sdb, self.minimumConfidence)
         ApplyCorrection(self.sdb)
-        self.tagId = SaveTagtoDatabase(self.imagePath, self.imageContent, self.sdb)
-        return self.tagPath, self.sdb,self.tagId
+        self.endTime = datetime.now()
+        self.processingTime=(self.endTime - self.startTime).total_seconds()
+        self.tagId = SaveTagtoDatabase(self.imagePath, self.processingTime,self.imageContent, self.sdb)
+        return self.tagPath, self.sdb,self.tagId, self.processingTime
 
     def GetCoordinatesOfMatchingTemplateBetweenTwoPoints(self, cv2RgbImg, templates, xStart, yStart, xEnd, yEnd,
                                                          threshold):

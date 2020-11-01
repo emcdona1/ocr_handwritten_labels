@@ -2,10 +2,11 @@ from DatabaseProcessing.DatabaseCalls import Call_SP_AddTag, Call_SP_UpdateWord,
     Call_SP_GetTagList
 from Helper.AlgorithmicMethods import GetTempFilePath
 
-def SaveTagtoDatabase(imagePath,imageContent, df):
+def SaveTagtoDatabase(imagePath,processingTime,imageContent, df):
     wordsInfoAsXML = DFToWordsXml(df)
     tagId=Call_SP_AddTag(
         originalImagePath=imagePath,
+        processingTime=processingTime,
         img=imageContent,
         wordsInfoAsXML=wordsInfoAsXML)
     return tagId
@@ -31,7 +32,7 @@ def DFToWordsXml(df):
     return '\n'.join(xml)
 
 def GetImgAndSDBFromTagId(tagId):
-    imgBlob,df=Call_SP_GetTagDetail(tagId)
+    imgBlob,imagePath,processingTime,df=Call_SP_GetTagDetail(tagId)
     d = []
     for index, w in df.iterrows():
         if (w['index'] > 0):
@@ -41,7 +42,7 @@ def GetImgAndSDBFromTagId(tagId):
     with open(tempFile, "wb") as fh:
         fh.write(imgBlob)
 
-    return tempFile,[d]
+    return tempFile,[d],imagePath,processingTime
 
 def GetImportedTagTuples(importedDate=''):
     return Call_SP_GetTagList(importedDate)
