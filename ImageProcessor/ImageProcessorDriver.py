@@ -38,8 +38,9 @@ def ProcessImagesFromTheUrlsInTheTextFile(suggestEngine, textFile, minimumConfid
 
 
 def ExtractAndProcessSingleImage(suggestEngine, imagePath, minimumConfidence,extractTag):
-    imgProcessorObj = ImageProcessor(suggestEngine, imagePath, minimumConfidence,extractTag)
-    imgProcessorObj.processImage()
+    #imgProcessorObj = ImageProcessor(suggestEngine, imagePath, minimumConfidence,extractTag)
+    #imgProcessorObj.processImage()
+    ProcessMultipleImages(suggestEngine,[imagePath],minimumConfidence,extractTag)
 
 def ProcessMultipleImages(suggestEngine, filePaths,minimumConfidence,extractTag):
     UpdateProcessingCount(len(filePaths))

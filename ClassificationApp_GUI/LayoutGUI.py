@@ -7,7 +7,8 @@ from tkinter.ttk import Style, Combobox
 
 from ClassificationApp_GUI.ProcessTag import OpenTagId, DisplayClassificationEditor
 from ClassificationApp_GUI.StatusBar import SetStatusForWord
-from DatabaseProcessing.DatabaseProcessing import GetImportedTagTuples
+from DatabaseProcessing.DatabaseProcessing import GetImportedTagTuples, DeleteTag
+
 gRoot=None
 
 
@@ -51,6 +52,10 @@ def CreateLayout(root):
     root.selectTagListBox = Listbox(selectTagFrame, font=("Courier", 15), height=1000, bd=0, background=None)
     root.selectTagListBox.pack(side=LEFT, fill=BOTH, padx=0, pady=1, expand=True)
     root.selectTagListBox.bind('<<ListboxSelect>>', lambda event, x=root: TagSelected(event, x))
+    root.selectTagListBox.bind('<Button-2>', lambda event, x=root: TagRequestDelete(event, x))
+    root.selectTagListBox.rclick = RightClick(root.selectTagListBox)
+
+
 
     scrollbar = Scrollbar(selectTagFrame, bd=0, width=5)
     root.selectTagListBox.config(yscrollcommand=scrollbar.set)
@@ -91,28 +96,41 @@ def CreateLayout(root):
     root.outputField.pack(padx=0, pady=2, fill=BOTH, expand=True)
 
 
-def TagSelected(evt,root):
+def TagSelected(evt,root,showDeleteOption=False):
     try:
+        root.tagId=0
         w = evt.widget
         index=int(w.curselection()[0])
         selectedItem=(root.importedTags[index])
         root.tagId=selectedItem[0]
-        root.importedDate=selectedItem[1]
-        root.imagePath=selectedItem[2]
-        OpenTagId(root,root.tagId)
+        if root.tagId>0:
+            root.importedDate=selectedItem[1]
+            root.imagePath=selectedItem[2]
+            if showDeleteOption:
+                root.selectTagListBox.rclick.popup(evt,root.tagId,selectedItem[2].split('/')[-1])
+            OpenTagId(root, root.tagId)
     except:
         pass
     pass
 
+def TagRequestDelete(evt,root):
+    root.selectTagListBox.selection_clear(0, END)
+    root.selectTagListBox.selection_set(root.selectTagListBox.nearest(evt.y))
+    root.selectTagListBox.activate(root.selectTagListBox.nearest(evt.y))
+    TagSelected(evt,root,True)
+    pass
+
+
 def InitializeTagListBox(root):
     root.selectTagListBox.delete(0, tkinter.END)
     for x in root.importedTags:
-        root.selectTagListBox.insert(x[0]," "+x[2].split('/')[-1])
+        if x[1] == root.selectedFilter or root.selectedFilter == 'Filter: None':
+            root.selectTagListBox.insert(x[0], " " + x[2].split('/')[-1])
     pass
 
 def RefreshFilteredList(event,root):
-    selected=root.selectDateCBox.get()
-    UpdateTagListBySelection(root,selected)
+    root.selectedFilter=root.selectDateCBox.get()
+    InitializeTagListBox(root)
     pass
 
 def GetImportedDates(root):
@@ -121,23 +139,14 @@ def GetImportedDates(root):
     return sorted(list(set(dates)))
     pass
 
-def UpdateTagListBySelection(root,selected):
-    root.selectTagListBox.delete(0, tkinter.END)
-    for x in root.importedTags:
-        if x[1]==selected or selected=='Filter: None':
-            root.selectTagListBox.insert(x[0], " " + x[2].split('/')[-1])
-    pass
-
-
 def InitializeImportedListCBox(tagId=0):
+    gRoot.tagId = tagId
     gRoot.importedTags = GetImportedTagTuples()
     gRoot.selectDateCBox['values']=GetImportedDates(gRoot)
-    gRoot.selectDateCBox.set("Filter: None")
+    gRoot.selectDateCBox.set(gRoot.selectedFilter)
     InitializeTagListBox(gRoot)
-    gRoot.tagId=tagId
     if(gRoot.tagId>0):
         OpenTagId(gRoot,gRoot.tagId)
-        #DisplayClassificationEditor(gRoot)
     pass
 
 def UpdateProcessingCount(count,processingTime=0):
@@ -163,7 +172,7 @@ def UpdateProcessingCount(count,processingTime=0):
             remainingMinutes=remainingTime//60
             remainingSeconds=((remainingTime-(remainingMinutes*60))*100)//100
             strRemmsg=f"{remainingMinutes} minutes {remainingSeconds} seconds to complete!"
-            SetStatusForWord(gRoot,f"Batch processing: {gRoot.processed}/{gRoot.total} are proceed! {strRemmsg}")
+            SetStatusForWord(gRoot,f"[PROCESSING]: {gRoot.processed}/{gRoot.total} processed! {strRemmsg}")
             Config_StateMenu(gRoot,"disabled")
 
 
@@ -171,5 +180,24 @@ def Config_StateMenu(root,state="normal"):
             root.menuBar.entryconfig("File", state=state)
             root.menuBar.entryconfig("Batch Tag Extraction", state=state)
             root.menuBar.entryconfig("Tools", state=state)
+
+
+class RightClick:
+    def __init__(self, master):
+        self.aMenu = Menu(master, tearoff=0)
+        self.aMenu.add_command(label='Delete', command=self.delete)
+
+    def delete(self):
+        print(f"Deleting TagId:{self.tagId}")
+        gRoot.sdb = ''
+        gRoot.scrollableImage.RemoveImage(gRoot)
+        DeleteTag(self.tagId)
+        InitializeImportedListCBox(0)
+
+
+    def popup(self, event,tagId,fileName):
+        self.aMenu.entryconfigure(1, label=f"Delete: {fileName}")
+        self.tagId=tagId
+        self.aMenu.post(event.x_root, event.y_root)
 
 

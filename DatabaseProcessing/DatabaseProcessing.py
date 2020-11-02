@@ -1,5 +1,5 @@
 from DatabaseProcessing.DatabaseCalls import Call_SP_AddTag, Call_SP_UpdateWord, Call_SP_GetTagDetail, \
-    Call_SP_GetTagList
+    Call_SP_GetTagList, Call_SP_DeleteTag
 from Helper.AlgorithmicMethods import GetTempFilePath
 
 def SaveTagtoDatabase(imagePath,processingTime,imageContent, df):
@@ -46,3 +46,6 @@ def GetImgAndSDBFromTagId(tagId):
 
 def GetImportedTagTuples(importedDate=''):
     return Call_SP_GetTagList(importedDate)
+
+def DeleteTag(tagId):
+    Call_SP_DeleteTag(tagId)
