@@ -3,8 +3,10 @@ import os
 
 from joblib import Parallel
 
+from ClassificationApp_GUI.LayoutGUI import UpdateProcessingCount
 from DatabaseProcessing.DatabaseCalls import Call_SP_GetTagDetail
 from ImageProcessor.ImageProcessor import ImageProcessor
+from threading import Thread
 
 ParallelProcessingSizeDefault = 4
 
@@ -15,7 +17,7 @@ def ProcessImagesInTheFolder(suggestEngine, imageFolder, minimumConfidence,extra
         if filename.endswith(".jpg"):
             filePaths.append(os.path.join(imageFolder, filename))
     try:
-        ProcessListOfImagePaths_Parallel(suggestEngine, filePaths, minimumConfidence,extractTag)
+        ProcessMultipleImages(suggestEngine, filePaths, minimumConfidence,extractTag)
     except:
         pass
     pass
@@ -29,7 +31,7 @@ def ProcessImagesFromTheUrlsInTheTextFile(suggestEngine, textFile, minimumConfid
         url = line.replace("\n", "")
         filePaths.append(url)
     try:
-        ProcessListOfImagePaths_Parallel(suggestEngine, filePaths, minimumConfidence,extractTag)
+        ProcessMultipleImages(suggestEngine, filePaths, minimumConfidence, extractTag)
     except:
         pass
     pass
@@ -37,11 +39,31 @@ def ProcessImagesFromTheUrlsInTheTextFile(suggestEngine, textFile, minimumConfid
 
 def ExtractAndProcessSingleImage(suggestEngine, imagePath, minimumConfidence,extractTag):
     imgProcessorObj = ImageProcessor(suggestEngine, imagePath, minimumConfidence,extractTag)
-    return imgProcessorObj.processImage()
+    imgProcessorObj.processImage()
+
+def ProcessMultipleImages(suggestEngine, filePaths,minimumConfidence,extractTag):
+    UpdateProcessingCount(len(filePaths))
+    # ProcessListOfImagePaths_Parallel(suggestEngine, filePaths, minimumConfidence,extractTag)
+    #ProcessListOfImagePaths_Sequential(suggestEngine, filePaths, minimumConfidence, extractTag)
+    ProcessMultipleImages_Thread(suggestEngine, filePaths, minimumConfidence, extractTag)
+    #ProcessListOfImagePaths_ThreadToThread(suggestEngine, filePaths, minimumConfidence, extractTag)
+
+def ProcessMultipleImages_Thread(suggestEngine, filePaths,minimumConfidence,extractTag):
+
+    args=(suggestEngine, filePaths,minimumConfidence,extractTag)
+    Thread(target=ProcessListOfImagePaths_Sequential,args=args).start()
+
+def ProcessListOfImagePaths_ThreadToThread(suggestEngine, filePaths, minimumConfidence,extractTag):
+    num_cores = multiprocessing.cpu_count()
+    imgObjListToprocess = [ImageProcessor(suggestEngine, filePath, minimumConfidence, extractTag) for filePath in
+                           filePaths]
+    for obj in imgObjListToprocess:
+        args=(obj)
+        Thread(target=obj.processImage).start()
+
 
 
 def ProcessListOfImagePaths_Sequential(suggestEngine, filePaths, minimumConfidence,extractTag):
-
     for filePath in filePaths:
         imgProcessorObj = ImageProcessor(suggestEngine, filePath, minimumConfidence,extractTag)
         imgProcessorObj.processImage()
@@ -59,7 +81,7 @@ def ProcessListOfImagePaths_Parallel(suggestEngine, filePaths, minimumConfidence
 
 def ExecuteProcessImage(obj):
     try:
-        return obj.processImage()
+        obj.processImage()
     except:
         print("Unknown Error when processing image!")
     return None

@@ -18,6 +18,7 @@ def AddMenuAndSubMenu(root):
     smFile.add_command(label="Extract and Process Image with Tag", command=lambda: ExtractFromImagePath(True))
     smFile.add_command(label="Extract and Process Image url", command=lambda: ExtractFromImageUrl(True))
 
+
     # ExtractTag
     smExtractTag = Menu(root.menuBar)
     root.menuBar.add_cascade(label="Batch Tag Extraction", menu=smExtractTag)
@@ -35,7 +36,7 @@ def AddMenuAndSubMenu(root):
         if len(imageSourceFolder) > 2:
             ProcessImagesInTheFolder(root.suggestEngine, imageSourceFolder,
                                      root.minimumConfidence, extractTag)
-            InitializeImportedListCBox(root)
+            #InitializeImportedListCBox(root)
         pass
 
     def ExtractFromTxtFileUrls(extractTag):
@@ -45,7 +46,7 @@ def AddMenuAndSubMenu(root):
         if len(txtFileContainingUrls) > 0:
             ProcessImagesFromTheUrlsInTheTextFile(root.suggestEngine, txtFileContainingUrls,
                                                   root.minimumConfidence, extractTag)
-            InitializeImportedListCBox(root)
+            #InitializeImportedListCBox(root)
         pass
 
     def ExtractFromImagePath(extractTag):
@@ -54,18 +55,18 @@ def AddMenuAndSubMenu(root):
         )
         if len(singleImagePath) > 1:
             root.imagePath = singleImagePath
-            root.tagPath, root.sdb, root.tagId,root.processingTime = ExtractAndProcessSingleImage(root.suggestEngine, root.imagePath,
+            ExtractAndProcessSingleImage(root.suggestEngine, root.imagePath,
                                                                               root.minimumConfidence, extractTag)
-            InitializeImportedListCBox(root)
-            DisplayClassificationEditor(root)
+            #InitializeImportedListCBox(root)
+            #DisplayClassificationEditor(root)
         pass
 
     def ExtractFromImageUrl(extractTag):
         imageUrl = simpledialog.askstring("Input", "Enter the image URL: ", parent=root)
         if len(imageUrl > 1):
             root.imagePath = imageUrl
-            root.tagPath, root.sdb, root.tagId,root.processingTime = ExtractAndProcessSingleImage(root.suggestEngine, root.imagePath,
+            ExtractAndProcessSingleImage(root.suggestEngine, root.imagePath,
                                                                               root.minimumConfidence, extractTag)
-            InitializeImportedListCBox(root)
-            DisplayClassificationEditor(root)
+            #InitializeImportedListCBox(root)
+            #DisplayClassificationEditor(root)
         pass

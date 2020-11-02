@@ -4,13 +4,17 @@ from tkinter import ttk
 from tkinter.scrolledtext import ScrolledText
 from tkinter.ttk import Style, Combobox
 
-from django.conf.locale import tk
 
-from ClassificationApp_GUI.ProcessTag import OpenTagId
+from ClassificationApp_GUI.ProcessTag import OpenTagId, DisplayClassificationEditor
+from ClassificationApp_GUI.StatusBar import SetStatusForWord
 from DatabaseProcessing.DatabaseProcessing import GetImportedTagTuples
+gRoot=None
 
 
 def CreateLayout(root):
+    global gRoot
+    gRoot=root
+
     ###############sizes#############
     windowHeight = 600
     leftPanelWidthForTagList_width = 180
@@ -77,6 +81,7 @@ def CreateLayout(root):
                                font=("Courier", 14))
     root.fileInfoLabel.pack(expand=True, fill=BOTH, side=LEFT)
 
+
     # output area
     outputAreaFrame = Frame(rightPanelFrame, height=(windowHeight - imageCanvasAreaHeight-statusAreaHeight),
                                 background="white")
@@ -97,13 +102,6 @@ def TagSelected(evt,root):
         OpenTagId(root,root.tagId)
     except:
         pass
-    pass
-
-def InitializeImportedListCBox(root):
-    root.importedTags = GetImportedTagTuples()
-    root.selectDateCBox['values']=GetImportedDates(root)
-    root.selectDateCBox.set("Filter: None")
-    InitializeTagListBox(root)
     pass
 
 def InitializeTagListBox(root):
@@ -129,3 +127,49 @@ def UpdateTagListBySelection(root,selected):
         if x[1]==selected or selected=='Filter: None':
             root.selectTagListBox.insert(x[0], " " + x[2].split('/')[-1])
     pass
+
+
+def InitializeImportedListCBox(tagId=0):
+    gRoot.importedTags = GetImportedTagTuples()
+    gRoot.selectDateCBox['values']=GetImportedDates(gRoot)
+    gRoot.selectDateCBox.set("Filter: None")
+    InitializeTagListBox(gRoot)
+    gRoot.tagId=tagId
+    if(gRoot.tagId>0):
+        OpenTagId(gRoot,gRoot.tagId)
+        #DisplayClassificationEditor(gRoot)
+    pass
+
+def UpdateProcessingCount(count,processingTime=0):
+    global gRoot
+    if(count>0):
+        gRoot.total += count
+    if gRoot.total>0:
+        if count<0:
+            gRoot.processed -=count
+            gRoot.totalTimeTaken+=processingTime
+
+        if(gRoot.total==gRoot.processed):
+            gRoot.processed=gRoot.total=gRoot.totalTimeTaken=0
+            Config_StateMenu(gRoot, "normal")
+
+        if(gRoot.total-gRoot.processed)>0:
+
+            if gRoot.totalTimeTaken>0:
+                remainingTime=(gRoot.totalTimeTaken *(gRoot.total-gRoot.processed))/ gRoot.processed
+            else:
+                remainingTime=(gRoot.total-gRoot.processed)*14
+
+            remainingMinutes=remainingTime//60
+            remainingSeconds=((remainingTime-(remainingMinutes*60))*100)//100
+            strRemmsg=f"{remainingMinutes} minutes {remainingSeconds} seconds to complete!"
+            SetStatusForWord(gRoot,f"Batch processing: {gRoot.processed}/{gRoot.total} are proceed! {strRemmsg}")
+            Config_StateMenu(gRoot,"disabled")
+
+
+def Config_StateMenu(root,state="normal"):
+            root.menuBar.entryconfig("File", state=state)
+            root.menuBar.entryconfig("Batch Tag Extraction", state=state)
+            root.menuBar.entryconfig("Tools", state=state)
+
+
