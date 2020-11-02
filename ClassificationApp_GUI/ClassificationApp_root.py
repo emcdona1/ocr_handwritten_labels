@@ -1,8 +1,6 @@
-from ClassificationApp_GUI.LayoutGUI import CreateLayout, AddElementSelectDate, AddElementSelectTag, \
-    InitializeImportedListCBox, InitializeTagListBox, AddElementStatusBar, AddElementOutputArea
+from ClassificationApp_GUI.LayoutGUI import CreateLayout,InitializeImportedListCBox
 from ClassificationApp_GUI.MenuAndSubMenuAndFunctional import AddMenuAndSubMenu
-from ClassificationApp_GUI.ScrollableImage import AddElementImageCanvas, Tk
-from ClassificationApp_GUI.StatusBar import *
+from ClassificationApp_GUI.ScrollableImage import Tk
 from DatabaseProcessing.DatabaseProcessing import GetImportedTagTuples
 from Helper.WordCategories import GetWordCategories
 from SuggestEngine.Get_SuggestEngine import GetRunningServerEngineOrCreateLocalForSuggestion
@@ -16,35 +14,11 @@ class ClassificationApp():
         root.plantDictionaryPath = "InputResources/genusspecies_data.txt"
         root.suggestEngine = GetRunningServerEngineOrCreateLocalForSuggestion(root.plantDictionaryPath, "TRIE")
         root.WordCategories = GetWordCategories()
-        root.importedTags = GetImportedTagTuples()
+
 
         #create layout
         root.title("Classify Specimen")
         CreateLayout(root)
         AddMenuAndSubMenu(root)
-        AddElementSelectDate(root)
         InitializeImportedListCBox(root)
-
-        AddElementSelectTag(root)
-        InitializeTagListBox(root)
-        AddElementStatusBar(root)
-
-        AddElementOutputArea(root)
-
         root.mainloop()
-
-        # status bar and user input Row#1 two columns
-
-        SetStatusForWord(root, "\n\t\t\t  Open image file to begin !")
-        # output Area
-        root.outputFrame = Frame(root)
-        root.outputFrame.grid(row=2, column=1, sticky='nsew')
-
-        #################################################################
-
-
-
-
-
-
-
