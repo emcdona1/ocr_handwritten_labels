@@ -7,7 +7,8 @@ from DatabaseProcessing.DatabaseProcessing import GetImgAndSDBFromTagId
 
 def ClearOldImage(root):
     RemoveOldData(root)
-    root.scrollableImage.RemoveImage(root)
+    for widget in root.imageCanvasFrame.winfo_children():
+        widget.destroy()
     root.tagId=0
     ClearOutput(root)
     pass
