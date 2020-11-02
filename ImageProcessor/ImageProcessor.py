@@ -8,6 +8,7 @@ import cv2
 import numpy as np
 from datetime import datetime
 
+from ClassificationApp_GUI.LayoutGUI import InitializeImportedListCBox, UpdateProcessingCount
 from DatabaseProcessing.DatabaseProcessing import SaveTagtoDatabase
 
 from DetectCorrectAndClassify.ApplyCorrection import ApplyCorrection
@@ -41,7 +42,6 @@ class ImageProcessor():
         cls.templatesInitialized = True
 
     def __init__(self, suggestEngine, imagePath, minimumConfidence, extractTag):
-        self.startTime=datetime.now()
         self.suggestEngine = suggestEngine
         self.imagePath = imagePath
         self.tagPath=imagePath #can be overwritten when tag is extracted.
@@ -50,11 +50,12 @@ class ImageProcessor():
         self.extractTag=extractTag
         if not ImageProcessor.templatesInitialized:
             ImageProcessor.InitializeTemplates()
-        self.InitializeImageContentAndTempTagPath()
 
 
     def processImage(self):
         print("Processing: " + self.imagePath)
+        self.startTime = datetime.now()
+        self.InitializeImageContentAndTempTagPath()
         dataFrame = InitializeDataFromImage(self.imageContent)
         self.sdb = GetSequentialDataBlocks(dataFrame)
         DetectAndClassify(self.suggestEngine, self.sdb, self.minimumConfidence)
@@ -62,7 +63,9 @@ class ImageProcessor():
         self.endTime = datetime.now()
         self.processingTime=(self.endTime - self.startTime).total_seconds()
         self.tagId = SaveTagtoDatabase(self.imagePath, self.processingTime,self.imageContent, self.sdb)
-        return self.tagPath, self.sdb,self.tagId, self.processingTime
+        UpdateProcessingCount(-1,self.processingTime)
+        InitializeImportedListCBox(self.tagId)
+        #return self.tagPath, self.sdb,self.tagId, self.processingTime
 
     def GetCoordinatesOfMatchingTemplateBetweenTwoPoints(self, cv2RgbImg, templates, xStart, yStart, xEnd, yEnd,
                                                          threshold):

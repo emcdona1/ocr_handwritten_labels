@@ -16,7 +16,8 @@ def ClearWordStatus(root):
 
 
 def SetWordStatusByValue(root, w, r, cat):
-    SetStatusForWord(root, (" word       : {w}\n"
+    if (root.total - root.processed) == 0:
+        SetStatusForWord(root, (" word       : {w}\n"
                      " replacement: {r}\n"
                      " category   : {cat}").format(w=w, r=r, cat=cat))
 

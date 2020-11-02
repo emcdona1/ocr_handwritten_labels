@@ -57,9 +57,10 @@ def ProcessActiveWord(root, word):
 
 
 def GetUserUpdatesForTheActiveWord(root, activeWord):
-    root.popUp = PopupWindow(root.master, root, activeWord)
-    root.wait_window(root.popUp.top)
-    if root.popUp.top:
-        root.popUp.top.destroy()
-    SetActiveWord(root, activeWord)
-    SetWordStatus(root, activeWord)
+    if(root.total==0):
+        root.popUp = PopupWindow(root.master, root, activeWord)
+        root.wait_window(root.popUp.top)
+        if root.popUp.top:
+            root.popUp.top.destroy()
+        SetActiveWord(root, activeWord)
+        SetWordStatus(root, activeWord)
