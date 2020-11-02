@@ -1,5 +1,6 @@
 from tkinter import Menu, filedialog, simpledialog
 
+from ClassificationApp_GUI.LayoutGUI import InitializeImportedListCBox
 from ClassificationApp_GUI.ProcessTag import DisplayClassificationEditor
 from Helper.BuildPlantDictionary import buildPlantDictionary
 from ImageProcessor.ImageProcessorDriver import ProcessImagesInTheFolder, ProcessImagesFromTheUrlsInTheTextFile, \
@@ -34,6 +35,7 @@ def AddMenuAndSubMenu(root):
         if len(imageSourceFolder) > 2:
             ProcessImagesInTheFolder(root.suggestEngine, imageSourceFolder,
                                      root.minimumConfidence, extractTag)
+            InitializeImportedListCBox(root)
         pass
 
     def ExtractFromTxtFileUrls(extractTag):
@@ -43,6 +45,7 @@ def AddMenuAndSubMenu(root):
         if len(txtFileContainingUrls) > 0:
             ProcessImagesFromTheUrlsInTheTextFile(root.suggestEngine, txtFileContainingUrls,
                                                   root.minimumConfidence, extractTag)
+            InitializeImportedListCBox(root)
         pass
 
     def ExtractFromImagePath(extractTag):
@@ -53,6 +56,7 @@ def AddMenuAndSubMenu(root):
             root.imagePath = singleImagePath
             root.tagPath, root.sdb, root.tagId,root.processingTime = ExtractAndProcessSingleImage(root.suggestEngine, root.imagePath,
                                                                               root.minimumConfidence, extractTag)
+            InitializeImportedListCBox(root)
             DisplayClassificationEditor(root)
         pass
 
@@ -62,5 +66,6 @@ def AddMenuAndSubMenu(root):
             root.imagePath = imageUrl
             root.tagPath, root.sdb, root.tagId,root.processingTime = ExtractAndProcessSingleImage(root.suggestEngine, root.imagePath,
                                                                               root.minimumConfidence, extractTag)
+            InitializeImportedListCBox(root)
             DisplayClassificationEditor(root)
         pass

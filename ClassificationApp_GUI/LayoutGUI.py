@@ -7,6 +7,7 @@ from tkinter.ttk import Style, Combobox
 from django.conf.locale import tk
 
 from ClassificationApp_GUI.ProcessTag import OpenTagId
+from DatabaseProcessing.DatabaseProcessing import GetImportedTagTuples
 
 
 def CreateLayout(root):
@@ -20,8 +21,6 @@ def CreateLayout(root):
     root.tagListBoxHeight=windowHeight-ddlBoxHeight
     root.canvasHeight=imageCanvasAreaHeight
     root.canvasWidth=rightPanelForImageStatusAndOutput_width
-    ############# Style########
-
 
     ###############Panels#####################
 
@@ -34,13 +33,25 @@ def CreateLayout(root):
     #Left Panel for the tag list
     leftPanelFrame = Frame(root, width=leftPanelWidthForTagList_width,background="gray")
     leftPanelFrame.pack(anchor=NW, expand=True, side=LEFT )
-    # Left Panel DDL frame
-    root.selectDateFrame = Frame(leftPanelFrame, width=leftPanelWidthForTagList_width, background="gray34")
-    root.selectDateFrame.pack(anchor=NW, expand=True, side=TOP)
+    # Left Panel DDL select date
+    selectDateFrame = Frame(leftPanelFrame, width=leftPanelWidthForTagList_width, background="gray34")
+    selectDateFrame.pack(anchor=NW, expand=True, side=TOP)
+    root.selectDateCBox = Combobox(selectDateFrame, values=[], font=("Courier", 14), state="readonly")
+    root.selectDateCBox.bind('<<ComboboxSelected>>', lambda event, x=root: RefreshFilteredList(event, x))
+    root.selectDateCBox.pack()
+
     # Left Panel Tag List frame
-    root.selectTagFrame = Frame(leftPanelFrame, width=leftPanelWidthForTagList_width,
+    selectTagFrame = Frame(leftPanelFrame, width=leftPanelWidthForTagList_width,
                                 background="gray90")
-    root.selectTagFrame.pack(anchor=SW, expand=True, side=BOTTOM)
+    selectTagFrame.pack(anchor=SW, expand=True, side=BOTTOM)
+    root.selectTagListBox = Listbox(selectTagFrame, font=("Courier", 15), height=1000, bd=0, background=None)
+    root.selectTagListBox.pack(side=LEFT, fill=BOTH, padx=0, pady=1, expand=True)
+    root.selectTagListBox.bind('<<ListboxSelect>>', lambda event, x=root: TagSelected(event, x))
+
+    scrollbar = Scrollbar(selectTagFrame, bd=0, width=5)
+    root.selectTagListBox.config(yscrollcommand=scrollbar.set)
+    scrollbar.config(command=root.selectTagListBox.yview)
+    scrollbar.pack(side=RIGHT, fill=BOTH, expand=True)
 
     #Right Panel for the image Area, status, and output area
     rightPanelFrame = Frame(root, height=windowHeight, background="yellow")
@@ -49,30 +60,31 @@ def CreateLayout(root):
     root.imageCanvasFrame = Frame(rightPanelFrame, height=imageCanvasAreaHeight,
                               background="gray")
     root.imageCanvasFrame.pack(anchor=NE, expand=True, fill=BOTH,side=TOP)
-    # Left Panel Tag List frame
-    root.statusBarFrame = Frame(rightPanelFrame, height=statusAreaHeight,background="gray94")
-    root.statusBarFrame.pack(anchor=NW, expand=True,fill=BOTH, side=TOP)
+    # status bar
+    statusBarFrame = Frame(rightPanelFrame, height=statusAreaHeight,background="gray94")
+    statusBarFrame.pack(anchor=NW, expand=True,fill=BOTH, side=TOP)
+    wordStatusFrame = Frame(statusBarFrame, height=50, bd=1, background="gray95")
+    wordStatusFrame.pack(anchor=NW, expand=False, fill=BOTH, side=TOP)
 
-    root.outputAreaFrame = Frame(rightPanelFrame, height=(windowHeight - imageCanvasAreaHeight-statusAreaHeight),
+    root.wordStatusLabel = Label(wordStatusFrame, text="Please import or open image file to continue!",
+                                 background="gray95", justify="left", bd=1, anchor="nw",
+                                 font=("Courier", 14))
+    root.wordStatusLabel.pack(expand=True, fill=BOTH, side=LEFT)
+
+    fileInfoFrame = Frame(statusBarFrame, height=50, bd=1, background="gray88")
+    fileInfoFrame.pack(anchor=NW, expand=False, fill=X, side=BOTTOM)
+    root.fileInfoLabel = Label(fileInfoFrame, text="", background="gray88", justify="left", bd=1, anchor="nw",
+                               font=("Courier", 14))
+    root.fileInfoLabel.pack(expand=True, fill=BOTH, side=LEFT)
+
+    # output area
+    outputAreaFrame = Frame(rightPanelFrame, height=(windowHeight - imageCanvasAreaHeight-statusAreaHeight),
                                 background="white")
-    root.outputAreaFrame.pack(anchor=SW, expand=True,fill=BOTH, side=BOTTOM)
+    outputAreaFrame.pack(anchor=SW, expand=True,fill=BOTH, side=BOTTOM)
 
-def AddElementSelectDate(root):
-    root.selectDateCBox = Combobox(root.selectDateFrame, values=[], font=("Courier", 14), state="readonly")
-    root.selectDateCBox.bind('<<ComboboxSelected>>', lambda event, x=root: RefreshFilteredList(event, x))
-    root.selectDateCBox.pack()
-    pass
+    root.outputField = ScrolledText(outputAreaFrame, font=("Courier", 16), bd=0, highlightthickness=0)
+    root.outputField.pack(padx=0, pady=2, fill=BOTH, expand=True)
 
-def AddElementSelectTag(root):
-    root.selectTagListBox=Listbox(root.selectTagFrame,font=("Courier", 15), height=1000,bd=0,background=None)
-    root.selectTagListBox.pack(side=LEFT, fill=BOTH, padx=0, pady=1,expand=True)
-    root.selectTagListBox.bind('<<ListboxSelect>>', lambda event, x=root:TagSelected(event,x))
-
-    scrollbar = Scrollbar(root.selectTagFrame, bd=0, width=5)
-    root.selectTagListBox.config(yscrollcommand=scrollbar.set)
-    scrollbar.config(command=root.selectTagListBox.yview)
-    scrollbar.pack(side=RIGHT, fill=BOTH, expand=True)
-    pass
 
 def TagSelected(evt,root):
     try:
@@ -88,8 +100,10 @@ def TagSelected(evt,root):
     pass
 
 def InitializeImportedListCBox(root):
+    root.importedTags = GetImportedTagTuples()
     root.selectDateCBox['values']=GetImportedDates(root)
     root.selectDateCBox.set("Filter: None")
+    InitializeTagListBox(root)
     pass
 
 def InitializeTagListBox(root):
@@ -114,26 +128,4 @@ def UpdateTagListBySelection(root,selected):
     for x in root.importedTags:
         if x[1]==selected or selected=='Filter: None':
             root.selectTagListBox.insert(x[0], " " + x[2].split('/')[-1])
-    pass
-
-def AddElementStatusBar(root):
-    wordStatusFrame = Frame(root.statusBarFrame, height=50, bd=1, background="gray95")
-    wordStatusFrame.pack(anchor=NW, expand=False, fill=BOTH, side=TOP)
-
-    root.wordStatusLabel = Label(wordStatusFrame, text="Please import or open image file to continue!",background="gray95", justify="left", bd=1, anchor="nw",
-                           font=("Courier", 14))
-    root.wordStatusLabel.pack(expand=True,fill=BOTH, side=LEFT)
-
-    fileInfoFrame = Frame(root.statusBarFrame, height=50, bd=1, background="gray88")
-    fileInfoFrame.pack(anchor=NW, expand=False, fill=X, side=BOTTOM)
-    root.fileInfoLabel = Label(fileInfoFrame, text="", background="gray88", justify="left", bd=1, anchor="nw",
-                                 font=("Courier", 14))
-    root.fileInfoLabel.pack(expand=True, fill=BOTH, side=LEFT)
-
-
-    pass
-
-def AddElementOutputArea(root):
-    root.outputField = ScrolledText(root.outputAreaFrame, font=("Courier", 16),bd=0,highlightthickness=0)
-    root.outputField.pack(padx=0, pady=2, fill=BOTH, expand=True)
     pass
