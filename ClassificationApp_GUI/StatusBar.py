@@ -4,6 +4,8 @@ def SetStatusForWord(root, val):
 
 
 def SetStatusForFileInfo(root,val):
+    if len(val)>65:
+        val="..."+val[-65:]
     root.fileInfoLabel['text'] = val
 
 def SetWordStatus(root, word):

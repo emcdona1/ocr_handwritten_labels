@@ -17,6 +17,7 @@ class ClassificationApp():
         root.processed=0
         root.total=0
         root.totalTimeTaken=0
+        root.selectedFilter="Filter: None"
         root.plantDictionaryPath = "InputResources/genusspecies_data.txt"
         root.suggestEngine = GetRunningServerEngineOrCreateLocalForSuggestion(root.plantDictionaryPath, "TRIE")
         root.WordCategories = GetWordCategories()
