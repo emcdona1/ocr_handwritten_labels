@@ -41,13 +41,6 @@ class ScrollableImage(tkinter.Frame):
         root.image_window = self
         root.image_window.grid(row=0, column=0,sticky='nsew')
 
-    def RemoveImage(self,root):
-        self.cnvs = tkinter.Canvas(self, highlightthickness=0, background="red")
-        self.image = None
-        self.cnvs.image = None
-        root.image_window = self
-        root.image_window.grid(row=0, column=0, sticky='nsew')
-
     def MouseScroll(self, evt):
         if evt.state == 0:
             self.cnvs.yview_scroll(-1 * (evt.delta), 'units')  # For MacOS
