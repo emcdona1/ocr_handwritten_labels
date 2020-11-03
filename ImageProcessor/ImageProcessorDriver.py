@@ -3,13 +3,17 @@ import os
 
 from joblib import Parallel
 
-from ClassificationApp_GUI.LayoutGUI import UpdateProcessingCount
+from ClassificationApp_GUI.LayoutGUI import UpdateProcessingCount, Config_StateMenu
+from ClassificationApp_GUI.StatusBar import SetStatusForWord
 from DatabaseProcessing.DatabaseCalls import Call_SP_GetTagDetail
 from ImageProcessor.ImageProcessor import ImageProcessor
 from threading import Thread
 
 ParallelProcessingSizeDefault = 4
-
+root=None
+def setRoot(r):
+    global root
+    root=r
 
 def ProcessImagesInTheFolder(suggestEngine, imageFolder, minimumConfidence,extractTag):
     filePaths = []
@@ -54,6 +58,8 @@ def ProcessMultipleImages_Thread(suggestEngine, filePaths,minimumConfidence,extr
     args=(suggestEngine, filePaths,minimumConfidence,extractTag)
     Thread(target=ProcessListOfImagePaths_Sequential,args=args).start()
 
+
+
 def ProcessListOfImagePaths_ThreadToThread(suggestEngine, filePaths, minimumConfidence,extractTag):
     num_cores = multiprocessing.cpu_count()
     imgObjListToprocess = [ImageProcessor(suggestEngine, filePath, minimumConfidence, extractTag) for filePath in
@@ -65,11 +71,19 @@ def ProcessListOfImagePaths_ThreadToThread(suggestEngine, filePaths, minimumConf
 
 
 def ProcessListOfImagePaths_Sequential(suggestEngine, filePaths, minimumConfidence,extractTag):
+    i=0;
     for filePath in filePaths:
-        imgProcessorObj = ImageProcessor(suggestEngine, filePath, minimumConfidence,extractTag)
-        imgProcessorObj.processImage()
-    pass
+        if not root.stopThread:
+            i+=1
+            imgProcessorObj = ImageProcessor(suggestEngine, filePath, minimumConfidence,extractTag)
+            imgProcessorObj.processImage()
+        else:
+            break
 
+    if root.stopThread:
+        UpdateProcessingCount(-(len(filePaths) - i), 0.01)
+        SetStatusForWord(root, f"User interrupted the process! {i}/{len(filePaths)} files are processed!", "red")
+        root.stopThread=False
 
 def ProcessListOfImagePaths_Parallel(suggestEngine, filePaths, minimumConfidence,extractTag):
     num_cores = multiprocessing.cpu_count()
