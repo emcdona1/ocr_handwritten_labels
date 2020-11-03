@@ -6,7 +6,7 @@ from tkinter.ttk import Style, Combobox
 
 
 from ClassificationApp_GUI.ProcessTag import OpenTagId, DisplayClassificationEditor
-from ClassificationApp_GUI.StatusBar import SetStatusForWord
+from ClassificationApp_GUI.StatusBar import SetStatusForWord, SetStatusForFileInfo
 from DatabaseProcessing.DatabaseProcessing import GetImportedTagTuples, DeleteTag
 
 gRoot=None
@@ -101,14 +101,12 @@ def TagSelected(evt,root,showDeleteOption=False):
         root.tagId=0
         w = evt.widget
         index=int(w.curselection()[0])
-        selectedItem=(root.importedTags[index])
-        root.tagId=selectedItem[0]
+        root.tagId,root.imagePath=root.tagIdImagePathHolder[index]
         if root.tagId>0:
-            root.importedDate=selectedItem[1]
-            root.imagePath=selectedItem[2]
             if showDeleteOption:
-                root.selectTagListBox.rclick.popup(evt,root.tagId,selectedItem[2].split('/')[-1])
+                root.selectTagListBox.rclick.popup(evt,root.tagId,root.imagePath.split('/')[-1],index)
             OpenTagId(root, root.tagId)
+
     except:
         pass
     pass
@@ -123,9 +121,13 @@ def TagRequestDelete(evt,root):
 
 def InitializeTagListBox(root):
     root.selectTagListBox.delete(0, tkinter.END)
+    root.tagIdImagePathHolder=[]
+    i=0
     for x in root.importedTags:
         if x[1] == root.selectedFilter or root.selectedFilter == 'Filter: None':
-            root.selectTagListBox.insert(x[0], " " + x[2].split('/')[-1])
+            root.selectTagListBox.insert(i," " + x[2].split('/')[-1])
+            root.tagIdImagePathHolder.append((x[0], x[2]))
+            i+=1
     pass
 
 def RefreshFilteredList(event,root):
@@ -139,7 +141,7 @@ def GetImportedDates(root):
     return sorted(list(set(dates)))
     pass
 
-def InitializeImportedListCBox(tagId=0):
+def InitializeImportedListAndOpenTheTagId(tagId=0):
     gRoot.tagId = tagId
     gRoot.importedTags = GetImportedTagTuples()
     gRoot.selectDateCBox['values']=GetImportedDates(gRoot)
@@ -190,14 +192,21 @@ class RightClick:
     def delete(self):
         print(f"Deleting TagId:{self.tagId}")
         gRoot.sdb = ''
-        gRoot.scrollableImage.RemoveImage(gRoot)
-        DeleteTag(self.tagId)
-        InitializeImportedListCBox(0)
+        DeleteRecord(gRoot,self.index,self.tagId)
+        SetStatusForFileInfo(gRoot, '')
 
 
-    def popup(self, event,tagId,fileName):
+    def popup(self, event,tagId,fileName,index):
+        self.fileName=fileName
         self.aMenu.entryconfigure(1, label=f"Delete: {fileName}")
         self.tagId=tagId
+        self.index=index
         self.aMenu.post(event.x_root, event.y_root)
+
+def DeleteRecord(root,index,tagId):
+    root.selectTagListBox.delete(index)
+    del root.tagIdImagePathHolder[index]
+    root.importedTags =  [i for i in root.importedTags  if not i[0] == tagId]
+    DeleteTag(tagId)
 
 

@@ -8,7 +8,7 @@ import cv2
 import numpy as np
 from datetime import datetime
 
-from ClassificationApp_GUI.LayoutGUI import InitializeImportedListCBox, UpdateProcessingCount
+from ClassificationApp_GUI.LayoutGUI import InitializeImportedListAndOpenTheTagId, UpdateProcessingCount
 from DatabaseProcessing.DatabaseProcessing import SaveTagtoDatabase
 
 from DetectCorrectAndClassify.ApplyCorrection import ApplyCorrection
@@ -64,7 +64,7 @@ class ImageProcessor():
         self.processingTime=(self.endTime - self.startTime).total_seconds()
         self.tagId = SaveTagtoDatabase(self.imagePath, self.processingTime,self.imageContent, self.sdb)
         UpdateProcessingCount(-1,self.processingTime)
-        InitializeImportedListCBox(self.tagId)
+        InitializeImportedListAndOpenTheTagId(self.tagId)
         #return self.tagPath, self.sdb,self.tagId, self.processingTime
 
     def GetCoordinatesOfMatchingTemplateBetweenTwoPoints(self, cv2RgbImg, templates, xStart, yStart, xEnd, yEnd,

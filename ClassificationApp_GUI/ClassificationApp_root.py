@@ -1,5 +1,5 @@
 from ClassificationApp_GUI.LayoutGUI import CreateLayout, GetImportedDates, \
-    InitializeTagListBox, InitializeImportedListCBox
+    InitializeTagListBox, InitializeImportedListAndOpenTheTagId
 from ClassificationApp_GUI.MenuAndSubMenuAndFunctional import AddMenuAndSubMenu
 from ClassificationApp_GUI.ProcessTag import OpenTagId
 from ClassificationApp_GUI.ScrollableImage import Tk
@@ -27,6 +27,6 @@ class ClassificationApp():
         root.title("Classify Specimen")
         CreateLayout(root)
         AddMenuAndSubMenu(root)
-        InitializeImportedListCBox()
+        InitializeImportedListAndOpenTheTagId()
         root.mainloop()
 

@@ -1,6 +1,5 @@
 from tkinter import Menu, filedialog, simpledialog
 
-from ClassificationApp_GUI.LayoutGUI import InitializeImportedListCBox
 from ClassificationApp_GUI.ProcessTag import DisplayClassificationEditor
 from Helper.BuildPlantDictionary import buildPlantDictionary
 from ImageProcessor.ImageProcessorDriver import ProcessImagesInTheFolder, ProcessImagesFromTheUrlsInTheTextFile, \
