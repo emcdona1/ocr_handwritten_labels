@@ -19,16 +19,20 @@ def AddMenuAndSubMenu(root):
 
 
     # ExtractTag
-    smExtractTag = Menu(root.menuBar)
-    root.menuBar.add_cascade(label="Batch Tag Extraction", menu=smExtractTag)
-    smExtractTag.add_command(label="Folder Containing Images", command=lambda: ExtractFromFolder(True))
-    smExtractTag.add_command(label="Text File With Urls of Images", command=lambda: ExtractFromTxtFileUrls(True))
+    root.smExtractTag = Menu(root.menuBar)
+    root.menuBar.add_cascade(label="Batch Tag Extraction", menu=root.smExtractTag)
+    root.smExtractTag.add_command(label="Folder Containing Images", command=lambda: ExtractFromFolder(True))
+    root.smExtractTag.add_command(label="Text File With Urls of Images", command=lambda: ExtractFromTxtFileUrls(True))
+    root.smExtractTag.add_command(label="Stop Batch Processing", command=lambda: StopBatchProcessing(root), state="disabled")
+
 
     # Tools
     smTools = Menu(root.menuBar)
     root.menuBar.add_cascade(label="Tools", menu=smTools)
     smTools.add_command(label="Build Plant Dictionary: " + root.plantDictionaryPath,
                         command=lambda: buildPlantDictionary(root.plantDictionaryPath))
+
+
 
     def ExtractFromFolder(extractTag):
         imageSourceFolder = filedialog.askdirectory() + "/"
@@ -69,3 +73,11 @@ def AddMenuAndSubMenu(root):
             #InitializeImportedListCBox(root)
             #DisplayClassificationEditor(root)
         pass
+
+    def StopBatchProcessing(root):
+        if (root.total - root.processed) > 0 and not root.stopThread:
+            root.stopThread = True
+
+
+
+

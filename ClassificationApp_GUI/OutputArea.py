@@ -1,7 +1,4 @@
 from tkinter import *
-from tkinter.scrolledtext import ScrolledText
-
-from ClassificationApp_GUI.StatusBar import SetStatusForFileInfo
 from Helper.GetWordsInformation import GetDescriptionFromDataBlocks, GetClassifiedDataTuples, \
     GetClassifiedCategoriesInOrder
 
@@ -41,3 +38,8 @@ def UpdateOutput(root,**kw):
                 root.outputField.insert('end', cd[1] + " ", 'data')
         root.outputField.insert('end',"\n", 'data')
     pass
+    root.outputField.insert('end',"\n---------------------------------------------------------------\n", 'label')
+    root.outputField.insert('end', '{0: <19}: '.format("Imported From: "), 'label')
+    root.outputField.insert('end',root.imagePath+"\n", 'data')
+    root.outputField.insert('end', '{0: <19}: '.format("Processing Time: "), 'label')
+    root.outputField.insert('end', str(root.processingTime)+" Seconds.\n", 'data')

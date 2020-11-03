@@ -5,8 +5,8 @@ from tkinter.scrolledtext import ScrolledText
 from tkinter.ttk import Style, Combobox
 
 
-from ClassificationApp_GUI.ProcessTag import OpenTagId, DisplayClassificationEditor
-from ClassificationApp_GUI.StatusBar import SetStatusForWord, SetStatusForFileInfo
+from ClassificationApp_GUI.ProcessTag import OpenTagId
+from ClassificationApp_GUI.StatusBar import SetStatusForWord
 from DatabaseProcessing.DatabaseProcessing import GetImportedTagTuples, DeleteTag
 
 gRoot=None
@@ -76,15 +76,10 @@ def CreateLayout(root):
     wordStatusFrame.pack(anchor=NW, expand=False, fill=BOTH, side=TOP)
 
     root.wordStatusLabel = Label(wordStatusFrame, text="Please import or open image file to continue!",
-                                 background="gray95", justify="left", bd=1, anchor="nw",
+                                 background="gray90", justify="left", bd=1, anchor="nw",
                                  font=("Courier", 14))
     root.wordStatusLabel.pack(expand=True, fill=BOTH, side=LEFT)
 
-    fileInfoFrame = Frame(statusBarFrame, height=50, bd=1, background="gray88")
-    fileInfoFrame.pack(anchor=NW, expand=False, fill=X, side=BOTTOM)
-    root.fileInfoLabel = Label(fileInfoFrame, text="", background="gray88", justify="left", bd=1, anchor="nw",
-                               font=("Courier", 14))
-    root.fileInfoLabel.pack(expand=True, fill=BOTH, side=LEFT)
 
 
     # output area
@@ -165,23 +160,27 @@ def UpdateProcessingCount(count,processingTime=0):
             Config_StateMenu(gRoot, "normal")
 
         if(gRoot.total-gRoot.processed)>0:
-
             if gRoot.totalTimeTaken>0:
                 remainingTime=(gRoot.totalTimeTaken *(gRoot.total-gRoot.processed))/ gRoot.processed
             else:
                 remainingTime=(gRoot.total-gRoot.processed)*14
 
-            remainingMinutes=remainingTime//60
-            remainingSeconds=((remainingTime-(remainingMinutes*60))*100)//100
+            remainingMinutes=int(remainingTime//60)
+            remainingSeconds=int(((remainingTime-(remainingMinutes*60))*100)//100)
             strRemmsg=f"{remainingMinutes} minutes {remainingSeconds} seconds to complete!"
-            SetStatusForWord(gRoot,f"[PROCESSING]: {gRoot.processed}/{gRoot.total} processed! {strRemmsg}")
+            SetStatusForWord(gRoot,f"[PROCESSING]: {gRoot.processed}/{gRoot.total} processed! {strRemmsg}","brown4")
             Config_StateMenu(gRoot,"disabled")
 
 
 def Config_StateMenu(root,state="normal"):
-            root.menuBar.entryconfig("File", state=state)
-            root.menuBar.entryconfig("Batch Tag Extraction", state=state)
-            root.menuBar.entryconfig("Tools", state=state)
+    root.menuBar.entryconfig("File", state=state)
+    root.menuBar.entryconfig("Tools", state=state)
+    root.smExtractTag.entryconfig("Folder Containing Images", state=state)
+    root.smExtractTag.entryconfig("Text File With Urls of Images", state=state)
+    if state=="normal":
+        root.smExtractTag.entryconfig("Stop Batch Processing", state="disabled")
+    else:
+        root.smExtractTag.entryconfig("Stop Batch Processing", state="normal")
 
 
 class RightClick:
@@ -193,7 +192,6 @@ class RightClick:
         print(f"Deleting TagId:{self.tagId}")
         gRoot.sdb = ''
         DeleteRecord(gRoot,self.index,self.tagId)
-        SetStatusForFileInfo(gRoot, '')
 
 
     def popup(self, event,tagId,fileName,index):
