@@ -39,9 +39,9 @@ def UpdateOutput(root,**kw):
         root.outputField.insert('end',"\n", 'data')
     pass
     root.outputField.insert('end',"\n---------------------------------------------------------------\n", 'label')
-    root.outputField.insert('end', '{0: <19}: '.format("Imported From: "), 'label')
+    root.outputField.insert('end', '{0: <19}: '.format("Imported From "), 'label')
     root.outputField.insert('end',root.imagePath+"\n", 'data')
-    root.outputField.insert('end', '{0: <19}: '.format("Processing Time: "), 'label')
+    root.outputField.insert('end', '{0: <19}: '.format("Processing Time "), 'label')
     root.outputField.insert('end', str(root.processingTime)+" Seconds.\n", 'data')
-    root.outputField.insert('end', '{0: <19}: '.format("Imported Date: "), 'label')
+    root.outputField.insert('end', '{0: <19}: '.format("Imported Date "), 'label')
     root.outputField.insert('end', str(root.importDate) + "\n", 'data')
