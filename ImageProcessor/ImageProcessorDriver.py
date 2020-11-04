@@ -5,7 +5,6 @@ from joblib import Parallel
 
 from ClassificationApp_GUI.LayoutGUI import UpdateProcessingCount, Config_StateMenu
 from ClassificationApp_GUI.StatusBar import SetStatusForWord
-from DatabaseProcessing.DatabaseCalls import Call_SP_GetTagDetail
 from ImageProcessor.ImageProcessor import ImageProcessor
 from threading import Thread
 

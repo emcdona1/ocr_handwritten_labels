@@ -100,8 +100,9 @@ def Call_SP_GetTagDetail(tagIdIn):
                     image = row[0]
                     imagePath=row[1]
                     processingTime=row[2]
+                    importDate=row[3]
         cursor.close()
         conn.close()
-        return image,imagePath,processingTime, dataFrame
+        return image,imagePath,processingTime, dataFrame,importDate
         pass
 

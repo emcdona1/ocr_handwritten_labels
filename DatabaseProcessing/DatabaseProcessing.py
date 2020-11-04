@@ -32,7 +32,7 @@ def DFToWordsXml(df):
     return '\n'.join(xml)
 
 def GetImgAndSDBFromTagId(tagId):
-    imgBlob,imagePath,processingTime,df=Call_SP_GetTagDetail(tagId)
+    imgBlob,imagePath,processingTime,df,importDate=Call_SP_GetTagDetail(tagId)
     d = []
     for index, w in df.iterrows():
         if (w['index'] > 0):
@@ -42,7 +42,7 @@ def GetImgAndSDBFromTagId(tagId):
     with open(tempFile, "wb") as fh:
         fh.write(imgBlob)
 
-    return tempFile,[d],imagePath,processingTime
+    return tempFile,[d],imagePath,processingTime,importDate
 
 def GetImportedTagTuples(importedDate=''):
     return Call_SP_GetTagList(importedDate)
