@@ -1,5 +1,19 @@
 # OCRProject
 
+#setup
+1. create virtual environment to run the project
+    a. pip3 install virtualenv
+    b. mkdir "myEnvDir"
+    c. cd "myEnvDir"
+    d. vritualenv "myEnv"
+    e. source myEnv/bin/activate
+    f. pip3 install -r requirements.txt (in the download code we should have this file.)
+    
+2. activate virtual environment
+(source /Users/Keshab/Desktop/PythonEnvironments/ocrProj/bin/activate)
+3. pip3 install requirements.txt
+4. now run the project using 
+
 #Execution
  from terminal navigate to main.py and execute following command
  python3 main.py

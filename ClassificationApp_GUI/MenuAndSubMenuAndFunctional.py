@@ -66,7 +66,7 @@ def AddMenuAndSubMenu(root):
 
     def ExtractFromImageUrl(extractTag):
         imageUrl = simpledialog.askstring("Input", "Enter the image URL: ", parent=root)
-        if len(imageUrl > 1):
+        if len(imageUrl) > 1:
             root.imagePath = imageUrl
             ExtractAndProcessSingleImage(root.suggestEngine, root.imagePath,
                                                                               root.minimumConfidence, extractTag)
