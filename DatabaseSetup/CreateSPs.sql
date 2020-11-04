@@ -75,7 +75,7 @@ DELIMITER $$
 	IN tagIdIn BIGINT
  )
  BEGIN
-	SELECT ti.Img, ti.OriginalImagePath,ti.ProcessingTime FROM Tag_Info ti WHERE ti.TagId=tagidIn;
+	SELECT ti.Img, ti.OriginalImagePath,ti.ProcessingTime,ti.ImportDate FROM Tag_Info ti WHERE ti.TagId=tagidIn;
 	SELECT WordIndex,OCRDescription,Replacement,Suggestions,Vertices,Category FROM Tag_Word w Where w.TagId=tagIdIn;
  END $$
  

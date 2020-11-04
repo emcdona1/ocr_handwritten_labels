@@ -32,6 +32,7 @@ class WordSearcherWithTrieNode:
 
         for letter in self.trie.children:
             self.searchRecursive(self.trie.children[letter], letter, word.lower(), currentRow, results, maxCost)
+            #improve here to break when maxcost 0 word is found
         return [suggestCostTuple[0] for suggestCostTuple in sorted(results, key=lambda x: x[1])][:5]
 
     def searchRecursive(self, node, letter, word, previousRow, results, maxCost):

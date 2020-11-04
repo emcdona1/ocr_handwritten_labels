@@ -17,7 +17,7 @@ def OpenTagId(root, tagId):
     root.tagId = tagId
     if root.tagId>0:
         try:
-            root.tagPath, root.sdb,root.imagePath,root.processingTime = GetImgAndSDBFromTagId(root.tagId)
+            root.tagPath, root.sdb,root.imagePath,root.processingTime,root.importDate = GetImgAndSDBFromTagId(root.tagId)
             DisplayClassificationEditor(root)
         except:
             ClearOldImage(root)
