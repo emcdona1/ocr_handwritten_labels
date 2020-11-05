@@ -4,16 +4,13 @@ standalone server,
 import pickle
 import socket
 from datetime import datetime
+from configparser import ConfigParser
 
 from SuggestEngine.Get_SuggestEngine import GetLocalSuggestEngine
 
-GENUS_SPECIES_FILE = "InputResources/genusspecies_data.txt"
-SERVER_PORT_DEFAULT = 1234
 
-
-def startSNSServer(wordFilePath=GENUS_SPECIES_FILE, hostName_server=socket.gethostname(),
-                   portNo_server=SERVER_PORT_DEFAULT, queueSize=10, bufferSize=1024):
-    se = GetLocalSuggestEngine(wordFilePath, 'TRIE')
+def startSNSServer(genusSpeciesFilePath,hostName,portNo_server, queueSize, bufferSize):
+    se = GetLocalSuggestEngine(genusSpeciesFilePath, 'TRIE')
     s = socket.socket()
     s.bind((hostName_server, portNo_server))
     s.listen(queueSize)
@@ -38,4 +35,13 @@ def startSNSServer(wordFilePath=GENUS_SPECIES_FILE, hostName_server=socket.getho
         c.close()
 
 
-startSNSServer()
+configParser = ConfigParser()
+configFilePath = r'Configuration.cfg'
+configParser.read(configFilePath)
+genusSpeciesFilePath = configParser.get('SNS_SERVER', 'genusSpeciesFilePath')
+portNo = configParser.get('SNS_SERVER', 'portNo')
+bufferSize = configParser.get('SNS_SERVER', 'bufferSize')
+queueSize = configParser.get('SNS_SERVER', 'queueSize')
+hostName_server = configParser.get('SNS_SERVER', 'host')
+
+startSNSServer(genusSpeciesFilePath,hostName_server,int(portNo),int(queueSize),int(bufferSize))

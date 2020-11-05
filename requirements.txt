@@ -22,3 +22,4 @@ googleapis-common-protos==1.52.0
 Shapely==1.7.1
 nltk==3.5
 grpcio==1.33.2
+configparser==5.0.1
