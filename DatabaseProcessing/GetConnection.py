@@ -11,10 +11,21 @@ databaseName = configParser.get('DATABASE', 'databaseName')
 portNo = configParser.get('DATABASE', 'portNo')
 
 def Get_Connection():
+    Connected=True
     conn = ""
     try:
         conn = mysql.connector.connect(user=userName, password=password, host=host, database=databaseName,port=portNo)
     except:
         print("Database connection can not made")
-        return "", False
-    return conn, True
+        Connected=False
+    return conn, Connected,databaseName
+
+def ConnectAndGetDBInfoToCreate():
+    conn = ""
+    Connected=True
+    try:
+        conn = mysql.connector.connect(user=userName, password=password, host=host, port=portNo)
+    except:
+        print("Database connection can not made")
+        Connected=False
+    return conn, Connected,databaseName,userName,password,host
