@@ -9,7 +9,7 @@ from configparser import ConfigParser
 from SuggestEngine.Get_SuggestEngine import GetLocalSuggestEngine
 
 
-def startSNSServer(genusSpeciesFilePath,hostName,portNo_server, queueSize, bufferSize):
+def startSNSServer(genusSpeciesFilePath,hostName_server,portNo_server, queueSize, bufferSize):
     se = GetLocalSuggestEngine(genusSpeciesFilePath, 'TRIE')
     s = socket.socket()
     s.bind((hostName_server, portNo_server))

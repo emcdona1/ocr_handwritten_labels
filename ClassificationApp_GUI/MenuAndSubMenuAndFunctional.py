@@ -1,7 +1,4 @@
 from tkinter import Menu, filedialog, simpledialog
-
-from ClassificationApp_GUI.ProcessTag import DisplayClassificationEditor
-from Helper.BuildPlantDictionary import buildPlantDictionary
 from ImageProcessor.ImageProcessorDriver import ProcessImagesInTheFolder, ProcessImagesFromTheUrlsInTheTextFile, \
     ExtractAndProcessSingleImage
 
@@ -24,14 +21,6 @@ def AddMenuAndSubMenu(root):
     root.smExtractTag.add_command(label="Folder Containing Images", command=lambda: ExtractFromFolder(True))
     root.smExtractTag.add_command(label="Text File With Urls of Images", command=lambda: ExtractFromTxtFileUrls(True))
     root.smExtractTag.add_command(label="Stop Batch Processing", command=lambda: StopBatchProcessing(root), state="disabled")
-
-
-    # Tools
-    smTools = Menu(root.menuBar)
-    root.menuBar.add_cascade(label="Tools", menu=smTools)
-    smTools.add_command(label="Build Plant Dictionary: " + root.plantDictionaryPath,
-                        command=lambda: buildPlantDictionary(root.plantDictionaryPath))
-
 
 
     def ExtractFromFolder(extractTag):

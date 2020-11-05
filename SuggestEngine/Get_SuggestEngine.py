@@ -33,12 +33,12 @@ def GetMonthSuggestEngine(monthsFilePath='InputResources/Months.txt', ENGINE_NAM
         return monthSuggestEngine
 
 
-def GetRunningServerEngineOrCreateLocalForSuggestion(plantDictionaryPath, engineTypeToUseWhenNotFound):
+def GetRunningServerEngineOrCreateLocalForSuggestion(root, engineTypeToUseWhenNotFound):
     se = None
     serverFound = False
     try:
         print("Checking if suggest server for SNS is available!")
-        se = SuggestEngineClient()
+        se = SuggestEngineClient(root)
         if (se.suggest('ServerTest') is None):
             print("suggest server (SNS) is not available!")
         else:
@@ -47,5 +47,5 @@ def GetRunningServerEngineOrCreateLocalForSuggestion(plantDictionaryPath, engine
     except:
         print("Unknown error! when using the SNS server!")
     if not serverFound:
-        se = GetLocalSuggestEngine(plantDictionaryPath, engineTypeToUseWhenNotFound)
+        se = GetLocalSuggestEngine(root.plantDictionaryPath, engineTypeToUseWhenNotFound)
     return se
