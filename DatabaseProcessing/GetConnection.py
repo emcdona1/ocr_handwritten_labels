@@ -15,8 +15,9 @@ def Get_Connection():
     conn = ""
     try:
         conn = mysql.connector.connect(user=userName, password=password, host=host, database=databaseName,port=portNo)
-    except:
+    except Exception as error:
         print("Database connection can not made")
+        print(error)
         Connected=False
     return conn, Connected,databaseName
 
@@ -25,7 +26,8 @@ def ConnectAndGetDBInfoToCreate():
     Connected=True
     try:
         conn = mysql.connector.connect(user=userName, password=password, host=host, port=portNo)
-    except:
+    except Exception as error:
         print("Database connection can not made")
+        print(error)
         Connected=False
     return conn, Connected,databaseName,userName,password,host

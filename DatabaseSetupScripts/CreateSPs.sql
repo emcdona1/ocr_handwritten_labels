@@ -48,7 +48,7 @@ DELIMITER $$
     SET tw.Replacement=replacementIn,
 		tw.Suggestions=suggestionsIn,
 		tw.Category=categoryIn,
-        tw.LastUpdatedTimeStap=NOW()
+        tw.LastUpdatedTimeStamp=NOW()
     WHERE tw.WordIndex=wordIndexIn and tw.TagId=tagidIn;
  END $$
  
