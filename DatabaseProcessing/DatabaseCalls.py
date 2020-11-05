@@ -7,7 +7,7 @@ from DatabaseProcessing.GetConnection import Get_Connection
 
 
 def Call_SP_AddTag(originalImagePath, processingTime,img, wordsInfoAsXML):
-    conn, isConnected = Get_Connection()
+    conn, isConnected,dbName = Get_Connection()
     tagId = 0
     if isConnected:
         cursor = conn.cursor()
@@ -27,7 +27,7 @@ def Call_SP_AddTag(originalImagePath, processingTime,img, wordsInfoAsXML):
 
 
 def Call_SP_UpdateWord(tagId,wordIndexUpdate, replacement,suggestions,category):
-    conn, isConnected = Get_Connection()
+    conn, isConnected, dbName= Get_Connection()
     if isConnected:
         cursor = conn.cursor()
         cursor.callproc('SP_UpdateWord', [tagId,wordIndexUpdate, replacement, str(suggestions),category,])
@@ -39,7 +39,7 @@ def Call_SP_UpdateWord(tagId,wordIndexUpdate, replacement,suggestions,category):
 
 
 def Call_SP_DeleteTag(tagIdDelete):
-    conn, isConnected = Get_Connection()
+    conn, isConnected, dbName= Get_Connection()
     if isConnected:
         cursor = conn.cursor()
         cursor.callproc('SP_DeleteTag', [tagIdDelete, ])
@@ -50,7 +50,7 @@ def Call_SP_DeleteTag(tagIdDelete):
 
 
 def Call_SP_GetTagList(importDateIn):
-    conn, isConnected = Get_Connection()
+    conn, isConnected,dbName = Get_Connection()
     if isConnected:
         cursor = conn.cursor()
         tagList = []
@@ -66,7 +66,7 @@ def Call_SP_GetTagList(importDateIn):
 
 def Call_SP_GetTagDetail(tagIdIn):
     dataFrame = pd.DataFrame(columns=['index', 'isIncorrectWord','tupleVertices'])
-    conn, isConnected = Get_Connection()
+    conn, isConnected, dbName = Get_Connection()
     if isConnected:
         cursor = conn.cursor()
         cursor.callproc('SP_GetTagDetail', [tagIdIn, ])
