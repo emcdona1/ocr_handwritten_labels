@@ -19,7 +19,7 @@ CREATE TABLE Tag_Word
     Suggestions VARCHAR(1000) NOT NULL,
     Vertices VARCHAR (500) NOT NULL,
     Category VARCHAR(50) NOT NULL,
-    LastUpdatedTimeStap DATETIME DEFAULT NOW(),
+    LastUpdatedTimeStamp DATETIME DEFAULT NOW(),
     FOREIGN KEY(TagId) REFERENCES Tag_Info(TagId),
     PRIMARY KEY (TagId, WordIndex)
 );

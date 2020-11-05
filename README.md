@@ -10,8 +10,7 @@
         e. source myEnv/bin/activate
         f. pip3 install -r requirements.txt (in the download code we should have this file.)
 2. Open and edit Configuration.cfg file as needed
-3. Open CreateDb.sql, CreateSPs.sql and CreateTables.sql in mysql and execute them to create the database or,
-   Execute python3 CreateDatabase.py to prepare a database, tables, and stored procedures.(WIP)
+3. Open CreateDb.sql, CreateSPs.sql and CreateTables.sql in mysql and execute them to create the database or. Make sure to have correct information.
 4. Execute python3 BuildPlantDictionary.py to build the plant dictionary (do not create new, as it takes a lot of time to build)
 
 #Execution
