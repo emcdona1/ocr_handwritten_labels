@@ -43,6 +43,10 @@
 8. User will have an option to delete the tag from the left panel with a right click.
 9. User will have ability to update any information provided by clicking on the words on the image shown.
 
+#OCR Data correction
+1. To correct the regular words, enchant spell checker is used. Any incorrect word is replaced by the suggested word with the least levenshtein distance.
+2. To correct the scientific words, Trie plant dictionary is used. Where all words are visited until they exceed the maximum given levenshtein distance. maximum levenshtein distance is dynamically calculated with the following formula
+   - maxCost = min((len(word) // 3) + 1, 8)
 
   
  
