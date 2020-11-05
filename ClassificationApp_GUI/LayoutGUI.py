@@ -174,7 +174,6 @@ def UpdateProcessingCount(count,processingTime=0):
 
 def Config_StateMenu(root,state="normal"):
     root.menuBar.entryconfig("File", state=state)
-    root.menuBar.entryconfig("Tools", state=state)
     root.smExtractTag.entryconfig("Folder Containing Images", state=state)
     root.smExtractTag.entryconfig("Text File With Urls of Images", state=state)
     if state=="normal":

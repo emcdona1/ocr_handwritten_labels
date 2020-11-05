@@ -1,84 +1,49 @@
 # OCRProject
 
-#setup
-1. create virtual environment to run the project
-    a. pip3 install virtualenv
-    b. mkdir "myEnvDir"
-    c. cd "myEnvDir"
-    d. vritualenv "myEnv"
-    e. source myEnv/bin/activate
-    f. pip3 install -r requirements.txt (in the download code we should have this file.)
-    
-2. activate virtual environment
-(source /Users/Keshab/Desktop/PythonEnvironments/ocrProj/bin/activate)
-3. pip3 install requirements.txt
-4. now run the project using 
+#Setup
+1. create virtual environment to run the project, pip3 install -r requirements.txt
+    sample: from terminal
+        a. pip3 install virtualenv
+        b. mkdir "myEnvDir"
+        c. cd "myEnvDir"
+        d. virtualenv "myEnv"
+        e. source myEnv/bin/activate
+        f. pip3 install -r requirements.txt (in the download code we should have this file.)
+2. Open and edit Configuration.cfg file
+3. Execute python3 CreateDatabase.py to prepare a database, tables, and stored procedures (WIP)
+4. Execute python3 BuildPlantDictionary.py to build the plant dictionary (do not create new, as it takes a lot of time to build)
 
 #Execution
- from terminal navigate to main.py and execute following command
- python3 main.py
- it will open GUI window, 
- 1. File
-    > Open Image : to classify any image
- 2. ExtractTag
-    > Change Destination: to specify the folder to keep extracted tags
-    > Extract Tags from folder: extract tags of all images within a folder
-    > Extra Tag from Single Image: extract tag of one image
-    > Extract Tags from Text file containing Urls: extract tags from each url
-    > Extract Tag from Image url: extract tag from single image url
+1. python3 Start_SNS_Server.py (it will start a SNS server which will provide service to suggest plant's scientific names)
+2. python3 main.py (it will lunch the application, which will use the server created on above step, if the server is not present/ready, it will create local search engine.)
+
+#Usage
+1. File >> Process Tag (As is)
+   - To process the image file from a local computer without cropping.
+2. File >> Extract and Process Image with Tag
+   - To crop and process the Tag from given local image.
+3. File >> Extract and Process Image url
+   - To crop and process the Tag from given image url or image path.
+4. Batch Tag Extraction >> Folder Containing Images
+    - To crop and process multiple images inside the local folder.
+5. Batch Tag Extraction >> Text File With Urls of Images
+    - To crop and process multiple images from the urls provided inside the given text file.
+6. Batch Tag Extraction >> Stop Batch Processing
+    - To break the batch processing, Please note the last file in progress will be processed before the break.
+    
+    
+#Workflow
+1. Image will be sent to the Google cloud vision API to extract OCR data
+2. Received OCR information will have the location of the words as well.
+3. Based upon the location, Registration numbers, Title, Collector, Dates will be classified.
+4. Remaining words will be analyzed to check if any of them is Scientific Names, (The words would get compared against the plant dictionary and closest match would replace the word if it is incorrect)
+5. All other remaining data will be classified as Location
+6. The classified data would be sent to database to store
+7. UI will load the image from the database and show the classified information.
+8. User will have an option to delete the tag from the left panel with a right click.
+9. User will have ability to update any information provided by clicking on the words on the image shown.
+
+
+  
  
- 3. Once the image is opened
-    > Application would automatically classify the data
-    > Click on word to to update the classification information or word data
-        
  
- 
-#Solution approach
-
-Part#1 Extract the tags from images.
-Sample images are inside the InputResources/SampleImages. And the urls inside the text file "InputResources/SampleImages/TagUrls.txt"
-Execute GetSectionOfImage.py, it will create a Tags folder in the desktop and extract the tags inside that folder.
-(this is work in progress.)
-
-Part #2 OCR detection
-Execute main.py, from the Menu "file" open the image
-
-Part #3 Auto-Correction of the OCR data
-work in progress
-(wrong words are marked with red box)
-corpus is build using the script on corpusBuilder.py, and the output data is used to detect scientific names
-
-Part #4 Manual-Correction of the OCR data
-Just click on any word shown, and update the value as needed.
-
-Part #5 Classification
-Automatic classification is  in progress
-User is now able to manually classify the detected words. below is sample output
-######### Classified Information #########
-Description: FLORA OF MISSOURI 
-Scientific Name: Camstozora shyhkyllae 
-Location: ( L. ) Link. Chere Coeur Lake NO 
-Registration Number: No. 1623 
-Date: april 10, 1986 
-Collector: JULIAN A. STEYERMARK, COLLECTOR 
-
-
-#Color code(will be updated as needed)
-Red: OCR detected a word that is not present in the dictionary
-Green: OCR value and replacement are same
-Yellow: User manually updated the value.
-
-#Scientific Name Detection
-a server is created which would use Trie search algorithm to find the closest match
-when application opens, it tires to connect with server (SNS), 
-if SNS server is down, it will create local engine to detect scientific words
-Local engine can be any one of three,
-1. Trie fastest engine when searching
-2. Fuzzy fastest when loading the dictionary, but slower when searching
-3. Enchant medium when searching.
-
-To avoid the situation, when application can be closed and open multiple times, and do not want to load the dictionary each time, a server can run continuesly
-execute the server by running "startSnsServer.py"
-if server is used to detect the scientific words, it will show the client-server communication in the console!
-
-

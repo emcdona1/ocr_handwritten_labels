@@ -1,5 +1,5 @@
 class WordCategories(object):
-    plantDict = ""  # enchant.PyPWL("InputResources/genusspecies_data.txt")
+    plantDict = ""
     Unknown = "Unknown"
     ScientificName = "Scientific Name"
     Date = "Date"

@@ -8,6 +8,14 @@ from Helper.WordCategories import GetWordCategories
 from ImageProcessor.ImageProcessorDriver import setRoot
 from SuggestEngine.Get_SuggestEngine import GetRunningServerEngineOrCreateLocalForSuggestion
 
+from configparser import ConfigParser
+
+configParser = ConfigParser()
+configFilePath = r'Configuration.cfg'
+configParser.read(configFilePath)
+genusSpeciesFilePath = configParser.get('SNS_SERVER', 'genusSpeciesFilePath')
+
+
 class ClassificationApp():
     def __init__(self, **kw):
         root = Tk(className='ToolTip-demo')
@@ -20,8 +28,10 @@ class ClassificationApp():
         root.totalTimeTaken=0
         root.stopThread = False
         root.selectedFilter="Filter: None"
-        root.plantDictionaryPath = "InputResources/genusspecies_data.txt"
-        root.suggestEngine = GetRunningServerEngineOrCreateLocalForSuggestion(root.plantDictionaryPath, "TRIE")
+        root.configParser=configParser
+        root.plantDictionaryPath = configParser.get('SNS_SERVER', 'genusSpeciesFilePath')
+
+        root.suggestEngine = GetRunningServerEngineOrCreateLocalForSuggestion(root, "TRIE")
         root.WordCategories = GetWordCategories()
 
 
