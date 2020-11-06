@@ -4,6 +4,8 @@ DROP PROCEDURE IF EXISTS SP_UpdateWord;
 DROP PROCEDURE IF EXISTS SP_DeleteTag;
 DROP PROCEDURE IF EXISTS SP_GetTagList;
 DROP PROCEDURE IF EXISTS SP_GetTagDetail;
+DROP PROCEDURE IF EXISTS SP_AddBarCodeInfo;
+DROP PROCEDURE IF EXISTS SP_GetBarCodeInfo;
 
 DELIMITER $$
 
@@ -79,4 +81,28 @@ DELIMITER $$
 	SELECT WordIndex,OCRDescription,Replacement,Suggestions,Vertices,Category FROM Tag_Word w Where w.TagId=tagIdIn;
  END $$
  
+ 
+ DELIMITER $$
+ CREATE PROCEDURE SP_AddBarCodeInfo(
+	IN barCodeIn VARCHAR(10),
+    IN irnIn BIGINT,
+    IN taxonomyIn VARCHAR(100),
+    IN collectorIn VARCHAR(100),
+    IN detailsIn VARCHAR(1000)
+ )
+ BEGIN
+	INSERT INTO Barcode_Info(BarCode,IRN,Taxonomy,Collector,Details)
+	VALUES (barCodeIn,irnIn,taxonomyIn,collectorIn,detailsIn);
+END $$
+
+DELIMITER $$
+ CREATE PROCEDURE SP_GetBarCodeInfo(
+	IN barCodeIn VARCHAR(10)
+ )
+ BEGIN
+	SELECT BarCode,IRN,Taxonomy,Collector,Details
+	FROM Barcode_Info bi
+	WHERE bi.BarCode=barCodeIn;
+END $$
+
 DELIMITER ;

@@ -48,6 +48,12 @@
 2. To correct the scientific words, Trie plant dictionary is used. Where all words are visited until they exceed the maximum given levenshtein distance. maximum levenshtein distance is dynamically calculated with the following formula
    - maxCost = min((len(word) // 3) + 1, 8)
 
+# WIP
+1. order of which words to find first,
+2. using natural language processing after enchant to correct the regular words. 
+3. modified trie search algorithm to break when exact word is found, or the maximum cost exceeded best match earlier.
+
+
   
  
  

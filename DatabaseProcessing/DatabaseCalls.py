@@ -106,3 +106,14 @@ def Call_SP_GetTagDetail(tagIdIn):
         return image,imagePath,processingTime, dataFrame,importDate
         pass
 
+def Call_SP_AddBarCodeInfo(barCode,irn,taxonomy, collector,details):
+    conn, isConnected,dbName = Get_Connection()
+    if isConnected:
+        cursor = conn.cursor()
+        cursor.callproc('SP_AddBarCodeInfo',[barCode, irn,taxonomy, collector,details, ])
+        cursor.stored_results()
+        conn.commit()
+        cursor.close()
+        conn.close()
+    else:
+        print("Unable to connect to the database")

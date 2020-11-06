@@ -1,5 +1,6 @@
 DROP TABLE IF EXISTS Tag_Word;
 DROP TABLE IF EXISTS Tag_Info;
+DROP TABLE IF EXISTS Barcode_Info;
 
 CREATE TABLE Tag_Info
 (
@@ -22,4 +23,14 @@ CREATE TABLE Tag_Word
     LastUpdatedTimeStamp DATETIME DEFAULT NOW(),
     FOREIGN KEY(TagId) REFERENCES Tag_Info(TagId),
     PRIMARY KEY (TagId, WordIndex)
+);
+
+CREATE TABLE Barcode_Info
+(
+    BarCode VARCHAR(10),
+    IRN BIGINT,
+    Taxonomy VARCHAR(100),
+    Collector VARCHAR(100),
+    Details VARCHAR(1000),
+    PRIMARY KEY (BarCode)
 );
