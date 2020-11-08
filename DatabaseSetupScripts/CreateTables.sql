@@ -5,6 +5,7 @@ DROP TABLE IF EXISTS Barcode_Info;
 CREATE TABLE Tag_Info
 (
 	TagId BIGINT PRIMARY KEY NOT NULL AUTO_INCREMENT,
+    BarCode VARCHAR(20),
     ImportDate VARCHAR(10) NOT NULL DEFAULT (DATE_FORMAT(NOW(),'%Y-%m-%d')),
     OriginalImagePath VARCHAR(255) NOT NULL,
     ProcessingTime DECIMAL(9,3),

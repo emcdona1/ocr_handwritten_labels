@@ -5,7 +5,7 @@ from tkinter.scrolledtext import ScrolledText
 from tkinter.ttk import Style, Combobox
 
 
-from ClassificationApp_GUI.ProcessTag import OpenTagId
+from ClassificationApp_GUI.ProcessTag import OpenTagId, DisplayClassificationEditor
 from ClassificationApp_GUI.StatusBar import SetStatusForWord
 from DatabaseProcessing.DatabaseProcessing import GetImportedTagTuples, DeleteTag
 
@@ -102,7 +102,8 @@ def TagSelected(evt,root,showDeleteOption=False):
                 root.selectTagListBox.rclick.popup(evt,root.tagId,root.imagePath.split('/')[-1],index)
             OpenTagId(root, root.tagId)
 
-    except:
+    except Exception as error:
+        print(error)
         pass
     pass
 
@@ -119,7 +120,7 @@ def InitializeTagListBox(root):
     root.tagIdImagePathHolder=[]
     i=0
     for x in root.importedTags:
-        if x[1] == root.selectedFilter or root.selectedFilter == 'Filter: None':
+        if x[1] == root.selectedFilter or (root.selectedFilter == 'Filter: None' and not x[1]=='Current Import'):
             root.selectTagListBox.insert(i," " + x[2].split('/')[-1])
             root.tagIdImagePathHolder.append((x[0], x[2]))
             i+=1
@@ -139,14 +140,30 @@ def GetImportedDates(root):
 def InitializeImportedListAndOpenTheTagId(tagId=0):
     gRoot.tagId = tagId
     gRoot.importedTags = GetImportedTagTuples()
-    gRoot.selectDateCBox['values']=GetImportedDates(gRoot)
+    gRoot.selectDateCBoxOptions=GetImportedDates(gRoot)
+    gRoot.selectDateCBox['values']=gRoot.selectDateCBoxOptions
     gRoot.selectDateCBox.set(gRoot.selectedFilter)
     InitializeTagListBox(gRoot)
     if(gRoot.tagId>0):
         OpenTagId(gRoot,gRoot.tagId)
     pass
 
-def UpdateProcessingCount(count,processingTime=0):
+def AddNewTagOnTheTagList(tagId,importDate,imagePath):
+    gRoot.importedTags.append((tagId,importDate,imagePath))
+    gRoot.importedTags.append((tagId,'Current Import',imagePath))
+    if importDate not in (gRoot.selectDateCBoxOptions):
+        gRoot.selectDateCBoxOptions.append(importDate)
+    if 'Current Import' not in (gRoot.selectDateCBoxOptions):
+        gRoot.selectDateCBoxOptions.append('Current Import')
+
+    gRoot.selectDateCBox['values']=gRoot.selectDateCBoxOptions
+    gRoot.selectedFilter='Current Import'
+    gRoot.selectDateCBox.set(gRoot.selectedFilter)
+    InitializeTagListBox(gRoot)
+
+
+
+def UpdateProcessingCount(count,processingTime=0,tagId=0,sdb='',tagPath='',imagePath='',importDate='',barCode=''):
     global gRoot
     if(count>0):
         gRoot.total += count
@@ -171,6 +188,16 @@ def UpdateProcessingCount(count,processingTime=0):
             SetStatusForWord(gRoot,f"[PROCESSING]: {gRoot.processed}/{gRoot.total} processed! {strRemmsg}","brown4")
             Config_StateMenu(gRoot,"disabled")
 
+    if (tagId>0):
+        gRoot.tagId=tagId
+        gRoot.sdb=sdb
+        gRoot.tagPath=tagPath
+        gRoot.imagePath=imagePath
+        gRoot.processingTime=processingTime
+        gRoot.importDate=importDate
+        gRoot.barCode=barCode
+        AddNewTagOnTheTagList(gRoot.tagId,gRoot.importDate,gRoot.imagePath)
+        DisplayClassificationEditor(gRoot)
 
 def Config_StateMenu(root,state="normal"):
     root.menuBar.entryconfig("File", state=state)

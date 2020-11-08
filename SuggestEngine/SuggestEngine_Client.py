@@ -20,6 +20,7 @@ class SuggestEngineClient:
             result = pickle.loads(self.s.recv(self.portNo_server))
             self.s.close()
             return result
-        except:
+        except Exception as error:
+            print(error)
             print(datetime.now().strftime("%H:%M:%S") + " Unknown Error when getting suggestion from SNS server!")
             return None

@@ -2,14 +2,15 @@ from DatabaseProcessing.DatabaseCalls import Call_SP_AddTag, Call_SP_UpdateWord,
     Call_SP_GetTagList, Call_SP_DeleteTag, Call_SP_AddBarCodeInfo
 from Helper.AlgorithmicMethods import GetTempFilePath
 
-def SaveTagtoDatabase(imagePath,processingTime,imageContent, df):
+def SaveTagtoDatabase(imagePath,processingTime,imageContent, df,barCode):
     wordsInfoAsXML = DFToWordsXml(df)
-    tagId=Call_SP_AddTag(
+    tagId,importDate,hasBarCodeInDB=Call_SP_AddTag(
         originalImagePath=imagePath,
         processingTime=processingTime,
         img=imageContent,
-        wordsInfoAsXML=wordsInfoAsXML)
-    return tagId
+        wordsInfoAsXML=wordsInfoAsXML,
+        barCode=barCode)
+    return tagId,importDate,hasBarCodeInDB
 
 def UpdateWordInDatabase(tagId,word):
     Call_SP_UpdateWord(tagId,word['index'], word['replacement'],word['suggestedDescription'],word['category'])
@@ -32,17 +33,17 @@ def DFToWordsXml(df):
     return '\n'.join(xml)
 
 def GetImgAndSDBFromTagId(tagId):
-    imgBlob,imagePath,processingTime,df,importDate=Call_SP_GetTagDetail(tagId)
+    imgBlob,imagePath,processingTime,df,importDate,barCode,irn,taxonomy,collector,details=Call_SP_GetTagDetail(tagId)
     d = []
     for index, w in df.iterrows():
         if (w['index'] > 0):
             d.append(w)
 
-    tempFile = GetTempFilePath()
+    tempFile = GetTempFilePath("DB_Load_Tag.png")
     with open(tempFile, "wb") as fh:
         fh.write(imgBlob)
 
-    return tempFile,[d],imagePath,processingTime,importDate
+    return tempFile,[d],imagePath,processingTime,importDate,barCode,irn,taxonomy,collector,details
 
 def GetImportedTagTuples(importedDate=''):
     return Call_SP_GetTagList(importedDate)

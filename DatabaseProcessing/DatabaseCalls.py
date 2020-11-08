@@ -6,13 +6,14 @@ import pandas as pd
 from DatabaseProcessing.GetConnection import Get_Connection
 
 
-def Call_SP_AddTag(originalImagePath, processingTime,img, wordsInfoAsXML):
+def Call_SP_AddTag(originalImagePath, processingTime,img, wordsInfoAsXML,barCode):
     conn, isConnected,dbName = Get_Connection()
     tagId = 0
+    importDate=''
     if isConnected:
         cursor = conn.cursor()
         cursor.callproc('SP_AddTag',
-                        [originalImagePath, processingTime,binascii.hexlify(img), wordsInfoAsXML, ])
+                        [originalImagePath, processingTime,binascii.hexlify(img), wordsInfoAsXML,barCode, ])
         result = cursor.stored_results()
         conn.commit()
         cursor.close()
@@ -21,9 +22,11 @@ def Call_SP_AddTag(originalImagePath, processingTime,img, wordsInfoAsXML):
         for r in result:
             for row in r:
                 tagId = row[0]
+                importDate=row[1]
+                hasBarCodeInDb=row[2]
         pass
 
-    return tagId
+    return tagId,importDate,hasBarCodeInDb
 
 
 def Call_SP_UpdateWord(tagId,wordIndexUpdate, replacement,suggestions,category):
@@ -101,9 +104,14 @@ def Call_SP_GetTagDetail(tagIdIn):
                     imagePath=row[1]
                     processingTime=row[2]
                     importDate=row[3]
+                    barCode=row[4]
+                    irn=str(row[5])
+                    taxonomy=row[6]
+                    collector=row[7]
+                    details=row[8]
         cursor.close()
         conn.close()
-        return image,imagePath,processingTime, dataFrame,importDate
+        return image,imagePath,processingTime, dataFrame,importDate,barCode,irn,taxonomy,collector,details
         pass
 
 def Call_SP_AddBarCodeInfo(barCode,irn,taxonomy, collector,details):
