@@ -2,6 +2,7 @@
 import io
 import os
 import tempfile
+from threading import Thread
 from urllib.request import urlopen
 
 import cv2
@@ -13,8 +14,9 @@ from DatabaseProcessing.DatabaseProcessing import SaveTagtoDatabase
 
 from DetectCorrectAndClassify.ApplyCorrection import ApplyCorrection
 from DetectCorrectAndClassify.DetectAndClassify import DetectAndClassify
-from Helper.AlgorithmicMethods import GetSequentialDataBlocks, GetTempFilePath
-from ImageProcessor.InitializeDataFromImage import InitializeDataFromImage
+from Helper.AlgorithmicMethods import GetNormalizedSequentialDataBlocks, GetTempFilePath
+from ImageProcessor.InitializeDataFromImage import GetInformationAsDataFrameFromImage, GetBarCodeFromOCRData
+from InitializeBarCodeInfoTable_Thread import GetInfoForBarCode
 
 
 class ImageProcessor():
@@ -51,21 +53,31 @@ class ImageProcessor():
         if not ImageProcessor.templatesInitialized:
             ImageProcessor.InitializeTemplates()
 
-
     def processImage(self):
         print("Processing: " + self.imagePath)
         self.startTime = datetime.now()
-        self.InitializeImageContentAndTempTagPath()
-        dataFrame = InitializeDataFromImage(self.imageContent)
-        self.sdb = GetSequentialDataBlocks(dataFrame)
+        self.SetImageRGBAndSaveToTempLocation()
+        self.ocrThread= Thread(target=self.InitializeOCRData)
+        self.ocrThread.start()
+        self.ExtractTagContentFromImageAndSetTempTagPath()
+        self.ocrThread.join()
+        self.barCode=GetBarCodeFromOCRData(self.dataFrame['description'][0])
+        self.sdb = GetNormalizedSequentialDataBlocks(self.startX, self.startY, self.dataFrame)
         DetectAndClassify(self.suggestEngine, self.sdb, self.minimumConfidence)
         ApplyCorrection(self.sdb)
         self.endTime = datetime.now()
         self.processingTime=(self.endTime - self.startTime).total_seconds()
-        self.tagId = SaveTagtoDatabase(self.imagePath, self.processingTime,self.imageContent, self.sdb)
-        UpdateProcessingCount(-1,self.processingTime)
-        InitializeImportedListAndOpenTheTagId(self.tagId)
-        #return self.tagPath, self.sdb,self.tagId, self.processingTime
+        self.tagId,self.importDate,self.hasBarCodeInDB = SaveTagtoDatabase(self.imagePath, self.processingTime, self.tagContent, self.sdb,self.barCode)
+        UpdateProcessingCount(-1,self.processingTime,self.tagId,self.sdb,self.tagPath,self.imagePath,self.importDate,self.barCode)
+        if len(self.barCode)>0 and self.hasBarCodeInDB==0:
+            GetInfoForBarCode(self.barCode)
+
+
+    def InitializeOCRData(self):
+        with io.open(self.tagPath, 'rb') as image_file:
+            self.imageContent = image_file.read()
+        self.dataFrame = GetInformationAsDataFrameFromImage(self.imageContent)
+        pass
 
     def GetCoordinatesOfMatchingTemplateBetweenTwoPoints(self, cv2RgbImg, templates, xStart, yStart, xEnd, yEnd,
                                                          threshold):
@@ -91,7 +103,7 @@ class ImageProcessor():
         iw = int(iw)
         # if the image is already a tag return that image.
         if ih < iw or ih * iw < tagMaxArea:
-            return img_rgb
+            return 0,0,img_rgb
 
         xStart = int(iw // 2)
         xEnd = int(iw - iw // 10)
@@ -118,22 +130,32 @@ class ImageProcessor():
         tagArea = int((ih - y) * (iw - x))
         if (iw - x) < (ih - y) or tagArea < tagMinArea:
             print("Looks like the image is a tag")
-            return img_rgb
+            return 0,0,img_rgb
         else:
-            return img_rgb[y:ih, x:iw]
+            return x,y,img_rgb[y:ih, x:iw]
 
-    def InitializeImageContentAndTempTagPath(self):
-        if (self.extractTag): #overwrite the tagPath if the tag is extracted
-            if ":" in self.imagePath:
-                resp = urlopen(self.imagePath)
-                image = np.asarray(bytearray(resp.read()), dtype="uint8")
-                img_rgb = cv2.imdecode(image, cv2.IMREAD_COLOR)
-            else:
-                img_rgb = cv2.imread(self.imagePath)
-            img_rgb=self.ExtractTagRGBFromTheLargeImageRGB(img_rgb)
-            tempFile=GetTempFilePath()
-            cv2.imwrite(tempFile, img_rgb)
-            self.tagPath=tempFile
+    def SetImageRGBAndSaveToTempLocation(self):
+        if ":" in self.imagePath:
+            resp = urlopen(self.imagePath)
+            image = np.asarray(bytearray(resp.read()), dtype="uint8")
+            img_rgb = cv2.imdecode(image, cv2.IMREAD_COLOR)
+        else:
+            img_rgb = cv2.imread(self.imagePath)
+        self.img_rgb=img_rgb
+        self.tempImagePath=GetTempFilePath("_temp_wholeImage.png")
+        cv2.imwrite(self.tempImagePath,img_rgb)
+        pass
+
+    def ExtractTagContentFromImageAndSetTempTagPath(self):
+        if (self.extractTag):
+            self.startX,self.startY,tag_rgb=self.ExtractTagRGBFromTheLargeImageRGB(self.img_rgb)
+            tempTagPath=GetTempFilePath("_temp_tagPath.png")
+            cv2.imwrite(tempTagPath, tag_rgb)
+            self.tagPath=tempTagPath
+        else:
+            self.startX=0
+            self.startY=0
+            self.tagPath=self.tempImagePath
 
         with io.open(self.tagPath, 'rb') as image_file:
-            self.imageContent = image_file.read()
+            self.tagContent = image_file.read()

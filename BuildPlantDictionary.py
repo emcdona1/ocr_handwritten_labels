@@ -24,7 +24,8 @@ def getSearchXpathResult(searchUrlWithKey, xpath):
         rawResult = doc.xpath(xpath)
         for g, s in zip(rawResult[0::2], rawResult[1::2]):
             result.add(g + " " + s)
-    except:
+    except Exception as error:
+        print(error)
         print(" xpath error :")
     return list(result)
 

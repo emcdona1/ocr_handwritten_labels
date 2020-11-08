@@ -13,11 +13,13 @@ DELIMITER $$
 	IN originalImagePathIn VARCHAR(255),
     IN processingTimeIn DECIMAL(9,3),
     IN imgIn LONGBLOB,
-    IN wordsInfoAsXMLIn LONGTEXT
+    IN wordsInfoAsXMLIn LONGTEXT,
+    IN barCodeIn VARCHAR(20)
  )
  BEGIN
-	INSERT INTO Tag_Info(OriginalImagePath,ProcessingTime,Img)
-	VALUES (originalImagePathIn,processingTimeIn,UNHEX(imgIn));
+	SET @ImportDate=(SELECT DATE_FORMAT(NOW(),'%Y-%m-%d'));
+	INSERT INTO Tag_Info(BarCode,ImportDate,OriginalImagePath,ProcessingTime,Img)
+	VALUES (barCodeIn,@ImportDate,originalImagePathIn,processingTimeIn,UNHEX(imgIn));
 	SELECT LAST_INSERT_ID() INTO @newTagId;
     
 	SET @COUNT = (SELECT EXTRACTVALUE(wordsInfoAsXMLIn,'COUNT(//words/word)'));
@@ -34,7 +36,10 @@ DELIMITER $$
                 ExtractValue(wordsInfoAsXMLIn,CONCAT('/words/word[',@I,']/category'));
         SET @I = @I + 1;
     END WHILE;
-    SELECT @newTagId;
+    IF EXISTS (SELECT 1 FROM  Barcode_Info where Barcode=barCodeIn)
+    THEN SELECT @newTagId,@ImportDate,1;
+    ELSE SELECT @newTagId,@ImportDate,0;
+    END IF;
  END $$ 
  
  DELIMITER $$
@@ -77,8 +82,14 @@ DELIMITER $$
 	IN tagIdIn BIGINT
  )
  BEGIN
-	SELECT ti.Img, ti.OriginalImagePath,ti.ProcessingTime,ti.ImportDate FROM Tag_Info ti WHERE ti.TagId=tagidIn;
+	SELECT ti.Img, ti.OriginalImagePath,ti.ProcessingTime,ti.ImportDate,ti.BarCode,
+    bi.IRN,bi.Taxonomy,bi.Collector,bi.Details
+    FROM Tag_Info ti 
+    LEFT JOIN Barcode_Info bi on ti.BarCode=bi.BarCode
+    WHERE ti.TagId=tagidIn;
 	SELECT WordIndex,OCRDescription,Replacement,Suggestions,Vertices,Category FROM Tag_Word w Where w.TagId=tagIdIn;
+	
+
  END $$
  
  

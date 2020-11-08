@@ -1,14 +1,23 @@
-import io
 import os
+import re
 import sys
-
 import pandas as pd
 from google.api_core.exceptions import ServiceUnavailable
 from google.cloud import vision
 from grpc._channel import _InactiveRpcError
 
-os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = r'ImageProcessor/serviceAccountToken.json'
-client = vision.ImageAnnotatorClient()
+client= None
+barCodeRegx=None
+
+def SetGoogleCloudVisionClient(serviceAccountTokenPath):
+    os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = serviceAccountTokenPath
+    global client
+    client=vision.ImageAnnotatorClient()
+    pass
+def SetBarCodeRegx(regx):
+    global barCodeRegx
+    barCodeRegx=regx
+
 
 
 def GetWordProperties(index, text, full_text_annotation):
@@ -38,7 +47,7 @@ def GetWordProperties(index, text, full_text_annotation):
     return t, confidence, sp, ep
 
 
-def InitializeDataFromImage(imageContent):
+def GetInformationAsDataFrameFromImage(imageContent):
     global client
     image = vision.types.Image(content=imageContent)
     # response = client.text_detection(image=image)
@@ -56,7 +65,8 @@ def InitializeDataFromImage(imageContent):
         client = vision.ImageAnnotatorClient()
         response = client.document_text_detection(image=image)
 
-    except:
+    except Exception as error:
+        print(error)
         print("Unexpected error:", sys.exc_info()[0])
         raise
 
@@ -86,3 +96,15 @@ def InitializeDataFromImage(imageContent):
         )
         index = index + 1
     return dataFrame
+
+def GetBarCodeFromOCRData(textData):
+    barCode=""
+    try:
+        barCode=re.findall(barCodeRegx,textData,re.MULTILINE)[0]
+    except Exception as error:
+        print("Could not detect bar code using OCR Data and Regx")
+        pass
+    return barCode
+
+
+#GetBarCodeFromImage("/Users/Keshab/Desktop/oneimg/3.png")

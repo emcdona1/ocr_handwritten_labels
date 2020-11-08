@@ -10,6 +10,7 @@ def ClearOldImage(root):
     for widget in root.imageCanvasFrame.winfo_children():
         widget.destroy()
     root.tagId=0
+    root.irn=0
     ClearOutput(root)
     pass
 
@@ -17,9 +18,11 @@ def OpenTagId(root, tagId):
     root.tagId = tagId
     if root.tagId>0:
         try:
-            root.tagPath, root.sdb,root.imagePath,root.processingTime,root.importDate = GetImgAndSDBFromTagId(root.tagId)
+            root.tagPath, root.sdb,root.imagePath,root.processingTime,root.importDate, \
+            root.barCode,root.irn,root.taxonomy,root.collector,root.details= GetImgAndSDBFromTagId(root.tagId)
             DisplayClassificationEditor(root)
-        except:
+        except Exception as error:
+            print(error)
             ClearOldImage(root)
     else:
         ClearOldImage(root)

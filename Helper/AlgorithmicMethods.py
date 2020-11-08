@@ -50,12 +50,23 @@ def GetSequencialDataList(d):
     return GetSequentialBlocks(lines)
 
 
-def GetSequentialDataBlocks(df):
+def GetNormalizedSequentialDataBlocks(startX, startY, df):
     d = []
-    for index, w in df.iterrows():
-        if (w['index'] > 0):
-            d.append(w)
+    if(startX==0 and startY==0):#processing whole image
+        for index, w in df.iterrows():
+            if (w['index'] > 0):
+                d.append(w)
+    else:#processing part of image
+        for index, w in df.iterrows():
+            if (w['index'] > 0):
+                if NormalizePosition(startX,startY,w):
+                    d.append(w)
     return GetSequencialDataList(d)
+
+def NormalizePosition(startX,startY,w):
+    w['tupleVertices']=[(x-startX,y-startY)for x,y in w['tupleVertices']]
+    return w['tupleVertices'][0][0]>=0 and w['tupleVertices'][0][1]>=0
+
 
 
 def DetectAndRemoveSmallRepeatedWordArea(x, y):
@@ -89,8 +100,8 @@ def MeetVerticalAlignment(w1, w2, verticleOffset=15):
 def AreWordsInAcceptableOffsetDistance(w1, w2):
     return MeetHorizontalAlignment(w1, w2) and MeetVerticalAlignment(w1, w2)
 
-def GetTempFilePath():
+def GetTempFilePath(ending):
     tf = tempfile.NamedTemporaryFile()
-    return tf.name + "_temp.png"
+    return tf.name + ending
     pass
 

@@ -3,18 +3,6 @@ from Helper.GetWordsInformation import GetDescriptionFromDataBlocks, GetClassifi
     GetClassifiedCategoriesInOrder
 
 
-def UpdateOutput_old(root, **kw):
-    ClearOutput(root)
-    type = kw.pop('type', "corrected")
-    useHint = kw.pop('useHint', 0)
-    data = "######### Data #########\n" + \
-           GetDescriptionFromDataBlocks(type, root.sdb, useHint)
-    classifiedData = "\n\n######### Classified Information #########\n" + \
-                     GetDescriptionFromDataBlocks('classified', root.sdb, 1, root.WordCategories)
-    AppendToOutputArea(root, data)
-    AppendToOutputArea(root, classifiedData)
-
-
 def AppendToOutputArea(root, value):
     root.outputField.insert('insert', value)
 
@@ -28,9 +16,12 @@ def UpdateOutput(root,**kw):
     classifiedCategories = [c[0] for c in classifiedData]
     classifiedCategories = list(set(classifiedCategories))
     categories = GetClassifiedCategoriesInOrder(root.WordCategories, classifiedCategories)
+    root.outputField.insert('end',GetLineText("Classifier Data"), 'line')
     root.outputField.tag_config('label', foreground="green",font=("Courier", 14))
     root.outputField.tag_config('data', foreground="black",font=("Courier", 14))
-
+    root.outputField.tag_config('line', foreground="gray50",font=("Courier", 14))
+    root.outputField.insert('end','{0: <19}: '.format('Bar Code'),'label')
+    root.outputField.insert('end',root.barCode+'\n','data')
     for c in categories:
         root.outputField.insert('end','{0: <19}: '.format(c),'label')
         for cd in classifiedData:
@@ -38,10 +29,49 @@ def UpdateOutput(root,**kw):
                 root.outputField.insert('end', cd[1] + " ", 'data')
         root.outputField.insert('end',"\n", 'data')
     pass
-    root.outputField.insert('end',"\n---------------------------------------------------------------\n", 'label')
+    try:
+        if len(str(root.barCode))>0 and int(root.irn+"0")>0:
+            root.outputField.insert('end',GetLineText("Barcode Info"), 'line')
+            root.outputField.insert('end', '{0: <19}: '.format("IRN "), 'label')
+            root.outputField.insert('end',root.irn+"\n", 'data')
+            root.outputField.insert('end', '{0: <19}: '.format("Taxonomy "), 'label')
+            root.outputField.insert('end',root.taxonomy+"\n", 'data')
+            root.outputField.insert('end', '{0: <19}: '.format("Collector "), 'label')
+            root.outputField.insert('end',root.collector+"\n", 'data')
+            for label,data in getTupleDetails(root.details):
+                root.outputField.insert('end', '{0: <19}: '.format(label), 'label')
+                root.outputField.insert('end',data+"\n", 'data')
+    except Exception as error:
+        print(error)
+        pass
+
+    root.outputField.insert('end',GetLineText("Import Details"), 'line')
     root.outputField.insert('end', '{0: <19}: '.format("Imported From "), 'label')
     root.outputField.insert('end',root.imagePath+"\n", 'data')
     root.outputField.insert('end', '{0: <19}: '.format("Processing Time "), 'label')
     root.outputField.insert('end', str(root.processingTime)+" Seconds.\n", 'data')
     root.outputField.insert('end', '{0: <19}: '.format("Imported Date "), 'label')
     root.outputField.insert('end', str(root.importDate) + "\n", 'data')
+
+
+def getTupleDetails(details):
+    details=details.replace(':','')
+    details=details.replace('  ',' ')
+    details=details.replace('[\'','')
+    details=details.replace('\']','')
+    details=details.replace('\', \'','||')
+    details=details.replace('[\"','')
+    details=details.replace('\"]','')
+    details=details.replace('\", \"','||')
+    details=details.replace('\', \"','||')
+    details=details.replace('\", \'','||')
+    details=details.replace(' ||','||')
+    details=details.replace('|| ','')
+    details=details.split('||')
+    tuples=[(i,k)for i,k in zip(details[0::2], details[1::2])]
+    return tuples
+
+def GetLineText(text,spacer=" * ",length=50):
+    return (f"{text:^{length}}").replace('   ',spacer).replace('  ',' ')+"\n"
+
+

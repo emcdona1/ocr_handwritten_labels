@@ -52,6 +52,7 @@
 1. order of which words to find first,
 2. using natural language processing after enchant to correct the regular words. 
 3. modified trie search algorithm to break when exact word is found, or the maximum cost exceeded best match earlier.
+4. brew install zbar (to detect barcodes)
 
 
   

@@ -1,7 +1,8 @@
 import multiprocessing
 import os
 
-from joblib import Parallel
+from queue import Queue
+from threading import Thread
 
 from ClassificationApp_GUI.LayoutGUI import UpdateProcessingCount, Config_StateMenu
 from ClassificationApp_GUI.StatusBar import SetStatusForWord
@@ -10,6 +11,7 @@ from threading import Thread
 
 ParallelProcessingSizeDefault = 4
 root=None
+
 def setRoot(r):
     global root
     root=r
@@ -21,7 +23,8 @@ def ProcessImagesInTheFolder(suggestEngine, imageFolder, minimumConfidence,extra
             filePaths.append(os.path.join(imageFolder, filename))
     try:
         ProcessMultipleImages(suggestEngine, filePaths, minimumConfidence,extractTag)
-    except:
+    except Exception as error:
+        print(error)
         pass
     pass
 
@@ -35,7 +38,8 @@ def ProcessImagesFromTheUrlsInTheTextFile(suggestEngine, textFile, minimumConfid
         filePaths.append(url)
     try:
         ProcessMultipleImages(suggestEngine, filePaths, minimumConfidence, extractTag)
-    except:
+    except Exception as error:
+        print(error)
         pass
     pass
 
@@ -47,26 +51,11 @@ def ExtractAndProcessSingleImage(suggestEngine, imagePath, minimumConfidence,ext
 
 def ProcessMultipleImages(suggestEngine, filePaths,minimumConfidence,extractTag):
     UpdateProcessingCount(len(filePaths))
-    # ProcessListOfImagePaths_Parallel(suggestEngine, filePaths, minimumConfidence,extractTag)
-    #ProcessListOfImagePaths_Sequential(suggestEngine, filePaths, minimumConfidence, extractTag)
-    ProcessMultipleImages_Thread(suggestEngine, filePaths, minimumConfidence, extractTag)
-    #ProcessListOfImagePaths_ThreadToThread(suggestEngine, filePaths, minimumConfidence, extractTag)
-
-def ProcessMultipleImages_Thread(suggestEngine, filePaths,minimumConfidence,extractTag):
-
     args=(suggestEngine, filePaths,minimumConfidence,extractTag)
-    Thread(target=ProcessListOfImagePaths_Sequential,args=args).start()
-
-
-
-def ProcessListOfImagePaths_ThreadToThread(suggestEngine, filePaths, minimumConfidence,extractTag):
-    num_cores = multiprocessing.cpu_count()
-    imgObjListToprocess = [ImageProcessor(suggestEngine, filePath, minimumConfidence, extractTag) for filePath in
-                           filePaths]
-    for obj in imgObjListToprocess:
-        args=(obj)
-        Thread(target=obj.processImage).start()
-
+    if root.parallelProcess:
+        Thread(target=ProcessListOfImagePaths_Parallel,args=args).start()
+    else:
+        Thread(target=ProcessListOfImagePaths_Sequential,args=args).start()
 
 
 def ProcessListOfImagePaths_Sequential(suggestEngine, filePaths, minimumConfidence,extractTag):
@@ -84,18 +73,32 @@ def ProcessListOfImagePaths_Sequential(suggestEngine, filePaths, minimumConfiden
         SetStatusForWord(root, f"User interrupted the process! {i}/{len(filePaths)} files are processed!", "red")
         root.stopThread=False
 
+
+
 def ProcessListOfImagePaths_Parallel(suggestEngine, filePaths, minimumConfidence,extractTag):
-    num_cores = multiprocessing.cpu_count()
-    imgObjListToprocess = [ImageProcessor(suggestEngine, filePath, minimumConfidence,extractTag) for filePath in
-                           filePaths]
-    executor = Parallel(n_jobs=num_cores, backend='multiprocessing')
-    tasks = (ExecuteProcessImage(imgObj) for imgObj in imgObjListToprocess)
-    executor(tasks)
+    num_cores = root.parallelProcessThreadCount
+    queue = Queue()
+    for x in range(num_cores):
+        infoExtractor = ImageThreadProcessor(queue)
+        infoExtractor.daemon = True
+        infoExtractor.start()
+
+    for filePath in filePaths:
+        imgProcessorObj = ImageProcessor(suggestEngine, filePath, minimumConfidence,extractTag)
+        queue.put(imgProcessorObj)
+    queue.join()
 
 
-def ExecuteProcessImage(obj):
-    try:
-        obj.processImage()
-    except:
-        print("Unknown Error when processing image!")
-    return None
+class ImageThreadProcessor(Thread):
+    def __init__(self, queue):
+        Thread.__init__(self)
+        self.queue = queue
+
+    def run(self):
+        while True:
+            imageProcessorObj = self.queue.get()
+            try:
+                imageProcessorObj.processImage()
+            finally:
+                self.queue.task_done()
+                print(imageProcessorObj.imagePath,": done")

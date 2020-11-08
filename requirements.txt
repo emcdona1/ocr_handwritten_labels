@@ -23,3 +23,4 @@ Shapely==1.7.1
 nltk==3.5
 grpcio==1.33.2
 configparser==5.0.1
+pyzbar==0.1.8
