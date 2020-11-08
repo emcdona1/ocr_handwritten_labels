@@ -18,11 +18,12 @@ def OpenTagId(root, tagId):
     root.tagId = tagId
     if root.tagId>0:
         try:
+            RemoveOldData(root)
             root.tagPath, root.sdb,root.imagePath,root.processingTime,root.importDate, \
             root.barCode,root.irn,root.taxonomy,root.collector,root.details= GetImgAndSDBFromTagId(root.tagId)
             DisplayClassificationEditor(root)
         except Exception as error:
-            print(error)
+            #print(f"{error} (Error Code:CAG_001)")
             ClearOldImage(root)
     else:
         ClearOldImage(root)
@@ -30,7 +31,6 @@ def OpenTagId(root, tagId):
 
 
 def DisplayClassificationEditor(root):
-    RemoveOldData(root)
     AddElementImageCanvas(root)
     CreateButtonsFromTheWords(root)
     UpdateOutput(root)

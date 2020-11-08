@@ -33,7 +33,7 @@ def main():
     try:
         os.remove(openssl_cafile)
     except FileNotFoundError as error:
-        print(error)
+        print(f"{error} (Error Code:IC_001)")
         pass
     print(" -- creating symlink to certifi certificate bundle")
     os.symlink(relpath_to_certifi_cafile, openssl_cafile)

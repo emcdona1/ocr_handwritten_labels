@@ -1,6 +1,6 @@
 import os
 
-from ClassificationApp_GUI.LayoutGUI import CreateLayout, InitializeImportedListAndOpenTheTagId
+from ClassificationApp_GUI.LayoutGUI import CreateLayout, RefreshImportedDatesAndSelect
 from ClassificationApp_GUI.MenuAndSubMenuAndFunctional import AddMenuAndSubMenu
 from ClassificationApp_GUI.ScrollableImage import Tk
 from Helper.WordCategories import GetWordCategories
@@ -27,17 +27,18 @@ class ClassificationApp():
         root.selectedFilter="Filter: None"
         root.suggestEngine = GetRunningServerEngineOrCreateLocalForSuggestion(root, "TRIE")
         root.WordCategories = GetWordCategories()
+        root.currentImportList=[]
+        root.selectDateCBoxOptions=[]
 
         #create layout
         root.title("Classify Specimen")
         CreateLayout(root)
         AddMenuAndSubMenu(root)
-        InitializeImportedListAndOpenTheTagId()
 
         #initialize root links to multiple places if needed
         setRoot(root)
+        RefreshImportedDatesAndSelect()
         root.mainloop()
-
 
 def InitializeConfiguration(root):
     root.configParser = ConfigParser()
@@ -45,8 +46,9 @@ def InitializeConfiguration(root):
     root.plantDictionaryPath = root.configParser.get('SNS_SERVER', 'genusSpeciesFilePath')
     root.serviceAccountTokenPath=root.configParser.get('GOOGLE_CLOUD_VISION_API', 'serviceAccountTokenPath')
     root.barCodeRegx=root.configParser.get('BARCODE', 'barCodeRegx')
-
     root.parallelProcess= True if root.configParser.get('IMAGE_PROCESSOR', 'parallelProcess').lower() in ['t','y','true','yes','1'] else False
     root.parallelProcessThreadCount=int(root.configParser.get('IMAGE_PROCESSOR', 'parallelProcessThreadCount'))
+    root.sortItemsByBarCode= True if root.configParser.get('TAG_LIST', 'sortItemsByBarCode').lower() in ['t','y','true','yes','1'] else False
+    root.noOfItemsInAPage=int(root.configParser.get('TAG_LIST', 'noOfItemsInAPage'))
 
 

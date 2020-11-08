@@ -9,14 +9,15 @@ import cv2
 import numpy as np
 from datetime import datetime
 
-from ClassificationApp_GUI.LayoutGUI import InitializeImportedListAndOpenTheTagId, UpdateProcessingCount
+from ClassificationApp_GUI.LayoutGUI import UpdateProcessingCount
 from DatabaseProcessing.DatabaseProcessing import SaveTagtoDatabase
 
 from DetectCorrectAndClassify.ApplyCorrection import ApplyCorrection
 from DetectCorrectAndClassify.DetectAndClassify import DetectAndClassify
 from Helper.AlgorithmicMethods import GetNormalizedSequentialDataBlocks, GetTempFilePath
+from ImageProcessor.InitializeBarCodeInfoTable import InitializeBarCodeInfoForAKey_InAThread
 from ImageProcessor.InitializeDataFromImage import GetInformationAsDataFrameFromImage, GetBarCodeFromOCRData
-from InitializeBarCodeInfoTable_Thread import GetInfoForBarCode
+
 
 
 class ImageProcessor():
@@ -70,11 +71,11 @@ class ImageProcessor():
         self.tagId,self.importDate,self.hasBarCodeInDB = SaveTagtoDatabase(self.imagePath, self.processingTime, self.tagContent, self.sdb,self.barCode)
         UpdateProcessingCount(-1,self.processingTime,self.tagId,self.sdb,self.tagPath,self.imagePath,self.importDate,self.barCode)
         if len(self.barCode)>0 and self.hasBarCodeInDB==0:
-            GetInfoForBarCode(self.barCode)
+            InitializeBarCodeInfoForAKey_InAThread(self.barCode)
 
 
     def InitializeOCRData(self):
-        with io.open(self.tagPath, 'rb') as image_file:
+        with io.open(self.tempImagePath, 'rb') as image_file:
             self.imageContent = image_file.read()
         self.dataFrame = GetInformationAsDataFrameFromImage(self.imageContent)
         pass

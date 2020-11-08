@@ -6,6 +6,7 @@ DROP PROCEDURE IF EXISTS SP_GetTagList;
 DROP PROCEDURE IF EXISTS SP_GetTagDetail;
 DROP PROCEDURE IF EXISTS SP_AddBarCodeInfo;
 DROP PROCEDURE IF EXISTS SP_GetBarCodeInfo;
+DROP PROCEDURE IF EXISTS SP_GetImportDates;
 
 DELIMITER $$
 
@@ -70,14 +71,45 @@ END $$
 
 DELIMITER $$
  CREATE PROCEDURE SP_GetTagList(
-	IN  importDateIn VARCHAR(10) 
+	IN importDateIn VARCHAR(20),
+    IN sortItemsByBarCode BIT,
+    IN startIndexIn BIGINT,
+    IN countIn BIGINT
  )
  BEGIN
-	SELECT ti.TagId, ti.ImportDate,ti.OriginalImagePath FROM Tag_info ti
-	WHERE importDateIn in ('', ti.ImportDate);
+	DROP TABLE IF EXISTS TagListTempTable;
+	CREATE TEMPORARY TABLE TagListTempTable (
+		Position BIGINT PRIMARY KEY NOT NULL AUTO_INCREMENT,
+        TagId BIGINT,
+        BarCode VARCHAR(20),
+		ImportDate VARCHAR(10),
+		OriginalImagePath VARCHAR(255)
+	) ENGINE=MEMORY;
+    
+	IF sortItemsByBarCode=1 
+    THEN 
+		INSERT INTO TagListTempTable (TagId,BarCode,ImportDate,OriginalImagePath)
+		SELECT ti.TagId, ti.BarCode,ti.ImportDate,ti.OriginalImagePath FROM Tag_info ti
+		WHERE importDateIn in ('Filter: None', ti.ImportDate) order by ti.BarCode;	
+    ELSE 
+		INSERT INTO TagListTempTable
+		SELECT ti.TagId, ti.BarCode,ti.ImportDate,ti.OriginalImagePath FROM Tag_info ti
+		WHERE importDateIn in ('Filter: None', ti.ImportDate) order by ti.TagId;	
+    END IF;
+    
+    SELECT TagId,BarCode,ImportDate,OriginalImagePath FROM TagListTempTable tl
+    WHERE tl.Position>=startIndexIn LIMIT countIn;
+    DROP TABLE TagListTempTable; 
  END $$
  
  DELIMITER $$
+ CREATE PROCEDURE SP_GetImportDates()
+ BEGIN
+	SELECT ImportDate, count(1) from Tag_info group by ImportDate order by ImportDate;
+ END $$
+ 
+ DELIMITER $$
+ 
  CREATE PROCEDURE SP_GetTagDetail(
 	IN tagIdIn BIGINT
  )
@@ -88,8 +120,6 @@ DELIMITER $$
     LEFT JOIN Barcode_Info bi on ti.BarCode=bi.BarCode
     WHERE ti.TagId=tagidIn;
 	SELECT WordIndex,OCRDescription,Replacement,Suggestions,Vertices,Category FROM Tag_Word w Where w.TagId=tagIdIn;
-	
-
  END $$
  
  

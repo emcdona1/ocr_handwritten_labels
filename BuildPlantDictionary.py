@@ -25,7 +25,7 @@ def getSearchXpathResult(searchUrlWithKey, xpath):
         for g, s in zip(rawResult[0::2], rawResult[1::2]):
             result.add(g + " " + s)
     except Exception as error:
-        print(error)
+        print(f"{error} (Error Code:BPD_001)")
         print(" xpath error :")
     return list(result)
 

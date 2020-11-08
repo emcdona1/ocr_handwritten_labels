@@ -10,6 +10,8 @@ def SetWordStatus(root, word):
 
 def ClearWordStatus(root):
     root.oldWord = root.activeWord = {'index': 0}
+    root.irn=0
+    root.imagePath=""
     SetWordStatusByValue(root, '', '', '')
 
 

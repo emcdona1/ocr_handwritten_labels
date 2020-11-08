@@ -51,16 +51,35 @@ def Call_SP_DeleteTag(tagIdDelete):
         conn.close()
         pass
 
+def CALL_SP_GetImportDates():
+    conn, isConnected, dbName= Get_Connection()
+    total=0
+    if isConnected:
+        importDates=[]
+        cursor = conn.cursor()
+        cursor.callproc('SP_GetImportDates', [])
+        for result in cursor.stored_results():
+            for row in result:
+                total+=row[1]
+                importDates.append(f"{row[0]} >{row[1]}")
+        cursor.close()
+        conn.close()
+        data=[f'Filter: None >{total}']
+        data.extend(importDates)
+        return data
+        pass
 
-def Call_SP_GetTagList(importDateIn):
+
+
+def Call_SP_GetTagList(importDateIn,sortItemsByBarCode,startIndex,Count):
     conn, isConnected,dbName = Get_Connection()
     if isConnected:
         cursor = conn.cursor()
         tagList = []
-        cursor.callproc('SP_GetTagList', [importDateIn, ])
+        cursor.callproc('SP_GetTagList',[importDateIn,sortItemsByBarCode,startIndex,Count])
         for result in cursor.stored_results():
             for row in result:
-                tagList.append((row[0],row[1],row[2]))
+                tagList.append((row[0],row[1],row[2],row[3])) #tagId,BarCode,ImportDate,OriginalImagePath
         cursor.close()
         conn.close()
         return tagList

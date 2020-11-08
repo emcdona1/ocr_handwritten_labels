@@ -66,7 +66,7 @@ def GetInformationAsDataFrameFromImage(imageContent):
         response = client.document_text_detection(image=image)
 
     except Exception as error:
-        print(error)
+        print(f"{error} (Error Code:IDFI_002)")
         print("Unexpected error:", sys.exc_info()[0])
         raise
 
@@ -102,6 +102,7 @@ def GetBarCodeFromOCRData(textData):
     try:
         barCode=re.findall(barCodeRegx,textData,re.MULTILINE)[0]
     except Exception as error:
+        print(f"{error} (Error Code:IDFI_001)")
         print("Could not detect bar code using OCR Data and Regx")
         pass
     return barCode

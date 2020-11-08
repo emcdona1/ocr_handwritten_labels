@@ -1,8 +1,7 @@
-import multiprocessing
+
 import os
 
 from queue import Queue
-from threading import Thread
 
 from ClassificationApp_GUI.LayoutGUI import UpdateProcessingCount, Config_StateMenu
 from ClassificationApp_GUI.StatusBar import SetStatusForWord
@@ -24,7 +23,7 @@ def ProcessImagesInTheFolder(suggestEngine, imageFolder, minimumConfidence,extra
     try:
         ProcessMultipleImages(suggestEngine, filePaths, minimumConfidence,extractTag)
     except Exception as error:
-        print(error)
+        print(f"{error} (Error Code:IPD_001)")
         pass
     pass
 
@@ -39,7 +38,7 @@ def ProcessImagesFromTheUrlsInTheTextFile(suggestEngine, textFile, minimumConfid
     try:
         ProcessMultipleImages(suggestEngine, filePaths, minimumConfidence, extractTag)
     except Exception as error:
-        print(error)
+        print(f"{error} (Error Code:IPD_002)")
         pass
     pass
 
@@ -51,7 +50,7 @@ def ExtractAndProcessSingleImage(suggestEngine, imagePath, minimumConfidence,ext
 
 def ProcessMultipleImages(suggestEngine, filePaths,minimumConfidence,extractTag):
     UpdateProcessingCount(len(filePaths))
-    args=(suggestEngine, filePaths,minimumConfidence,extractTag)
+    args=(suggestEngine, filePaths,minimumConfidence,extractTag,)
     if root.parallelProcess:
         Thread(target=ProcessListOfImagePaths_Parallel,args=args).start()
     else:
