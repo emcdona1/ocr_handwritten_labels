@@ -21,6 +21,6 @@ class SuggestEngineClient:
             self.s.close()
             return result
         except Exception as error:
-            print(error)
+            print(f"{error} (Error Code:SEC_001)")
             print(datetime.now().strftime("%H:%M:%S") + " Unknown Error when getting suggestion from SNS server!")
             return None

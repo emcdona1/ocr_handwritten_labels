@@ -30,7 +30,7 @@ def startSNSServer(genusSpeciesFilePath,hostName_server,portNo_server, queueSize
                 print(datetime.now().strftime("%H:%M:%S"), "suggestions:", suggestions, "are sent")
                 break;
             except Exception as error:
-                print(error)
+                print(f"{error} (Error Code:SSS_001)")
                 print(datetime.now().strftime("%H:%M:%S") + " Unknown Error at server side ")
                 break;
         c.close()

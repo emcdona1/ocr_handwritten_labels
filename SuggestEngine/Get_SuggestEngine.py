@@ -42,7 +42,7 @@ def GetRunningServerEngineOrCreateLocalForSuggestion(root, engineTypeToUseWhenNo
             print("SNS server is available, SNS server would be used to suggest Scientific words!")
             serverFound = True
     except Exception as error:
-        print(error)
+        print(f"{error} (Error Code:GSE_001)")
         print("Unknown error! when using the SNS server!")
     if not serverFound:
         se = GetLocalSuggestEngine(root.plantDictionaryPath, engineTypeToUseWhenNotFound)

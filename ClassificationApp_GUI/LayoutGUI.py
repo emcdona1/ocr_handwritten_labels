@@ -5,9 +5,9 @@ from tkinter.scrolledtext import ScrolledText
 from tkinter.ttk import Style, Combobox
 
 
-from ClassificationApp_GUI.ProcessTag import OpenTagId, DisplayClassificationEditor
+from ClassificationApp_GUI.ProcessTag import OpenTagId, DisplayClassificationEditor, RemoveOldData
 from ClassificationApp_GUI.StatusBar import SetStatusForWord
-from DatabaseProcessing.DatabaseProcessing import GetImportedTagTuples, DeleteTag
+from DatabaseProcessing.DatabaseProcessing import DeleteTag, GetImportDates, GetImportedTagTuples
 
 gRoot=None
 
@@ -21,6 +21,7 @@ def CreateLayout(root):
     leftPanelWidthForTagList_width = 180
     rightPanelForImageStatusAndOutput_width = 600
     ddlBoxHeight=30
+    tagListControllerHeight=30
     imageCanvasAreaHeight=350
     statusAreaHeight=60
     root.tagListBoxHeight=windowHeight-ddlBoxHeight
@@ -49,13 +50,16 @@ def CreateLayout(root):
     selectTagFrame = Frame(leftPanelFrame, width=leftPanelWidthForTagList_width,
                                 background="gray90")
     selectTagFrame.pack(anchor=SW, expand=True, side=BOTTOM)
-    root.selectTagListBox = Listbox(selectTagFrame, font=("Courier", 15), height=1000, bd=0, background=None)
+    root.selectTagListBox = Listbox(selectTagFrame, font=("Courier", 15), height=32, bd=0, background=None)
     root.selectTagListBox.pack(side=LEFT, fill=BOTH, padx=0, pady=1, expand=True)
     root.selectTagListBox.bind('<<ListboxSelect>>', lambda event, x=root: TagSelected(event, x))
     root.selectTagListBox.bind('<Button-2>', lambda event, x=root: TagRequestDelete(event, x))
     root.selectTagListBox.rclick = RightClick(root.selectTagListBox)
 
-
+    # Left Panel Tag List Controller
+    tagListControllerFrame=Frame(leftPanelFrame, width=leftPanelWidthForTagList_width,
+                                 background="gray80",height=tagListControllerHeight)
+    tagListControllerFrame.pack(side=LEFT,fill=BOTH,padx=0,pady=1, expand=True)
 
     scrollbar = Scrollbar(selectTagFrame, bd=0, width=5)
     root.selectTagListBox.config(yscrollcommand=scrollbar.set)
@@ -103,7 +107,7 @@ def TagSelected(evt,root,showDeleteOption=False):
             OpenTagId(root, root.tagId)
 
     except Exception as error:
-        print(error)
+        #print(f"{error} (Error Code:LG_001)")
         pass
     pass
 
@@ -115,20 +119,9 @@ def TagRequestDelete(evt,root):
     pass
 
 
-def InitializeTagListBox(root):
-    root.selectTagListBox.delete(0, tkinter.END)
-    root.tagIdImagePathHolder=[]
-    i=0
-    for x in root.importedTags:
-        if x[1] == root.selectedFilter or (root.selectedFilter == 'Filter: None' and not x[1]=='Current Import'):
-            root.selectTagListBox.insert(i," " + x[2].split('/')[-1])
-            root.tagIdImagePathHolder.append((x[0], x[2]))
-            i+=1
-    pass
-
 def RefreshFilteredList(event,root):
     root.selectedFilter=root.selectDateCBox.get()
-    InitializeTagListBox(root)
+    GetTagListAndDisplay(root.selectedFilter,0)
     pass
 
 def GetImportedDates(root):
@@ -137,30 +130,55 @@ def GetImportedDates(root):
     return sorted(list(set(dates)))
     pass
 
-def InitializeImportedListAndOpenTheTagId(tagId=0):
-    gRoot.tagId = tagId
-    gRoot.importedTags = GetImportedTagTuples()
-    gRoot.selectDateCBoxOptions=GetImportedDates(gRoot)
+def RefreshImportedDatesAndSelect(selectedFilter='Filter: None'):
+    gRoot.selectDateCBoxOptions=[]
+    if len(gRoot.currentImportList)>0:
+        gRoot.selectDateCBoxOptions.append(f'Current Import >{len(gRoot.currentImportList)}')
+    gRoot.selectDateCBoxOptions.extend(GetImportDates())
     gRoot.selectDateCBox['values']=gRoot.selectDateCBoxOptions
+    gRoot.selectedFilter=selectedFilter
     gRoot.selectDateCBox.set(gRoot.selectedFilter)
-    InitializeTagListBox(gRoot)
-    if(gRoot.tagId>0):
-        OpenTagId(gRoot,gRoot.tagId)
-    pass
+    GetTagListAndDisplay(gRoot.selectedFilter)
 
-def AddNewTagOnTheTagList(tagId,importDate,imagePath):
-    gRoot.importedTags.append((tagId,importDate,imagePath))
-    gRoot.importedTags.append((tagId,'Current Import',imagePath))
-    if importDate not in (gRoot.selectDateCBoxOptions):
-        gRoot.selectDateCBoxOptions.append(importDate)
-    if 'Current Import' not in (gRoot.selectDateCBoxOptions):
-        gRoot.selectDateCBoxOptions.append('Current Import')
 
+def GetTagListAndDisplay(filter,tagPageIndex=0):
+    gRoot.tagPageIndex=tagPageIndex
+    f=filter.split(" >")[0]
+    if f=='Current Import':
+        InitializeTagListBox(gRoot.currentImportList)
+    else:
+        tagList=GetImportedTagTuples(f,gRoot.sortItemsByBarCode,tagPageIndex*gRoot.noOfItemsInAPage,gRoot.noOfItemsInAPage)
+        InitializeTagListBox(tagList)
+
+def AddNewTagOnTheTagList(tagId,importDate,imagePath,barCode):
+    #tagId,BarCode,ImportDate,OriginalImagePath
+    data=[(tagId,barCode,'Current Import',imagePath)]
+    data.extend(gRoot.currentImportList)
+    gRoot.currentImportList=data
+    currentImportOption=f'Current Import >{len(gRoot.currentImportList)}'
+    gRoot.selectDateCBoxOptions=[currentImportOption]
+    gRoot.selectDateCBoxOptions.extend(GetImportDates())
     gRoot.selectDateCBox['values']=gRoot.selectDateCBoxOptions
-    gRoot.selectedFilter='Current Import'
+    gRoot.selectedFilter=currentImportOption
     gRoot.selectDateCBox.set(gRoot.selectedFilter)
-    InitializeTagListBox(gRoot)
+    InitializeTagListBox(gRoot.currentImportList)
 
+def InitializeTagListBox(lst):
+    gRoot.tagListDisplay=lst
+    gRoot.selectTagListBox.delete(0, tkinter.END)
+    gRoot.tagIdImagePathHolder=[]
+    i=0
+    for x in gRoot.tagListDisplay:
+        #tagId,BarCode,ImportDate,OriginalImagePath
+        gRoot.selectTagListBox.insert(i,str(x[1])+"_" + str(x[3].split('/')[-1]))
+        gRoot.tagIdImagePathHolder.append((x[0], x[3]))
+        i+=1
+
+def DeleteRecord(root,index,tagId):
+    root.selectTagListBox.delete(index)
+    del root.tagIdImagePathHolder[index]
+    del root.tagListDisplay[index]
+    DeleteTag(tagId)
 
 
 def UpdateProcessingCount(count,processingTime=0,tagId=0,sdb='',tagPath='',imagePath='',importDate='',barCode=''):
@@ -189,6 +207,7 @@ def UpdateProcessingCount(count,processingTime=0,tagId=0,sdb='',tagPath='',image
             Config_StateMenu(gRoot,"disabled")
 
     if (tagId>0):
+        RemoveOldData(gRoot)
         gRoot.tagId=tagId
         gRoot.sdb=sdb
         gRoot.tagPath=tagPath
@@ -196,7 +215,7 @@ def UpdateProcessingCount(count,processingTime=0,tagId=0,sdb='',tagPath='',image
         gRoot.processingTime=processingTime
         gRoot.importDate=importDate
         gRoot.barCode=barCode
-        AddNewTagOnTheTagList(gRoot.tagId,gRoot.importDate,gRoot.imagePath)
+        AddNewTagOnTheTagList(gRoot.tagId,gRoot.importDate,gRoot.imagePath,gRoot.barCode)
         DisplayClassificationEditor(gRoot)
 
 def Config_StateMenu(root,state="normal"):
@@ -227,10 +246,6 @@ class RightClick:
         self.index=index
         self.aMenu.post(event.x_root, event.y_root)
 
-def DeleteRecord(root,index,tagId):
-    root.selectTagListBox.delete(index)
-    del root.tagIdImagePathHolder[index]
-    root.importedTags =  [i for i in root.importedTags  if not i[0] == tagId]
-    DeleteTag(tagId)
+
 
 

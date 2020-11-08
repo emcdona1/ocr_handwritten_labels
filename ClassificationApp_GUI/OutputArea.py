@@ -9,6 +9,7 @@ def AppendToOutputArea(root, value):
 
 def ClearOutput(root):
     root.outputField.delete('1.0', END)
+    root.irn=0
 
 def UpdateOutput(root,**kw):
     ClearOutput(root)
@@ -30,7 +31,7 @@ def UpdateOutput(root,**kw):
         root.outputField.insert('end',"\n", 'data')
     pass
     try:
-        if len(str(root.barCode))>0 and int(root.irn+"0")>0:
+        if len(str(root.barCode))>0 and int(str(root.irn)+"0")>0:
             root.outputField.insert('end',GetLineText("Barcode Info"), 'line')
             root.outputField.insert('end', '{0: <19}: '.format("IRN "), 'label')
             root.outputField.insert('end',root.irn+"\n", 'data')
@@ -42,7 +43,7 @@ def UpdateOutput(root,**kw):
                 root.outputField.insert('end', '{0: <19}: '.format(label), 'label')
                 root.outputField.insert('end',data+"\n", 'data')
     except Exception as error:
-        print(error)
+        print(f"{error} (Error Code:OA_001)")
         pass
 
     root.outputField.insert('end',GetLineText("Import Details"), 'line')

@@ -10,5 +10,5 @@ def confirm(question):
             return confirm(question)
     except Exception as error:
         print("Please enter valid inputs")
-        print(error)
+        print(f"{error} (Error Code:C_001)")
         return confirm(question)
