@@ -1,6 +1,9 @@
 from DatabaseProcessing.DatabaseCalls import Call_SP_AddTag, Call_SP_UpdateWord, Call_SP_GetTagDetail, \
-    Call_SP_GetTagList, Call_SP_DeleteTag, Call_SP_AddBarCodeInfo, CALL_SP_GetImportDates
+    Call_SP_GetTagList, Call_SP_DeleteTag, Call_SP_AddBarCodeInfo, CALL_SP_GetImportDates, CALL_SP_GetTagClassification, \
+    Call_SP_AddUpdateTagClassification
 from Helper.AlgorithmicMethods import GetTempFilePath
+from Helper.GetWordsInformation import GetClassifiedDataTuples
+
 
 def SaveTagtoDatabase(imagePath,processingTime,imageContent, df,barCode):
     wordsInfoAsXML = DFToWordsXml(df)
@@ -12,8 +15,14 @@ def SaveTagtoDatabase(imagePath,processingTime,imageContent, df,barCode):
         barCode=barCode)
     return tagId,importDate,hasBarCodeInDB
 
-def UpdateWordInDatabase(tagId,word):
-    Call_SP_UpdateWord(tagId,word['index'], word['replacement'],word['suggestedDescription'],word['category'])
+def UpdateWordInDatabase(root,word):
+    tagId=root.tagId
+    root.classifiedData=GetClassifiedDataTuples(root.sdb)
+    if(tagId>0):
+        Call_SP_UpdateWord(tagId,word['index'], word['replacement'],word['suggestedDescription'],word['category'])
+        AddUpdateTagClassification(tagId,root.classifiedData)
+    else:
+        print(f'Invalid tagId:{tagId}')
     pass
 
 def DFToWordsXml(df):
@@ -56,5 +65,19 @@ def DeleteTag(tagId):
 
 def AddBarCodeInfo(barCode,irn,taxonomy, collector,details):
     Call_SP_AddBarCodeInfo(barCode,irn,taxonomy, collector,details)
+
+def GetTagClassification(TagId):
+    return CALL_SP_GetTagClassification(TagId)
+
+def AddUpdateTagClassification(TagId, classificationTuples):
+    xml = ['<classifications>']
+    for c in classificationTuples:
+        xml.append('<classification>')
+        xml.append(f'<Category>{c[0]}</Category>')
+        xml.append(f'<Information>{c[1]}</Information>')
+        xml.append('</classification>')
+    xml.append('</classifications>')
+    data='\n'.join(xml)
+    Call_SP_AddUpdateTagClassification(TagId,data )
 
 

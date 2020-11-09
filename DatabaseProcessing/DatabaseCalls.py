@@ -28,6 +28,32 @@ def Call_SP_AddTag(originalImagePath, processingTime,img, wordsInfoAsXML,barCode
 
     return tagId,importDate,hasBarCodeInDb
 
+def Call_SP_AddUpdateTagClassification(TagId, classificationInfoAsXML):
+    conn, isConnected, dbName= Get_Connection()
+    if isConnected:
+        cursor = conn.cursor()
+        cursor.callproc('SP_AddUpdateTagClassification', [TagId,classificationInfoAsXML,])
+        cursor.stored_results()
+        conn.commit()
+        cursor.close()
+        conn.close()
+        pass
+
+def CALL_SP_GetTagClassification(TagId):
+    conn, isConnected, dbName= Get_Connection()
+    if isConnected:
+        classifiedInformation=[]
+        cursor = conn.cursor()
+        cursor.callproc('SP_GetTagClassification', [TagId,])
+        for result in cursor.stored_results():
+            for row in result:
+                classifiedInformation.append((row[0],row[1]))
+        cursor.close()
+        conn.close()
+        return classifiedInformation
+        pass
+
+
 
 def Call_SP_UpdateWord(tagId,wordIndexUpdate, replacement,suggestions,category):
     conn, isConnected, dbName= Get_Connection()

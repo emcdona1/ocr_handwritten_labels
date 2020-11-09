@@ -1,6 +1,7 @@
 DROP TABLE IF EXISTS Tag_Word;
-DROP TABLE IF EXISTS Tag_Info;
 DROP TABLE IF EXISTS Barcode_Info;
+DROP TABLE IF EXISTS Tag_ClassifiedInfo;
+DROP TABLE IF EXISTS Tag_Info;
 
 CREATE TABLE Tag_Info
 (
@@ -26,6 +27,12 @@ CREATE TABLE Tag_Word
     PRIMARY KEY (TagId, WordIndex)
 );
 
+CREATE TABLE Tag_ClassifiedInfo(
+	TagId BIGINT,
+    Category VARCHAR(500) NOT NULL,
+    Information VARCHAR(2000) NOT NULL
+);
+
 CREATE TABLE Barcode_Info
 (
     BarCode VARCHAR(10),
@@ -35,3 +42,4 @@ CREATE TABLE Barcode_Info
     Details VARCHAR(1000),
     PRIMARY KEY (BarCode)
 );
+

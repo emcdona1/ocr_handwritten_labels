@@ -5,10 +5,10 @@ from Helper.GetWordsInformation import GetDescriptionFromDataBlocks, GetClassifi
 
 def AppendToOutputArea(root, value):
     root.outputField.insert('insert', value)
+
 def UpdateOutput(root,**kw):
     root.outputField.delete('1.0', END)
-    classifiedData = GetClassifiedDataTuples(root.sdb)
-    classifiedCategories = [c[0] for c in classifiedData]
+    classifiedCategories = [c[0] for c in root.classifiedData]
     classifiedCategories = list(set(classifiedCategories))
     categories = GetClassifiedCategoriesInOrder(root.WordCategories, classifiedCategories)
     root.outputField.insert('end',GetLineText("Classifier Data"), 'line')
@@ -19,7 +19,7 @@ def UpdateOutput(root,**kw):
     root.outputField.insert('end',root.barCode+'\n','data')
     for c in categories:
         root.outputField.insert('end','{0: <19}: '.format(c),'label')
-        for cd in classifiedData:
+        for cd in root.classifiedData:
             if (cd[0] == c):
                 root.outputField.insert('end', cd[1] + " ", 'data')
         root.outputField.insert('end',"\n", 'data')
