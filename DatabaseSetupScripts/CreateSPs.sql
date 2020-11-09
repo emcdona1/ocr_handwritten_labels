@@ -95,6 +95,7 @@ DELIMITER $$
 	IN tagIdDelete BIGINT
  )
  BEGIN
+	DELETE FROM Tag_ClassifiedInfo where TagId=tagIdDelete;
 	DELETE FROM Tag_Word WHERE TagId=tagIdDelete;
     DELETE FROM Tag_Info WHERE TagId=tagIdDelete;
 END $$
