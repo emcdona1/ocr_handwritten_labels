@@ -74,10 +74,22 @@ def GetNotCategorizedOCRData(sdb, maskedIncorrect=True):
 
 def GetClassifiedDataTuples(sdb):
     classifiedData = []
+    categories=[]
     for db in sdb:
         for w in db:
             if w['index'] > 0:
-                classifiedData.append((w['category'], w['replacement']))
+                categories.append(w['category'])
+
+    categories=list(set(categories))
+    i=0
+    for c in categories:
+        info=""
+        for db in sdb:
+            for w in db:
+                if w['index']>0 and w['category']==c:
+                    info=info+" "+w['replacement']
+        classifiedData.append((c, info))
+
     return classifiedData
 
 

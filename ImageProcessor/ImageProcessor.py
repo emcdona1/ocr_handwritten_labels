@@ -10,11 +10,12 @@ import numpy as np
 from datetime import datetime
 
 from ClassificationApp_GUI.LayoutGUI import UpdateProcessingCount
-from DatabaseProcessing.DatabaseProcessing import SaveTagtoDatabase
+from DatabaseProcessing.DatabaseProcessing import SaveTagtoDatabase, AddUpdateTagClassification
 
 from DetectCorrectAndClassify.ApplyCorrection import ApplyCorrection
 from DetectCorrectAndClassify.DetectAndClassify import DetectAndClassify
 from Helper.AlgorithmicMethods import GetNormalizedSequentialDataBlocks, GetTempFilePath
+from Helper.GetWordsInformation import GetClassifiedDataTuples
 from ImageProcessor.GetBarCodeFromImage import GetBarCodeFromImage
 from ImageProcessor.InitializeBarCodeInfoTable import InitializeBarCodeInfoForAKey_InAThread
 from ImageProcessor.InitializeDataFromImage import GetInformationAsDataFrameFromImage, GetBarCodeFromText
@@ -74,7 +75,10 @@ class ImageProcessor():
         self.endTime = datetime.now()
         self.processingTime=(self.endTime - self.startTime).total_seconds()
         self.tagId,self.importDate,self.hasBarCodeInDB = SaveTagtoDatabase(self.imagePath, self.processingTime, self.tagContent, self.sdb,self.barCode)
-        UpdateProcessingCount(-1,self.processingTime,self.tagId,self.sdb,self.tagPath,self.imagePath,self.importDate,self.barCode)
+        self.classifiedData = GetClassifiedDataTuples(self.sdb)
+        AddUpdateTagClassification(self.tagId,self.classifiedData)
+
+        UpdateProcessingCount(-1,self.processingTime,self.tagId,self.sdb,self.tagPath,self.imagePath,self.importDate,self.barCode,self.classifiedData)
         if len(self.barCode)>0 and self.hasBarCodeInDB==0:
             InitializeBarCodeInfoForAKey_InAThread(self.barCode)
 

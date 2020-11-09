@@ -14,7 +14,9 @@ class PopupWindow(object):
         height=rowHeight*4-padding*8
         top = self.top = Toplevel(master)
         self.top.grab_set()
-
+        self.tagId=root.tagId
+        self.root=root
+        self.word=word
         self.top.geometry(str(width) + "x" + str(height))
         self.top.resizable(0, 0)
         self.top.wm_title("Manual update: " + word['description'])
@@ -51,41 +53,41 @@ class PopupWindow(object):
         self.categoryEntry.set(word['category'])
         self.categoryEntry.grid(row=0, column=1, sticky='ne')
 
-        u = Button(buttonFrame, text='Update', command=lambda: self.CommandUpdate(root, word),
+        u = Button(buttonFrame, text='Update', command=self.CommandUpdate,
                         activebackground='blue')
         u.grid(row=0, column=0, sticky='se')
         c = Button(buttonFrame, text='Cancel', command=self.CommandCancel, activebackground="blue")
         c.grid(row=0, column=1, sticky='se')
 
-    def CommandUpdate(self, root, word):
-        self.ReplacementUpdate(word, self.replacementEntry.get(), root)
-        self.CategoriesUpdate(root, word, self.categoryEntry.get())
-        UpdateWordOutline(word)
-        UpdateOutput(root)
-        UpdateWordInDatabase(root.tagId,word)
+    def CommandUpdate(self):
+        self.ReplacementUpdate(self.replacementEntry.get())
+        self.CategoriesUpdate(self.categoryEntry.get())
+        self.root.tagId=self.tagId
+        UpdateWordInDatabase(self.root,self.word)
+        UpdateWordOutline(self.word)
+        UpdateOutput(self.root)
         self.top.grab_release()
         self.top.destroy()
 
-    def CategoriesUpdate(self, root, word, categoryValue):
-        oldValue = word['category']
+    def CategoriesUpdate(self,categoryValue):
+        oldValue = self.word['category']
         if oldValue != categoryValue:
-            word['category'] = categoryValue
-            UpdateWordInDatabase(root.tagId,word)
-            if categoryValue not in root.WordCategories:
-                root.WordCategories.append(categoryValue)
+            self.word['category'] = categoryValue
+            if categoryValue not in self.root.WordCategories:
+                self.root.WordCategories.append(categoryValue)
 
-    def ReplacementUpdate(self, word, replacementValue, root):
-        oldValue = word['replacement']
+    def ReplacementUpdate(self, replacementValue):
+        oldValue = self.word['replacement']
         if oldValue != replacementValue:
-            word['replacement'] = replacementValue
-            if word['description'] == replacementValue:
-                word['color'] = 'green'
-                word['isIncorrectWord'] = False
+            self.word['replacement'] = replacementValue
+            if self.word['description'] == replacementValue:
+                self.word['color'] = 'green'
+                self.word['isIncorrectWord'] = False
             else:
-                word['color'] = '#F4A460'  # user updated values
-                word['isIncorrectWord'] = True
-            if oldValue not in word['suggestedDescription']:
-                word['suggestedDescription'].append(oldValue)
+                self.word['color'] = '#F4A460'  # user updated values
+                self.word['isIncorrectWord'] = True
+            if oldValue not in self.word['suggestedDescription']:
+                self.word['suggestedDescription'].append(oldValue)
 
     def CommandCancel(self):
         self.top.grab_release()

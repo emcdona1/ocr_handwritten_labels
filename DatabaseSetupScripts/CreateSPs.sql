@@ -7,6 +7,8 @@ DROP PROCEDURE IF EXISTS SP_GetTagDetail;
 DROP PROCEDURE IF EXISTS SP_AddBarCodeInfo;
 DROP PROCEDURE IF EXISTS SP_GetBarCodeInfo;
 DROP PROCEDURE IF EXISTS SP_GetImportDates;
+DROP PROCEDURE IF EXISTS SP_AddUpdateTagClassification;
+DROP PROCEDURE IF EXISTS SP_GetTagClassification;
 
 DELIMITER $$
 
@@ -42,6 +44,34 @@ DELIMITER $$
     ELSE SELECT @newTagId,@ImportDate,0;
     END IF;
  END $$ 
+ 
+ DELIMITER $$
+ CREATE PROCEDURE SP_AddUpdateTagClassification(
+	IN TagIdIn BIGINT,
+    IN classificationInfoAsXML LONGTEXT
+)
+BEGIN
+	DELETE FROM Tag_ClassifiedInfo where TagId=TagIdIn;
+
+	SET @COUNT = (SELECT EXTRACTVALUE(classificationInfoAsXML,'COUNT(//classifications/classification)'));
+    SET @I = 1;
+    WHILE(@I <= @COUNT) DO
+        INSERT INTO Tag_ClassifiedInfo(TagId,Category,Information)
+        SELECT  TagIdIn,
+				ExtractValue(classificationInfoAsXML,CONCAT('/classifications/classification[',@I,']/Category')),
+				ExtractValue(classificationInfoAsXML,CONCAT('/classifications/classification[',@I,']/Information'));
+        SET @I = @I + 1;
+    END WHILE;
+ END $$ 
+
+DELIMITER $$
+ CREATE PROCEDURE SP_GetTagClassification(
+	IN TagIdIn BIGINT
+)
+BEGIN
+	SELECT Category,Information FROM Tag_ClassifiedInfo where TagId=TagIdIn;
+END $$ 
+
  
  DELIMITER $$
  CREATE PROCEDURE SP_UpdateWord(

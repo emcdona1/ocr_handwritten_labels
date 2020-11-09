@@ -5,7 +5,7 @@ from tkinter.scrolledtext import ScrolledText
 from tkinter.ttk import Style, Combobox
 
 
-from ClassificationApp_GUI.ProcessTag import OpenTagId, DisplayClassificationEditor, RemoveOldData
+from ClassificationApp_GUI.ProcessTag import OpenTagId, DisplayClassificationEditor, RemoveRootData
 from ClassificationApp_GUI.StatusBar import SetStatusForWord
 from DatabaseProcessing.DatabaseProcessing import DeleteTag, GetImportDates, GetImportedTagTuples
 
@@ -224,7 +224,7 @@ def DeleteRecord(root,index,tagId):
     DeleteTag(tagId)
 
 
-def UpdateProcessingCount(count,processingTime=0,tagId=0,sdb='',tagPath='',imagePath='',importDate='',barCode=''):
+def UpdateProcessingCount(count,processingTime=0,tagId=0,sdb='',tagPath='',imagePath='',importDate='',barCode='',classifiedData=''):
     global gRoot
     if(count>0):
         gRoot.total += count
@@ -250,7 +250,7 @@ def UpdateProcessingCount(count,processingTime=0,tagId=0,sdb='',tagPath='',image
             Config_StateMenu(gRoot,"disabled")
 
     if (tagId>0):
-        RemoveOldData(gRoot)
+        RemoveRootData(gRoot)
         gRoot.tagId=tagId
         gRoot.sdb=sdb
         gRoot.tagPath=tagPath
@@ -259,6 +259,7 @@ def UpdateProcessingCount(count,processingTime=0,tagId=0,sdb='',tagPath='',image
         gRoot.importDate=importDate
         gRoot.barCode=barCode
         AddNewTagOnTheTagList(gRoot.tagId,gRoot.importDate,gRoot.imagePath,gRoot.barCode)
+        gRoot.classifiedData=classifiedData
         DisplayClassificationEditor(gRoot)
 
 def Config_StateMenu(root,state="normal"):
