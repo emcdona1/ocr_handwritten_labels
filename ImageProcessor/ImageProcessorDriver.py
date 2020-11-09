@@ -46,23 +46,23 @@ def ProcessImagesFromTheUrlsInTheTextFile(suggestEngine, textFile, minimumConfid
 def ExtractAndProcessSingleImage(suggestEngine, imagePath, minimumConfidence,extractTag):
     #imgProcessorObj = ImageProcessor(suggestEngine, imagePath, minimumConfidence,extractTag)
     #imgProcessorObj.processImage()
-    ProcessMultipleImages(suggestEngine,[imagePath],minimumConfidence,extractTag)
+    ProcessMultipleImages(suggestEngine,[imagePath],minimumConfidence,extractTag,True)
 
-def ProcessMultipleImages(suggestEngine, filePaths,minimumConfidence,extractTag):
+def ProcessMultipleImages(suggestEngine, filePaths,minimumConfidence,extractTag,displayAfterProcessing=False):
     UpdateProcessingCount(len(filePaths))
-    args=(suggestEngine, filePaths,minimumConfidence,extractTag,)
+    args=(suggestEngine, filePaths,minimumConfidence,extractTag,displayAfterProcessing)
     if root.parallelProcess:
         Thread(target=ProcessListOfImagePaths_Parallel,args=args).start()
     else:
         Thread(target=ProcessListOfImagePaths_Sequential,args=args).start()
 
 
-def ProcessListOfImagePaths_Sequential(suggestEngine, filePaths, minimumConfidence,extractTag):
+def ProcessListOfImagePaths_Sequential(suggestEngine, filePaths, minimumConfidence,extractTag,displayAfterProcessing=False):
     i=0;
     for filePath in filePaths:
         if not root.stopThread:
             i+=1
-            imgProcessorObj = ImageProcessor(suggestEngine, filePath, minimumConfidence,extractTag)
+            imgProcessorObj = ImageProcessor(suggestEngine, filePath, minimumConfidence,extractTag,displayAfterProcessing)
             imgProcessorObj.processImage()
         else:
             break
@@ -74,7 +74,7 @@ def ProcessListOfImagePaths_Sequential(suggestEngine, filePaths, minimumConfiden
 
 
 
-def ProcessListOfImagePaths_Parallel(suggestEngine, filePaths, minimumConfidence,extractTag):
+def ProcessListOfImagePaths_Parallel(suggestEngine, filePaths, minimumConfidence,extractTag,displayAfterProcessing=False):
     num_cores = root.parallelProcessThreadCount
     queue = Queue()
     for x in range(num_cores):
@@ -83,7 +83,7 @@ def ProcessListOfImagePaths_Parallel(suggestEngine, filePaths, minimumConfidence
         infoExtractor.start()
 
     for filePath in filePaths:
-        imgProcessorObj = ImageProcessor(suggestEngine, filePath, minimumConfidence,extractTag)
+        imgProcessorObj = ImageProcessor(suggestEngine, filePath, minimumConfidence,extractTag,displayAfterProcessing)
         queue.put(imgProcessorObj)
     queue.join()
 

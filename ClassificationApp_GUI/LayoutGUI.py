@@ -44,11 +44,13 @@ def CreateLayout(root):
     root.selectDateCBox = Combobox(selectDateFrame, values=[], font=("Courier", 14), state="readonly")
     root.selectDateCBox.bind('<<ComboboxSelected>>', lambda event, x=root: RefreshFilteredList(event, x))
     root.selectDateCBox.pack()
+    #TagFrame
+    tagFrame=Frame(leftPanelFrame, width=leftPanelWidthForTagList_width,background="gray90")
+    tagFrame.pack(anchor=SW, expand=True, side=BOTTOM)
 
     # Left Panel Tag List frame
-    selectTagFrame = Frame(leftPanelFrame, width=leftPanelWidthForTagList_width,
-                                background="gray90")
-    selectTagFrame.pack(anchor=SW, expand=True, side=BOTTOM)
+    selectTagFrame = Frame(tagFrame, width=leftPanelWidthForTagList_width,background="gray90")
+    selectTagFrame.pack(anchor=NE, expand=True, side=TOP)
     root.selectTagListBox = Listbox(selectTagFrame, font=("Courier", 15), height=32, bd=0, background=None)
     root.selectTagListBox.pack(side=LEFT, fill=BOTH, padx=0, pady=1, expand=True)
     root.selectTagListBox.bind('<<ListboxSelect>>', lambda event, x=root: TagSelected(event, x))
@@ -56,9 +58,9 @@ def CreateLayout(root):
     root.selectTagListBox.rclick = RightClick(root.selectTagListBox)
 
     # Left Panel Tag List Controller
-    root.tagListControllerFrame=Frame(leftPanelFrame, width=leftPanelWidthForTagList_width,
+    root.tagListControllerFrame=Frame(tagFrame, width=leftPanelWidthForTagList_width,
                                  background="gray80",height=tagListControllerHeight)
-    root.tagListControllerFrame.pack(side=LEFT,fill=BOTH,padx=0,pady=1, expand=True)
+    root.tagListControllerFrame.pack(side=BOTTOM,fill=BOTH,padx=0,pady=1, expand=True)
 
     root.previousPage=Button(root.tagListControllerFrame, text ="|<", command = GetPreviousPage)
     root.previousPage.grid(row=0,column=0)
@@ -223,7 +225,7 @@ def DeleteRecord(root,index,tagId):
     DeleteTag(tagId)
 
 
-def UpdateProcessingCount(count,processingTime=0,tagId=0,sdb='',tagPath='',imagePath='',importDate='',barCode='',classifiedData=''):
+def UpdateProcessingCount(count,processingTime=0,tagId=0,sdb='',tagPath='',imagePath='',importDate='',barCode='',classifiedData='',display=False):
     global gRoot
     if(count>0):
         gRoot.total += count
@@ -248,7 +250,9 @@ def UpdateProcessingCount(count,processingTime=0,tagId=0,sdb='',tagPath='',image
             SetStatusForWord(gRoot,f"[PROCESSING]: {gRoot.processed}/{gRoot.total} processed! {strRemmsg}","brown4")
             Config_StateMenu(gRoot,"disabled")
 
-    if (tagId>0):
+    if tagId>0:
+        AddNewTagOnTheTagList(tagId,importDate,imagePath,barCode)
+    if display:
         RemoveRootData(gRoot)
         gRoot.tagId=tagId
         gRoot.sdb=sdb
@@ -257,7 +261,6 @@ def UpdateProcessingCount(count,processingTime=0,tagId=0,sdb='',tagPath='',image
         gRoot.processingTime=processingTime
         gRoot.importDate=importDate
         gRoot.barCode=barCode
-        AddNewTagOnTheTagList(gRoot.tagId,gRoot.importDate,gRoot.imagePath,gRoot.barCode)
         gRoot.classifiedData=classifiedData
         DisplayClassificationEditor(gRoot)
 
