@@ -30,7 +30,8 @@ CREATE TABLE Tag_Word
 CREATE TABLE Tag_ClassifiedInfo(
 	TagId BIGINT,
     Category VARCHAR(500) NOT NULL,
-    Information VARCHAR(2000) NOT NULL
+    Information VARCHAR(2000) NOT NULL,
+    FOREIGN KEY(TagId) REFERENCES Tag_Info(TagId)
 );
 
 CREATE TABLE Barcode_Info
