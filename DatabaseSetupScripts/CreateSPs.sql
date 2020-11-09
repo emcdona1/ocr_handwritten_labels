@@ -98,7 +98,7 @@ DELIMITER $$
     END IF;
     
     SELECT TagId,BarCode,ImportDate,OriginalImagePath FROM TagListTempTable tl
-    WHERE tl.Position>=startIndexIn LIMIT countIn;
+    WHERE tl.Position>startIndexIn LIMIT countIn;
     DROP TABLE TagListTempTable; 
  END $$
  
