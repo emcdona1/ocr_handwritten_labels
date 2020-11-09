@@ -1,8 +1,7 @@
 import tkinter
 from tkinter import *
-from tkinter import ttk
 from tkinter.scrolledtext import ScrolledText
-from tkinter.ttk import Style, Combobox
+from tkinter.ttk import Combobox
 
 
 from ClassificationApp_GUI.ProcessTag import OpenTagId, DisplayClassificationEditor, RemoveRootData
@@ -63,7 +62,7 @@ def CreateLayout(root):
 
     root.previousPage=Button(root.tagListControllerFrame, text ="|<", command = GetPreviousPage)
     root.previousPage.grid(row=0,column=0)
-    root.pageDDL = Combobox(root.tagListControllerFrame, values=[], font=("Courier", 15), state="readonly",width=13)
+    root.pageDDL = Combobox(root.tagListControllerFrame, values=[], font=("Courier", 15), justify='center',state="readonly",width=13)
     root.pageDDL.bind('<<ComboboxSelected>>', lambda event, x=root: RefreshTagListPage(event, x))
     root.pageDDL.grid(row=0,column=1)
 
