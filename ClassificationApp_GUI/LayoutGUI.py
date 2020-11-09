@@ -57,9 +57,18 @@ def CreateLayout(root):
     root.selectTagListBox.rclick = RightClick(root.selectTagListBox)
 
     # Left Panel Tag List Controller
-    tagListControllerFrame=Frame(leftPanelFrame, width=leftPanelWidthForTagList_width,
+    root.tagListControllerFrame=Frame(leftPanelFrame, width=leftPanelWidthForTagList_width,
                                  background="gray80",height=tagListControllerHeight)
-    tagListControllerFrame.pack(side=LEFT,fill=BOTH,padx=0,pady=1, expand=True)
+    root.tagListControllerFrame.pack(side=LEFT,fill=BOTH,padx=0,pady=1, expand=True)
+
+    root.previousPage=Button(root.tagListControllerFrame, text ="|<", command = GetPreviousPage)
+    root.previousPage.grid(row=0,column=0)
+    root.pageDDL = Combobox(root.tagListControllerFrame, values=[], font=("Courier", 15), state="readonly",width=13)
+    root.pageDDL.bind('<<ComboboxSelected>>', lambda event, x=root: RefreshTagListPage(event, x))
+    root.pageDDL.grid(row=0,column=1)
+
+    root.nextPage=Button(root.tagListControllerFrame, text =">|", command = GetNextPage)
+    root.nextPage.grid(row=0,column=2)
 
     scrollbar = Scrollbar(selectTagFrame, bd=0, width=5)
     root.selectTagListBox.config(yscrollcommand=scrollbar.set)
@@ -118,6 +127,25 @@ def TagRequestDelete(evt,root):
     TagSelected(evt,root,True)
     pass
 
+def RefreshTagListPage(event,root):
+    GetTagListAndDisplay(gRoot.selectDateCBox.get(),int(root.pageDDL.get().split(":")[1])-1)
+    pass
+
+def GetPreviousPage():
+    text=gRoot.pageDDL.get().split(":")[0]
+    currentPage=int(gRoot.pageDDL.get().split(":")[1])
+    if currentPage>1:
+        gRoot.pageDDL.set(f"{text}:{currentPage-1}")
+        GetTagListAndDisplay(gRoot.selectDateCBox.get(),currentPage-2)
+    pass
+
+def GetNextPage():
+    text=gRoot.pageDDL.get().split(":")[0]
+    currentPage=int(gRoot.pageDDL.get().split(":")[1])
+    if currentPage*gRoot.noOfItemsInAPage<int(gRoot.selectDateCBox.get().split(">")[1]):
+        gRoot.pageDDL.set(f"{text}:{currentPage+1}")
+        GetTagListAndDisplay(gRoot.selectDateCBox.get(),currentPage)
+    pass
 
 def RefreshFilteredList(event,root):
     root.selectedFilter=root.selectDateCBox.get()
@@ -136,9 +164,24 @@ def RefreshImportedDatesAndSelect(selectedFilter='Filter: None'):
         gRoot.selectDateCBoxOptions.append(f'Current Import >{len(gRoot.currentImportList)}')
     gRoot.selectDateCBoxOptions.extend(GetImportDates())
     gRoot.selectDateCBox['values']=gRoot.selectDateCBoxOptions
-    gRoot.selectedFilter=selectedFilter
+    if selectedFilter=='Filter: None':
+        gRoot.selectedFilter=gRoot.selectDateCBoxOptions[0]
+    else:
+        gRoot.selectedFilter=selectedFilter
+    SetTagListPageDropDown(gRoot.selectedFilter.split(">")[1])
     gRoot.selectDateCBox.set(gRoot.selectedFilter)
     GetTagListAndDisplay(gRoot.selectedFilter)
+
+def SetTagListPageDropDown(totalItems):
+    i=1
+    items=[f"Page:{i}"]
+    while i*int(gRoot.noOfItemsInAPage)<int(totalItems):
+        i+=1
+        items.append(f"Page:{i}")
+
+    gRoot.pageDDLOptions=items
+    gRoot.pageDDL['values']=items
+    gRoot.pageDDL.set(items[0])
 
 
 def GetTagListAndDisplay(filter,tagPageIndex=0):
@@ -245,6 +288,9 @@ class RightClick:
         self.tagId=tagId
         self.index=index
         self.aMenu.post(event.x_root, event.y_root)
+
+
+
 
 
 
