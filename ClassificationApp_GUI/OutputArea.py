@@ -5,14 +5,8 @@ from Helper.GetWordsInformation import GetDescriptionFromDataBlocks, GetClassifi
 
 def AppendToOutputArea(root, value):
     root.outputField.insert('insert', value)
-
-
-def ClearOutput(root):
-    root.outputField.delete('1.0', END)
-    root.irn=0
-
 def UpdateOutput(root,**kw):
-    ClearOutput(root)
+    root.outputField.delete('1.0', END)
     classifiedData = GetClassifiedDataTuples(root.sdb)
     classifiedCategories = [c[0] for c in classifiedData]
     classifiedCategories = list(set(classifiedCategories))

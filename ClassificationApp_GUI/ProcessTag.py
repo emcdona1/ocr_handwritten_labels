@@ -1,7 +1,7 @@
 from ClassificationApp_GUI.InteractiveWords import CreateButtonsFromTheWords
 
-from ClassificationApp_GUI.OutputArea import UpdateOutput, ClearOutput
-from ClassificationApp_GUI.ScrollableImage import  AddElementImageCanvas
+from ClassificationApp_GUI.OutputArea import UpdateOutput
+from ClassificationApp_GUI.ScrollableImage import AddElementImageCanvas, END
 from ClassificationApp_GUI.StatusBar import ClearWordStatus
 from DatabaseProcessing.DatabaseProcessing import GetImgAndSDBFromTagId
 
@@ -11,7 +11,6 @@ def ClearOldImage(root):
         widget.destroy()
     root.tagId=0
     root.irn=0
-    ClearOutput(root)
     pass
 
 def OpenTagId(root, tagId):
@@ -36,11 +35,9 @@ def DisplayClassificationEditor(root):
     UpdateOutput(root)
     pass
 
-
-
-
 def RemoveOldData(root):
     ClearWordStatus(root)
+    root.outputField.delete('1.0', END)
 
 
 pass
