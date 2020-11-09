@@ -46,13 +46,14 @@ class ImageProcessor():
         cls.topEdgeTemplates = cls.GetTemplateDataListFromFolder(tet)
         cls.templatesInitialized = True
 
-    def __init__(self, suggestEngine, imagePath, minimumConfidence, extractTag):
+    def __init__(self, suggestEngine, imagePath, minimumConfidence, extractTag,displayAfterProcessing=False):
         self.suggestEngine = suggestEngine
         self.imagePath = imagePath
         self.tagPath=imagePath #can be overwritten when tag is extracted.
         self.minimumConfidence = minimumConfidence
         self.sdb = None
         self.extractTag=extractTag
+        self.displayAfterProcessing=displayAfterProcessing
         if not ImageProcessor.templatesInitialized:
             ImageProcessor.InitializeTemplates()
 
@@ -78,7 +79,7 @@ class ImageProcessor():
         self.classifiedData = GetClassifiedDataTuples(self.sdb)
         AddUpdateTagClassification(self.tagId,self.classifiedData)
 
-        UpdateProcessingCount(-1,self.processingTime,self.tagId,self.sdb,self.tagPath,self.imagePath,self.importDate,self.barCode,self.classifiedData)
+        UpdateProcessingCount(-1,self.processingTime,self.tagId,self.sdb,self.tagPath,self.imagePath,self.importDate,self.barCode,self.classifiedData,self.displayAfterProcessing)
         if len(self.barCode)>0 and self.hasBarCodeInDB==0:
             InitializeBarCodeInfoForAKey_InAThread(self.barCode)
 
