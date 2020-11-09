@@ -1,3 +1,5 @@
+from tkinter import END
+
 
 def SetStatusForWord(root, val,fgColor="black"):
     root.wordStatusLabel['text'] = val
