@@ -5,6 +5,7 @@ from ClassificationApp_GUI.MenuAndSubMenuAndFunctional import AddMenuAndSubMenu
 from ClassificationApp_GUI.ScrollableImage import Tk
 from Helper.WordCategories import GetWordCategories
 from ImageProcessor.ImageProcessorDriver import setRoot, ExtractAndProcessSingleImage
+from ImageProcessor.InitializeBarCodeInfoTable import SetBarCodeInfoDetails
 from ImageProcessor.InitializeDataFromImage import SetGoogleCloudVisionClient, SetBarCodeRegx
 from SuggestEngine.Get_SuggestEngine import GetRunningServerEngineOrCreateLocalForSuggestion
 
@@ -18,7 +19,6 @@ class ClassificationApp():
         #initialize data
         InitializeConfiguration(root)
         SetGoogleCloudVisionClient(root.serviceAccountTokenPath)
-        SetBarCodeRegx(root.barCodeRegx)
         root.minimumConfidence = 1
         root.processed=0
         root.total=0
@@ -37,6 +37,7 @@ class ClassificationApp():
 
         #initialize root links to multiple places if needed
         setRoot(root)
+        SetBarCodeRegx(root.barCodeRegx)
         RefreshImportedDatesAndSelect()
         root.mainloop()
 
@@ -50,5 +51,10 @@ def InitializeConfiguration(root):
     root.parallelProcessThreadCount=int(root.configParser.get('IMAGE_PROCESSOR', 'parallelProcessThreadCount'))
     root.sortItemsByBarCode= True if root.configParser.get('TAG_LIST', 'sortItemsByBarCode').lower() in ['t','y','true','yes','1'] else False
     root.noOfItemsInAPage=int(root.configParser.get('TAG_LIST', 'noOfItemsInAPage'))
+    SetBarCodeInfoDetails(root.configParser.get('BARCODE', 'xPathIRN'),
+                          root.configParser.get('BARCODE', 'xPathTaxonomy'),
+                          root.configParser.get('BARCODE', 'xPathCollector'),
+                          root.configParser.get('BARCODE', 'xPathDetails'),
+                          root.configParser.get('BARCODE', 'barCodeSearchUrl'))
 
 

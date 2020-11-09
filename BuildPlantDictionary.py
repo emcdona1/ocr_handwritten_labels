@@ -13,6 +13,8 @@ configParser = ConfigParser()
 configFilePath = r'Configuration.cfg'
 configParser.read(configFilePath)
 genusSpeciesFilePath = configParser.get('SNS_SERVER', 'genusSpeciesFilePath')
+searchurl = configParser.get('SNS_SERVER', 'searchUrl')
+xpath = configParser.get('SNS_SERVER', 'xPathGenusSpecies')
 
 
 def getSearchXpathResult(searchUrlWithKey, xpath):
@@ -43,8 +45,7 @@ def buildPlantDictionary(destination):
             print("Old file is backed up at:"+bakFilePath)
 
     if buildFile:
-        searchurl = "http://www.theplantlist.org/tpl1.1/search?q="
-        xpath = "//td/a/span[@class='name']/*[@class='genus' or @class='species']/text()"
+
         f = open(destination, "w")
         for a in ascii_lowercase:
             for b in ascii_lowercase:
