@@ -97,15 +97,16 @@ def GetInformationAsDataFrameFromImage(imageContent):
         index = index + 1
     return dataFrame
 
-def GetBarCodeFromOCRData(textData):
+def GetBarCodeFromText(textData):
     barCode=""
     try:
-        barCode=re.findall(barCodeRegx,textData,re.MULTILINE)[0]
+        match=re.search(barCodeRegx,textData,re.MULTILINE)
+        if match:
+            barCode=match.group(0)
+
     except Exception as error:
         print(f"{error} (Error Code:IDFI_001)")
         print("Could not detect bar code using OCR Data and Regx")
         pass
     return barCode
 
-
-#GetBarCodeFromImage("/Users/Keshab/Desktop/oneimg/3.png")

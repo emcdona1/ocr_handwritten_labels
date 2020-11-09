@@ -15,8 +15,9 @@ from DatabaseProcessing.DatabaseProcessing import SaveTagtoDatabase
 from DetectCorrectAndClassify.ApplyCorrection import ApplyCorrection
 from DetectCorrectAndClassify.DetectAndClassify import DetectAndClassify
 from Helper.AlgorithmicMethods import GetNormalizedSequentialDataBlocks, GetTempFilePath
+from ImageProcessor.GetBarCodeFromImage import GetBarCodeFromImage
 from ImageProcessor.InitializeBarCodeInfoTable import InitializeBarCodeInfoForAKey_InAThread
-from ImageProcessor.InitializeDataFromImage import GetInformationAsDataFrameFromImage, GetBarCodeFromOCRData
+from ImageProcessor.InitializeDataFromImage import GetInformationAsDataFrameFromImage, GetBarCodeFromText
 
 
 
@@ -62,7 +63,11 @@ class ImageProcessor():
         self.ocrThread.start()
         self.ExtractTagContentFromImageAndSetTempTagPath()
         self.ocrThread.join()
-        self.barCode=GetBarCodeFromOCRData(self.dataFrame['description'][0])
+        self.barCode=GetBarCodeFromText(self.imagePath.split("/")[-1])
+        if not len(self.barCode)>0:
+            self.barCode=GetBarCodeFromText(self.dataFrame['description'][0])
+        if not len(self.barCode)>0:
+            self.barCode=GetBarCodeFromImage(self.tempImagePath)
         self.sdb = GetNormalizedSequentialDataBlocks(self.startX, self.startY, self.dataFrame)
         DetectAndClassify(self.suggestEngine, self.sdb, self.minimumConfidence)
         ApplyCorrection(self.sdb)

@@ -4,11 +4,23 @@ import requests
 from lxml import html
 from DatabaseProcessing.DatabaseProcessing import AddBarCodeInfo
 
-xPathIRN="//div[@class='view-content']/div/div[span/text()='IRN: ']/span/a[starts-with(@href, '/catalogue/')]/text()"
-xPathTaxonomy = "//div[@class='view-content']/div/div[1]/span/a[starts-with(@href, '/taxonomy/')]/text()"
-xPathCollector="//div[@class='view-content']/div/div[2]/span/text()"
-xPathDetails="//div[@class='view-content']/div/div[position()>2 and span[not(a) and not(div)][2]]/span/text()"
-searchurl = "https://collections-botany.fieldmuseum.org/list?ss_ObjEcode="
+xPathIRN=None
+xPathTaxonomy = None
+xPathCollector=None
+xPathDetails=None
+searchurl = None
+
+def SetBarCodeInfoDetails(irnPath,taxonomyPath,collectorPath,detailsPath,url):
+    global xPathIRN
+    global xPathTaxonomy
+    global xPathCollector
+    global xPathDetails
+    global searchurl
+    xPathIRN=irnPath
+    xPathTaxonomy=taxonomyPath
+    xPathCollector=collectorPath
+    xPathDetails=detailsPath
+    searchurl=url
 
 
 
