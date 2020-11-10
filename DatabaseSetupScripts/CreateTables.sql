@@ -29,18 +29,17 @@ CREATE TABLE Tag_Word
 
 CREATE TABLE Tag_ClassifiedInfo(
 	TagId BIGINT,
-    Category VARCHAR(500) NOT NULL,
+    Category VARCHAR(50) NOT NULL,
     Information VARCHAR(2000) NOT NULL,
-    FOREIGN KEY(TagId) REFERENCES Tag_Info(TagId)
+    FOREIGN KEY(TagId) REFERENCES Tag_Info(TagId),
+    PRIMARY KEY (TagId, Category)
 );
 
 CREATE TABLE Barcode_Info
 (
     BarCode VARCHAR(10),
-    IRN BIGINT,
-    Taxonomy VARCHAR(100),
-    Collector VARCHAR(100),
-    Details VARCHAR(1000),
-    PRIMARY KEY (BarCode)
+    Category VARCHAR(50) NOT NULL,
+    Information VARCHAR(2000) NOT NULL,
+	PRIMARY KEY (BarCode, Category)
 );
 

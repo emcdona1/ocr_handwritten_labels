@@ -23,6 +23,7 @@ class ClassificationApp():
         root.processed=0
         root.total=0
         root.totalTimeTaken=0
+        root.tagId=0
         root.stopThread = False
         root.selectedFilter="Filter: None"
         root.suggestEngine = GetRunningServerEngineOrCreateLocalForSuggestion(root, "TRIE")

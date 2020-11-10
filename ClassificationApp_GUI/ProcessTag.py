@@ -3,13 +3,12 @@ from ClassificationApp_GUI.InteractiveWords import CreateButtonsFromTheWords
 from ClassificationApp_GUI.OutputArea import UpdateOutput
 from ClassificationApp_GUI.ScrollableImage import AddElementImageCanvas, END
 from ClassificationApp_GUI.StatusBar import ClearWordStatus
-from DatabaseProcessing.DatabaseProcessing import GetImgAndSDBFromTagId, GetTagClassification
+from DatabaseProcessing.DatabaseProcessing import GetImgAndSDBFromTagId, GetTagClassification, GetBarCodeClassification
 
 
 def ClearOldImage(root):
     for widget in root.imageCanvasFrame.winfo_children():
         widget.destroy()
-    root.irn=0
     pass
 
 def OpenTagId(root, tagId):
@@ -18,9 +17,9 @@ def OpenTagId(root, tagId):
             ClearOldImage(root)
             RemoveRootData(root)
             root.tagId=tagId
-            root.tagPath, root.sdb,root.imagePath,root.processingTime,root.importDate, \
-            root.barCode,root.irn,root.taxonomy,root.collector,root.details= GetImgAndSDBFromTagId(root.tagId)
+            root.tagPath, root.sdb,root.imagePath,root.processingTime,root.importDate,root.barCode= GetImgAndSDBFromTagId(root.tagId)
             root.classifiedData=GetTagClassification(root.tagId)
+            root.classifiedDataForBarCode=GetBarCodeClassification(root.barCode) if len(root.barCode)>0 else []
             DisplayClassificationEditor(root)
         except Exception as error:
             print(f"{error} (Error Code:CAG_001)")

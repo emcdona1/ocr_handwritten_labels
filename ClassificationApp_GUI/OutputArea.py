@@ -24,21 +24,11 @@ def UpdateOutput(root,**kw):
                 root.outputField.insert('end', cd[1] + " ", 'data')
         root.outputField.insert('end',"\n", 'data')
     pass
-    try:
-        if len(str(root.barCode))>0 and int(str(root.irn)+"0")>0:
-            root.outputField.insert('end',GetLineText("Barcode Info"), 'line')
-            root.outputField.insert('end', '{0: <19}: '.format("IRN "), 'label')
-            root.outputField.insert('end',root.irn+"\n", 'data')
-            root.outputField.insert('end', '{0: <19}: '.format("Taxonomy "), 'label')
-            root.outputField.insert('end',root.taxonomy+"\n", 'data')
-            root.outputField.insert('end', '{0: <19}: '.format("Collector "), 'label')
-            root.outputField.insert('end',root.collector+"\n", 'data')
-            for label,data in getTupleDetails(root.details):
-                root.outputField.insert('end', '{0: <19}: '.format(label), 'label')
-                root.outputField.insert('end',data+"\n", 'data')
-    except Exception as error:
-        print(f"{error} (Error Code:OA_001)")
-        pass
+    if len(str(root.barCode))>0:
+        root.outputField.insert('end',GetLineText("Barcode Info"), 'line')
+        for cb in root.classifiedDataForBarCode:
+            root.outputField.insert('end', '{0: <19}: '.format(cb[0]),'label')
+            root.outputField.insert('end', cb[1] + "\n", 'data')
 
     root.outputField.insert('end',GetLineText("Import Details"), 'line')
     root.outputField.insert('end', '{0: <19}: '.format("Imported From "), 'label')
@@ -47,24 +37,6 @@ def UpdateOutput(root,**kw):
     root.outputField.insert('end', str(root.processingTime)+" Seconds.\n", 'data')
     root.outputField.insert('end', '{0: <19}: '.format("Imported Date "), 'label')
     root.outputField.insert('end', str(root.importDate) + "\n", 'data')
-
-
-def getTupleDetails(details):
-    details=details.replace(':','')
-    details=details.replace('  ',' ')
-    details=details.replace('[\'','')
-    details=details.replace('\']','')
-    details=details.replace('\', \'','||')
-    details=details.replace('[\"','')
-    details=details.replace('\"]','')
-    details=details.replace('\", \"','||')
-    details=details.replace('\', \"','||')
-    details=details.replace('\", \'','||')
-    details=details.replace(' ||','||')
-    details=details.replace('|| ','')
-    details=details.split('||')
-    tuples=[(i,k)for i,k in zip(details[0::2], details[1::2])]
-    return tuples
 
 def GetLineText(text,spacer=" * ",length=50):
     return (f"{text:^{length}}").replace('   ',spacer).replace('  ',' ')+"\n"

@@ -44,35 +44,7 @@ DELIMITER $$
     ELSE SELECT @newTagId,@ImportDate,0;
     END IF;
  END $$ 
- 
- DELIMITER $$
- CREATE PROCEDURE SP_AddUpdateTagClassification(
-	IN TagIdIn BIGINT,
-    IN classificationInfoAsXML LONGTEXT
-)
-BEGIN
-	DELETE FROM Tag_ClassifiedInfo where TagId=TagIdIn;
-
-	SET @COUNT = (SELECT EXTRACTVALUE(classificationInfoAsXML,'COUNT(//classifications/classification)'));
-    SET @I = 1;
-    WHILE(@I <= @COUNT) DO
-        INSERT INTO Tag_ClassifiedInfo(TagId,Category,Information)
-        SELECT  TagIdIn,
-				ExtractValue(classificationInfoAsXML,CONCAT('/classifications/classification[',@I,']/Category')),
-				ExtractValue(classificationInfoAsXML,CONCAT('/classifications/classification[',@I,']/Information'));
-        SET @I = @I + 1;
-    END WHILE;
- END $$ 
-
-DELIMITER $$
- CREATE PROCEDURE SP_GetTagClassification(
-	IN TagIdIn BIGINT
-)
-BEGIN
-	SELECT Category,Information FROM Tag_ClassifiedInfo where TagId=TagIdIn;
-END $$ 
-
- 
+  
  DELIMITER $$
  CREATE PROCEDURE SP_UpdateWord(
 	IN tagidIn BIGINT,
@@ -145,10 +117,8 @@ DELIMITER $$
 	IN tagIdIn BIGINT
  )
  BEGIN
-	SELECT ti.Img, ti.OriginalImagePath,ti.ProcessingTime,ti.ImportDate,ti.BarCode,
-    bi.IRN,bi.Taxonomy,bi.Collector,bi.Details
+	SELECT ti.Img, ti.OriginalImagePath,ti.ProcessingTime,ti.ImportDate,ti.BarCode
     FROM Tag_Info ti 
-    LEFT JOIN Barcode_Info bi on ti.BarCode=bi.BarCode
     WHERE ti.TagId=tagidIn;
 	SELECT WordIndex,OCRDescription,Replacement,Suggestions,Vertices,Category FROM Tag_Word w Where w.TagId=tagIdIn;
  END $$
@@ -157,24 +127,57 @@ DELIMITER $$
  DELIMITER $$
  CREATE PROCEDURE SP_AddBarCodeInfo(
 	IN barCodeIn VARCHAR(10),
-    IN irnIn BIGINT,
-    IN taxonomyIn VARCHAR(100),
-    IN collectorIn VARCHAR(100),
-    IN detailsIn VARCHAR(1000)
- )
- BEGIN
-	INSERT INTO Barcode_Info(BarCode,IRN,Taxonomy,Collector,Details)
-	VALUES (barCodeIn,irnIn,taxonomyIn,collectorIn,detailsIn);
-END $$
+	IN classificationInfoAsXML LONGTEXT
+)
+BEGIN
+	IF NOT EXISTS (SELECT * FROM Barcode_Info WHERE BarCode=barCodeIn)
+	THEN
+		SET @COUNT = (SELECT EXTRACTVALUE(classificationInfoAsXML,'COUNT(//classifications/classification)'));
+		SET @I = 1;
+		WHILE(@I <= @COUNT) DO
+			INSERT INTO Barcode_Info(BarCode,Category,Information)
+			SELECT  barCodeIn,
+					ExtractValue(classificationInfoAsXML,CONCAT('/classifications/classification[',@I,']/Category')),
+					ExtractValue(classificationInfoAsXML,CONCAT('/classifications/classification[',@I,']/Information'));
+			SET @I = @I + 1;
+		END WHILE;
+    END IF;
+ END $$ 
 
 DELIMITER $$
  CREATE PROCEDURE SP_GetBarCodeInfo(
 	IN barCodeIn VARCHAR(10)
- )
- BEGIN
-	SELECT BarCode,IRN,Taxonomy,Collector,Details
-	FROM Barcode_Info bi
-	WHERE bi.BarCode=barCodeIn;
-END $$
+)
+BEGIN
+	SELECT Category,Information FROM Barcode_Info where BarCode=barCodeIn order by Category;
+END $$ 
+
+ DELIMITER $$
+ CREATE PROCEDURE SP_AddUpdateTagClassification(
+	IN TagIdIn BIGINT,
+    IN classificationInfoAsXML LONGTEXT
+)
+BEGIN
+	DELETE FROM Tag_ClassifiedInfo where TagId=TagIdIn;
+
+	SET @COUNT = (SELECT EXTRACTVALUE(classificationInfoAsXML,'COUNT(//classifications/classification)'));
+    SET @I = 1;
+    WHILE(@I <= @COUNT) DO
+        INSERT INTO Tag_ClassifiedInfo(TagId,Category,Information)
+        SELECT  TagIdIn,
+				ExtractValue(classificationInfoAsXML,CONCAT('/classifications/classification[',@I,']/Category')),
+				ExtractValue(classificationInfoAsXML,CONCAT('/classifications/classification[',@I,']/Information'));
+        SET @I = @I + 1;
+    END WHILE;
+ END $$ 
+
+DELIMITER $$
+ CREATE PROCEDURE SP_GetTagClassification(
+	IN TagIdIn BIGINT
+)
+BEGIN
+	SELECT Category,Information FROM Tag_ClassifiedInfo where TagId=TagIdIn order by Category;
+END $$ 
+
 
 DELIMITER ;

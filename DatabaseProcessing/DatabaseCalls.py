@@ -53,7 +53,19 @@ def CALL_SP_GetTagClassification(TagId):
         return classifiedInformation
         pass
 
-
+def CALL_SP_GetBarCodeInfo(barCode):
+    conn, isConnected, dbName= Get_Connection()
+    if isConnected:
+        classifiedInformation=[]
+        cursor = conn.cursor()
+        cursor.callproc('SP_GetBarCodeInfo', [barCode,])
+        for result in cursor.stored_results():
+            for row in result:
+                classifiedInformation.append((row[0],row[1]))
+        cursor.close()
+        conn.close()
+        return classifiedInformation
+        pass
 
 def Call_SP_UpdateWord(tagId,wordIndexUpdate, replacement,suggestions,category):
     conn, isConnected, dbName= Get_Connection()
@@ -94,8 +106,6 @@ def CALL_SP_GetImportDates():
         data.extend(importDates)
         return data
         pass
-
-
 
 def Call_SP_GetTagList(importDateIn,sortItemsByBarCode,startIndex,Count):
     conn, isConnected,dbName = Get_Connection()
@@ -150,23 +160,21 @@ def Call_SP_GetTagDetail(tagIdIn):
                     processingTime=row[2]
                     importDate=row[3]
                     barCode=row[4]
-                    irn=str(row[5])
-                    taxonomy=row[6]
-                    collector=row[7]
-                    details=row[8]
         cursor.close()
         conn.close()
-        return image,imagePath,processingTime, dataFrame,importDate,barCode,irn,taxonomy,collector,details
+        return image,imagePath,processingTime, dataFrame,importDate,barCode
         pass
 
-def Call_SP_AddBarCodeInfo(barCode,irn,taxonomy, collector,details):
-    conn, isConnected,dbName = Get_Connection()
+
+def Call_SP_AddBarCodeInfo(BarCode, classificationInfoAsXML):
+    conn, isConnected, dbName= Get_Connection()
     if isConnected:
         cursor = conn.cursor()
-        cursor.callproc('SP_AddBarCodeInfo',[barCode, irn,taxonomy, collector,details, ])
+        cursor.callproc('SP_AddBarCodeInfo', [BarCode,classificationInfoAsXML,])
         cursor.stored_results()
         conn.commit()
         cursor.close()
         conn.close()
-    else:
-        print("Unable to connect to the database")
+        pass
+
+
