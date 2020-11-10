@@ -22,13 +22,28 @@ def AddMenuAndSubMenu(root):
     root.smExtractTag.add_command(label="Text File With Urls of Images", command=lambda: ExtractFromTxtFileUrls(True))
     root.smExtractTag.add_command(label="Stop Batch Processing", command=lambda: StopBatchProcessing(root), state="disabled")
 
+    # Export to File
+    root.smExportTag=Menu(root.menuBar)
+    root.menuBar.add_cascade(label="Export",menu=root.smExportTag)
+    root.smExportTag.add_command(label="Export current Tag Information", command=lambda: ExportTag(root.tagId))
+    root.smExportTag.add_command(label="Export all Tags", command=lambda: ExportAllTags())
+
+    def ExportTag(tagId):
+        if tagId:
+            print("Export: "+str(tagId))
+            pass
+
+    def ExportAllTags():
+        print("Export all tags")
+        pass
+
+
 
     def ExtractFromFolder(extractTag):
         imageSourceFolder = filedialog.askdirectory() + "/"
         if len(imageSourceFolder) > 2:
             ProcessImagesInTheFolder(root.suggestEngine, imageSourceFolder,
                                      root.minimumConfidence, extractTag)
-            #InitializeImportedListCBox(root)
         pass
 
     def ExtractFromTxtFileUrls(extractTag):
@@ -37,7 +52,6 @@ def AddMenuAndSubMenu(root):
         )
         if len(txtFileContainingUrls) > 0:
             ProcessImagesFromTheUrlsInTheTextFile(root.suggestEngine, txtFileContainingUrls,root.minimumConfidence, extractTag)
-            #InitializeImportedListCBox(root)
         pass
 
     def ExtractFromImagePath(extractTag):
@@ -47,8 +61,6 @@ def AddMenuAndSubMenu(root):
         if len(singleImagePath) > 1:
             root.imagePath = singleImagePath
             ExtractAndProcessSingleImage(root.suggestEngine, root.imagePath,root.minimumConfidence, extractTag)
-            #InitializeImportedListCBox(root)
-            #DisplayClassificationEditor(root)
         pass
 
 
@@ -58,8 +70,6 @@ def AddMenuAndSubMenu(root):
         if len(imageUrl) > 1:
             root.imagePath = imageUrl
             ExtractAndProcessSingleImage(root.suggestEngine, root.imagePath,root.minimumConfidence, extractTag)
-            #InitializeImportedListCBox(root)
-            #DisplayClassificationEditor(root)
         pass
 
     def StopBatchProcessing(root):

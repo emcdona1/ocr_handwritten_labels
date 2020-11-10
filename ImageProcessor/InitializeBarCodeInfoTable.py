@@ -36,13 +36,36 @@ def GetDetails(doc,xPath,default):
     else:
         return "[]"
 
-def GetBarCodeInformationFromResponse(response):
+def GetBarCodeInformationTupleFromResponse(response):
+    tuples=[]
     doc = html.fromstring(response.content)
     irn=GetFirstValueIfExists(doc,xPathIRN,"0")
-    taxonomy=GetFirstValueIfExists(doc,xPathTaxonomy,"")
-    collector=GetFirstValueIfExists(doc,xPathCollector,"")
-    details=GetDetails(doc,xPathDetails,"")
-    return irn,taxonomy,collector,details
+    if int(irn)>0:
+        tuples.append(("IRN",irn))
+        tuples.append(("Taxonomy",GetFirstValueIfExists(doc,xPathTaxonomy,"")))
+        tuples.append(("Collector",GetFirstValueIfExists(doc,xPathCollector,"")))
+        details=GetDetails(doc,xPathDetails,"")
+        if len(details)>0:
+            tuples.extend(getTupleFromDetails(details))
+    return tuples
+
+def getTupleFromDetails(details):
+    details=details.replace(':','')
+    details=details.replace('  ',' ')
+    details=details.replace('[\'','')
+    details=details.replace('\']','')
+    details=details.replace('\', \'','||')
+    details=details.replace('[\"','')
+    details=details.replace('\"]','')
+    details=details.replace('\", \"','||')
+    details=details.replace('\', \"','||')
+    details=details.replace('\", \'','||')
+    details=details.replace(' ||','||')
+    details=details.replace('|| ','')
+    details=details.split('||')
+    tuples=[(i,k)for i,k in zip(details[0::2], details[1::2])]
+    return tuples
+
 
 #InitializeBarCodeInfoTable(55029,1068760)
 def InitializeBarCodeInfoTable(startNo,maxVal):
@@ -56,10 +79,9 @@ def InitializeBarCodeInfoForAKey(searchKey):
     ExtractDataFromResponseAndSaveToDatabase(searchKey,response)
 
 def ExtractDataFromResponseAndSaveToDatabase(barCode,response):
-    irn,taxonomy,collector,details=GetBarCodeInformationFromResponse(response)
-    if(int(irn+"0")>0):
-        AddBarCodeInfo(barCode,str(irn),str(taxonomy),str(collector),str(details))
-
+    classificationTuples=GetBarCodeInformationTupleFromResponse(response)
+    if len(classificationTuples)>0:
+        AddBarCodeInfo(barCode,classificationTuples)
 
 def InitializeBarCodeInfoForAKey_InAThread(searchKey):
     args = (searchKey,)
