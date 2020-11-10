@@ -9,6 +9,8 @@ DROP PROCEDURE IF EXISTS SP_GetBarCodeInfo;
 DROP PROCEDURE IF EXISTS SP_GetImportDates;
 DROP PROCEDURE IF EXISTS SP_AddUpdateTagClassification;
 DROP PROCEDURE IF EXISTS SP_GetTagClassification;
+DROP PROCEDURE IF EXISTS SP_GetDataForCSV;
+DROP PROCEDURE IF EXISTS SP_GetDataForCSVForImportDate;
 
 DELIMITER $$
 
@@ -178,6 +180,115 @@ DELIMITER $$
 BEGIN
 	SELECT Category,Information FROM Tag_ClassifiedInfo where TagId=TagIdIn order by Category;
 END $$ 
+
+DELIMITER $$
+CREATE PROCEDURE SP_GetDataForCSV(
+	IN TagIdIn BIGINT
+)
+BEGIN
+	SET @tagId=TagIdIn;
+    
+    DROP TABLE IF EXISTS BarCodeTempTable;
+	CREATE TEMPORARY TABLE BarCodeTempTable (
+		BarCodeTemp VARCHAR(20)
+	) ENGINE=MEMORY;
+    INSERT INTO BarCodeTempTable(BarCodeTemp)
+    SELECT BarCode FROM Tag_Info WHERE @tagId in (0,TagId);
+    -- ------------ GET Tag_Info  --------------------
+	SELECT TagId,BarCode,ImportDate,OriginalImagePath from Tag_Info where @tagId in (TagId,0);
+	-- ------------ GET Tag_ClassifiedInfo  --------------------
+	SET @sql = NULL;
+	SELECT
+	  GROUP_CONCAT(DISTINCT
+		CONCAT(
+		  'max(case when Category = ''',
+		  Category,
+		  ''' then Information  end) AS ''',Category, ''''
+		)
+	  ) INTO @sql
+	FROM
+	  Tag_ClassifiedInfo;
+	  
+	SET @sql = CONCAT('SELECT TagId, ', @sql, 'FROM Tag_ClassifiedInfo WHERE @TagId IN (Tagid,0) GROUP BY TagId');
+	PREPARE stmt FROM @sql;
+	EXECUTE stmt;
+	DEALLOCATE PREPARE stmt;
+	-- ------------ GET Barcode_Info --------------------
+	SET @sql = NULL;
+	SELECT
+	  GROUP_CONCAT(DISTINCT
+		CONCAT(
+		  'max(case when Category = ''',
+		  Category,
+		  ''' then Information  end) AS ''',Category, ''''
+		)
+	  ) INTO @sql
+	FROM
+	  Barcode_Info
+	  WHERE Category<>'barcode'; -- do not select barcode column
+	SET @sql = CONCAT('SELECT BarCode, ', @sql, 'FROM Barcode_Info WHERE BarCode IN(SELECT BarCodeTemp from BarCodeTempTable) GROUP BY BarCode');
+
+	PREPARE stmt FROM @sql;
+	EXECUTE stmt;
+	DEALLOCATE PREPARE stmt;
+    DROP TABLE IF EXISTS BarCodeTempTable;
+END $$
+DELIMITER ;
+
+
+DELIMITER $$
+CREATE PROCEDURE SP_GetDataForCSVForImportDate(
+	IN importDateIn VARCHAR(20)
+)
+BEGIN
+	SET @importDateIn=importDateIn;
+    
+    DROP TABLE IF EXISTS TagIdBarCodeTempTable;
+	CREATE TEMPORARY TABLE TagIdBarCodeTempTable (
+		TagIdTemp BIGINT,
+		BarCodeTemp VARCHAR(20)
+	) ENGINE=MEMORY;
+    INSERT INTO TagIdBarCodeTempTable(TagIdTemp,BarCodeTemp)
+    SELECT TagId,BarCode FROM Tag_Info WHERE ImportDate=importDateIn;
+    -- ------------ GET Tag_Info  --------------------
+	SELECT TagId,BarCode,ImportDate,OriginalImagePath from Tag_Info where ImportDate=importDateIn;
+	-- ------------ GET Tag_ClassifiedInfo  --------------------
+	SET @sql = NULL;
+	SELECT
+	  GROUP_CONCAT(DISTINCT
+		CONCAT(
+		  'max(case when Category = ''',
+		  Category,
+		  ''' then Information  end) AS ''',Category, ''''
+		)
+	  ) INTO @sql
+	FROM
+	  Tag_ClassifiedInfo;
+	  
+	SET @sql = CONCAT('SELECT TagId, ', @sql, 'FROM Tag_ClassifiedInfo WHERE TagId IN (SELECT TagIdTemp FROM TagIdBarCodeTempTable) GROUP BY TagId');
+	PREPARE stmt FROM @sql;
+	EXECUTE stmt;
+	DEALLOCATE PREPARE stmt;
+	-- ------------ GET Barcode_Info --------------------
+	SET @sql = NULL;
+	SELECT
+	  GROUP_CONCAT(DISTINCT
+		CONCAT(
+		  'max(case when Category = ''',
+		  Category,
+		  ''' then Information  end) AS ''',Category, ''''
+		)
+	  ) INTO @sql
+	FROM
+	  Barcode_Info
+	  WHERE Category<>'barcode'; -- do not select barcode column
+	SET @sql = CONCAT('SELECT BarCode, ', @sql, 'FROM Barcode_Info WHERE BarCode IN(SELECT BarCodeTemp from TagIdBarCodeTempTable) GROUP BY BarCode');
+
+	PREPARE stmt FROM @sql;
+	EXECUTE stmt;
+	DEALLOCATE PREPARE stmt;
+    DROP TABLE IF EXISTS TagIdBarCodeTempTable;
+END $$
 
 
 DELIMITER ;

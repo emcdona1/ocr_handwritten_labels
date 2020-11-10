@@ -1,10 +1,7 @@
 import ast
 import binascii
-
 import pandas as pd
-
 from DatabaseProcessing.GetConnection import Get_Connection
-
 
 def Call_SP_AddTag(originalImagePath, processingTime,img, wordsInfoAsXML,barCode):
     conn, isConnected,dbName = Get_Connection()
@@ -176,5 +173,32 @@ def Call_SP_AddBarCodeInfo(BarCode, classificationInfoAsXML):
         cursor.close()
         conn.close()
         pass
+
+def CALL_SP_GetDataForCSV(TagId):
+    conn, isConnected, dbName= Get_Connection()
+    if isConnected:
+        cursor = conn.cursor()
+        cursor.callproc('SP_GetDataForCSV', [TagId,])
+        dfs=[]
+        for result in cursor.stored_results():
+            dfs.append(pd.DataFrame(result.fetchall(),columns=[col[0] for col in result.description]))
+        cursor.close()
+        conn.close()
+        return dfs
+    pass
+
+def CALL_SP_GetDataForCSVForImportDate(ImportDate):
+    conn, isConnected, dbName= Get_Connection()
+    if isConnected:
+        cursor = conn.cursor()
+        cursor.callproc('SP_GetDataForCSVForImportDate', [ImportDate,])
+        dfs=[]
+        for result in cursor.stored_results():
+            dfs.append(pd.DataFrame(result.fetchall(),columns=[col[0] for col in result.description]))
+        cursor.close()
+        conn.close()
+        return dfs
+    pass
+
 
 

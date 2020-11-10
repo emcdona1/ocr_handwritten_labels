@@ -1,6 +1,7 @@
 from DatabaseProcessing.DatabaseCalls import Call_SP_AddTag, Call_SP_UpdateWord, Call_SP_GetTagDetail, \
     Call_SP_GetTagList, Call_SP_DeleteTag, Call_SP_AddBarCodeInfo, CALL_SP_GetImportDates, CALL_SP_GetTagClassification, \
-    Call_SP_AddUpdateTagClassification, CALL_SP_GetBarCodeInfo
+    Call_SP_AddUpdateTagClassification, CALL_SP_GetBarCodeInfo, CALL_SP_GetDataForCSV, \
+    CALL_SP_GetDataForCSVForImportDate
 from Helper.AlgorithmicMethods import GetTempFilePath
 from Helper.GetWordsInformation import GetClassifiedDataTuples
 
@@ -88,5 +89,11 @@ def GetXMLClassificationInfoFromTuples(classificationTuples):
     xml.append('</classifications>')
     data='\n'.join(xml)
     return data
+
+def GetDataForCSV(TagId):
+    return CALL_SP_GetDataForCSV(TagId)
+
+def GetDataForCSVForImportDate(ImportDate):
+    return CALL_SP_GetDataForCSVForImportDate(ImportDate)
 
 
