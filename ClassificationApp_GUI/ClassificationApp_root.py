@@ -3,6 +3,7 @@ import os
 from ClassificationApp_GUI.LayoutGUI import CreateLayout, RefreshImportedDatesAndSelect
 from ClassificationApp_GUI.MenuAndSubMenuAndFunctional import AddMenuAndSubMenu
 from ClassificationApp_GUI.ScrollableImage import Tk
+from Helper.SaveDataFramesToExcelFile import SetExportFolder
 from Helper.WordCategories import GetWordCategories
 from ImageProcessor.ImageProcessorDriver import setRoot, ExtractAndProcessSingleImage
 from ImageProcessor.InitializeBarCodeInfoTable import SetBarCodeInfoDetails
@@ -57,5 +58,6 @@ def InitializeConfiguration(root):
                           root.configParser.get('BARCODE', 'xPathCollector'),
                           root.configParser.get('BARCODE', 'xPathDetails'),
                           root.configParser.get('BARCODE', 'barCodeSearchUrl'))
+    SetExportFolder(root.configParser.get('EXPORT_EXCEL', 'exportToFolderPath'))
 
 

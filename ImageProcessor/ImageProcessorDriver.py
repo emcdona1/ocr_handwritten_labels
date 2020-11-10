@@ -3,7 +3,7 @@ import os
 
 from queue import Queue
 
-from ClassificationApp_GUI.LayoutGUI import UpdateProcessingCount, Config_StateMenu
+from ClassificationApp_GUI.LayoutGUI import UpdateProcessingCount
 from ClassificationApp_GUI.StatusBar import SetStatusForWord
 from ImageProcessor.ImageProcessor import ImageProcessor
 from threading import Thread

@@ -3,11 +3,10 @@ from tkinter import *
 from tkinter.scrolledtext import ScrolledText
 from tkinter.ttk import Combobox
 
-
 from ClassificationApp_GUI.ProcessTag import OpenTagId, DisplayClassificationEditor, RemoveRootData
 from ClassificationApp_GUI.StatusBar import SetStatusForWord
 from DatabaseProcessing.DatabaseProcessing import DeleteTag, GetImportDates, GetImportedTagTuples
-
+import re
 gRoot=None
 
 
@@ -115,6 +114,7 @@ def TagSelected(evt,root,showDeleteOption=False):
             if showDeleteOption:
                 root.selectTagListBox.rclick.popup(evt,root.tagId,root.imagePath.split('/')[-1],index)
             OpenTagId(root, root.tagId)
+        UpdateExportTagLabel(root)
 
     except Exception as error:
         #print(f"{error} (Error Code:LG_001)")
@@ -151,6 +151,7 @@ def GetNextPage():
 def RefreshFilteredList(event,root):
     root.selectedFilter=root.selectDateCBox.get()
     GetTagListAndDisplay(root.selectedFilter,0)
+    UpdateExportImportDatelabel(root)
     pass
 
 def GetImportedDates(root):
@@ -172,6 +173,7 @@ def RefreshImportedDatesAndSelect(selectedFilter='Filter: None'):
     SetTagListPageDropDown(gRoot.selectedFilter.split(">")[1])
     gRoot.selectDateCBox.set(gRoot.selectedFilter)
     GetTagListAndDisplay(gRoot.selectedFilter)
+
 
 def SetTagListPageDropDown(totalItems):
     i=1
@@ -274,6 +276,24 @@ def Config_StateMenu(root,state="normal"):
         root.smExtractTag.entryconfig("Stop Batch Processing", state="normal")
 
 
+
+def UpdateExportTagLabel(root):
+    root.smExportTag.entryconfigure(0, label=f"Current Tag: ", state="disabled")
+    if len(root.imagePath.split('/')[-1])>0:
+        root.smExportTag.entryconfigure(0, label=f"Current Tag: {root.imagePath.split('/')[-1]}", state="normal")
+
+
+def UpdateExportImportDatelabel(root):
+    root.smExportTag.entryconfigure(1, label=f"Tags with import date: ", state="disabled")
+    filter=(root.selectedFilter.split(" >")[0])
+    nosymboltxt=re.sub(r'[^\w]', ' ', filter)
+    nosymboltxt=nosymboltxt.replace(" ","")
+    if nosymboltxt.isdigit():
+        root.smExportTag.entryconfigure(1, label=f"Tags with import date: {filter}", state="normal")
+
+
+
+
 class RightClick:
     def __init__(self, master):
         self.aMenu = Menu(master, tearoff=0)
@@ -283,6 +303,7 @@ class RightClick:
         print(f"Deleting TagId:{self.tagId}")
         gRoot.sdb = ''
         DeleteRecord(gRoot,self.index,self.tagId)
+
 
 
     def popup(self, event,tagId,fileName,index):

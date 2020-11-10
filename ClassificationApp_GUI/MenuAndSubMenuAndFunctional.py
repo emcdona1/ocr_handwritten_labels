@@ -1,4 +1,7 @@
+
 from tkinter import Menu, filedialog, simpledialog
+
+from Helper.SaveDataFramesToExcelFile import ExportSingleTagToCSV, ExportAllTagsToCSV, ExportTagsWithImportDatesToCSV
 from ImageProcessor.ImageProcessorDriver import ProcessImagesInTheFolder, ProcessImagesFromTheUrlsInTheTextFile, \
     ExtractAndProcessSingleImage
 
@@ -24,19 +27,10 @@ def AddMenuAndSubMenu(root):
 
     # Export to File
     root.smExportTag=Menu(root.menuBar)
-    root.menuBar.add_cascade(label="Export",menu=root.smExportTag)
-    root.smExportTag.add_command(label="Export current Tag Information", command=lambda: ExportTag(root.tagId))
-    root.smExportTag.add_command(label="Export all Tags", command=lambda: ExportAllTags())
-
-    def ExportTag(tagId):
-        if tagId:
-            print("Export: "+str(tagId))
-            pass
-
-    def ExportAllTags():
-        print("Export all tags")
-        pass
-
+    root.menuBar.add_cascade(label="Export To Excel File",menu=root.smExportTag)
+    root.smExportTag.add_command(label="Current Tag:", command=lambda: ExportSingleTagToCSV(root.tagId,root.imagePath.split("/")[-1]),state="disabled")
+    root.smExportTag.add_command(label="Tags with import date:", command=lambda: ExportTagsWithImportDatesToCSV(root.selectedFilter.split(" >")[0]),state="disabled")
+    root.smExportTag.add_command(label="Export all Tags", command=lambda: ExportAllTagsToCSV(),state="normal")
 
 
     def ExtractFromFolder(extractTag):
@@ -75,7 +69,4 @@ def AddMenuAndSubMenu(root):
     def StopBatchProcessing(root):
         if (root.total - root.processed) > 0 and not root.stopThread:
             root.stopThread = True
-
-
-
 
