@@ -5,6 +5,7 @@ from tkinter import *
 def UpdateOutput(root, **kw):
     root.imagePathToOpen = root.imagePath
     root.outputField.delete('1.0', END)
+    root.importDetails['text']=f"Imported On: {root.importDate}\tProcessing Time: {root.processingTime} seconds."
     root.outputField.insert('end', '{0: <19}: '.format("Imported From "), 'label')
     root.outputField.insert('end', root.imagePath, 'filePath')
     root.outputField.insert('end', '\n')
@@ -17,14 +18,6 @@ def UpdateOutput(root, **kw):
                 root.outputField.insert('end', '{0: <19}: '.format(cb[0]), 'label')
                 root.outputField.insert('end', cb[1], 'data')
                 root.outputField.insert('end', '\n')
-
-    root.outputField.insert('end', "______________________________________________________________________\n\n", 'line')
-    root.outputField.insert('end', '{0: <19}: '.format("Imported Date "), 'label')
-    root.outputField.insert('end', str(root.importDate), 'data')
-    root.outputField.insert('end', '\n')
-    root.outputField.insert('end', '{0: <19}: '.format("Processing Time "), 'label')
-    root.outputField.insert('end', str(root.processingTime) + " Seconds.", 'data')
-    root.outputField.insert('end', '\n')
 
     root.outputField.insert('end', "______________________________________________________________________\n\n", 'line')
     for cd in root.classifiedData:

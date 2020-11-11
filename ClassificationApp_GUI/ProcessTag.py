@@ -36,6 +36,7 @@ def RemoveRootData(root):
     root.tagPath=root.sdb=root.imagePath=root.processingTime=root.importDate=root.barCode=root.irn=root.taxonomy=root.collector=root.details=None
     ClearWordStatus(root)
     root.outputField.delete('1.0', END)
+    root.importDetails['text']=''
 
 
 pass

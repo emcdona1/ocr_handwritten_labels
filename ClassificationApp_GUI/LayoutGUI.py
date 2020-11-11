@@ -98,6 +98,15 @@ def CreateLayout(root):
                                  font=("Courier", 14))
     root.wordStatusLabel.pack(expand=True, fill=BOTH, side=LEFT)
 
+    importDetailsFrame=Frame(statusBarFrame, height=18, bd=0, background="gray80")
+    importDetailsFrame.pack(anchor=SW, expand=TRUE, fill=BOTH, side=BOTTOM)
+
+    root.importDetails = Label(importDetailsFrame, text="",
+                                 justify="left", bd=1, anchor="nw",
+                                 font=("Courier", 12),foreground="brown4")
+    root.importDetails.pack(expand=True, fill=BOTH,side=LEFT)
+
+
 
 
     # output area
