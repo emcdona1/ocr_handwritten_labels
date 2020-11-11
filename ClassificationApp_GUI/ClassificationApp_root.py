@@ -53,6 +53,7 @@ def InitializeConfiguration(root):
     root.parallelProcessThreadCount=int(root.configParser.get('IMAGE_PROCESSOR', 'parallelProcessThreadCount'))
     root.sortItemsByBarCode= True if root.configParser.get('TAG_LIST', 'sortItemsByBarCode').lower() in ['t','y','true','yes','1'] else False
     root.noOfItemsInAPage=int(root.configParser.get('TAG_LIST', 'noOfItemsInAPage'))
+    root.barCodeSearchUrl=root.configParser.get('BARCODE', 'barCodeSearchUrl')
     SetBarCodeInfoDetails(root.configParser.get('BARCODE', 'xPathIRN'),
                           root.configParser.get('BARCODE', 'xPathTaxonomy'),
                           root.configParser.get('BARCODE', 'xPathCollector'),

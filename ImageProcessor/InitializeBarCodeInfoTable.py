@@ -43,7 +43,10 @@ def GetBarCodeInformationTupleFromResponse(response):
     if int(irn)>0:
         tuples.append(("IRN",irn))
         tuples.append(("Taxonomy",GetFirstValueIfExists(doc,xPathTaxonomy,"")))
-        tuples.append(("Collector",GetFirstValueIfExists(doc,xPathCollector,"")))
+        possibleCollector=GetFirstValueIfExists(doc,xPathCollector,"")
+        if len(possibleCollector)>0 and (not ':' in possibleCollector):
+            tuples.append(("Collector",possibleCollector))
+
         details=GetDetails(doc,xPathDetails,"")
         if len(details)>0:
             tuples.extend(getTupleFromDetails(details))
@@ -86,6 +89,7 @@ def ExtractDataFromResponseAndSaveToDatabase(barCode,response):
 def InitializeBarCodeInfoForAKey_InAThread(searchKey):
     args = (searchKey,)
     Thread(target=InitializeBarCodeInfoForAKey, args=args).start()
+
 
 
 
