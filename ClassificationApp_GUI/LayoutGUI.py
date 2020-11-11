@@ -1,13 +1,8 @@
 import tkinter
-import urllib
 import webbrowser
 from tkinter import *
 from tkinter.scrolledtext import ScrolledText
 from tkinter.ttk import Combobox
-from urllib.request import urlopen
-
-import PIL
-
 from ClassificationApp_GUI.ProcessTag import OpenTagId, DisplayClassificationEditor, RemoveRootData
 from ClassificationApp_GUI.StatusBar import SetStatusForWord
 from DatabaseProcessing.DatabaseProcessing import DeleteTag, GetImportDates, GetImportedTagTuples
@@ -55,7 +50,8 @@ def CreateLayout(root):
     # Left Panel Tag List frame
     selectTagFrame = Frame(tagFrame, width=leftPanelWidthForTagList_width,background="gray90")
     selectTagFrame.pack(anchor=NE, expand=True, side=TOP)
-    root.selectTagListBox = Listbox(selectTagFrame, font=("Courier", 15), height=32, bd=1, background="gray90")
+    root.selectTagListBox = Listbox(selectTagFrame, font=("Courier", 15), height=32, bd=0, background="gray90")
+
     root.selectTagListBox.pack(side=LEFT, fill=BOTH, padx=0, pady=1, expand=True)
     root.selectTagListBox.bind('<<ListboxSelect>>', lambda event, x=root: TagSelected(event, x))
     root.selectTagListBox.bind('<Button-2>', lambda event, x=root: TagRequestDelete(event, x))
@@ -228,10 +224,17 @@ def InitializeTagListBox(lst):
     gRoot.tagListDisplay=lst
     gRoot.selectTagListBox.delete(0, tkinter.END)
     gRoot.tagIdImagePathHolder=[]
-    i=0
+    i = 0
+
     for x in gRoot.tagListDisplay:
         #tagId,BarCode,ImportDate,OriginalImagePath
         gRoot.selectTagListBox.insert(i,str(x[1])+"_" + str(x[3].split('/')[-1]))
+        if i%2==0:
+            gRoot.selectTagListBox.itemconfigure(i,background="gainsboro",selectbackground="gray80",
+                                                 selectforeground="sea green")
+        else:
+            gRoot.selectTagListBox.itemconfigure(i,selectbackground="gray80",selectforeground="sea green")
+
         gRoot.tagIdImagePathHolder.append((x[0], x[3]))
         i+=1
 
