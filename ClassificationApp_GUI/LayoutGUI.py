@@ -1,7 +1,12 @@
 import tkinter
+import urllib
+import webbrowser
 from tkinter import *
 from tkinter.scrolledtext import ScrolledText
 from tkinter.ttk import Combobox
+from urllib.request import urlopen
+
+import PIL
 
 from ClassificationApp_GUI.ProcessTag import OpenTagId, DisplayClassificationEditor, RemoveRootData
 from ClassificationApp_GUI.StatusBar import SetStatusForWord
@@ -50,7 +55,7 @@ def CreateLayout(root):
     # Left Panel Tag List frame
     selectTagFrame = Frame(tagFrame, width=leftPanelWidthForTagList_width,background="gray90")
     selectTagFrame.pack(anchor=NE, expand=True, side=TOP)
-    root.selectTagListBox = Listbox(selectTagFrame, font=("Courier", 15), height=32, bd=0, background=None)
+    root.selectTagListBox = Listbox(selectTagFrame, font=("Courier", 15), height=32, bd=1, background="gray90")
     root.selectTagListBox.pack(side=LEFT, fill=BOTH, padx=0, pady=1, expand=True)
     root.selectTagListBox.bind('<<ListboxSelect>>', lambda event, x=root: TagSelected(event, x))
     root.selectTagListBox.bind('<Button-2>', lambda event, x=root: TagRequestDelete(event, x))
@@ -61,13 +66,13 @@ def CreateLayout(root):
                                  background="gray80",height=tagListControllerHeight)
     root.tagListControllerFrame.pack(side=BOTTOM,fill=BOTH,padx=0,pady=1, expand=True)
 
-    root.previousPage=Button(root.tagListControllerFrame, text ="|<", command = GetPreviousPage)
+    root.previousPage=Button(root.tagListControllerFrame, text ="|<", command = GetPreviousPage, background="gray90")
     root.previousPage.grid(row=0,column=0)
-    root.pageDDL = Combobox(root.tagListControllerFrame, values=[], font=("Courier", 15), justify='center',state="readonly",width=13)
+    root.pageDDL = Combobox(root.tagListControllerFrame, values=[], font=("Courier", 15), justify='center',state="readonly",width=13, background="gray90")
     root.pageDDL.bind('<<ComboboxSelected>>', lambda event, x=root: RefreshTagListPage(event, x))
     root.pageDDL.grid(row=0,column=1)
 
-    root.nextPage=Button(root.tagListControllerFrame, text =">|", command = GetNextPage)
+    root.nextPage=Button(root.tagListControllerFrame, text =">|", command = GetNextPage, background="gray90")
     root.nextPage.grid(row=0,column=2)
 
     scrollbar = Scrollbar(selectTagFrame, bd=0, width=5)
@@ -102,6 +107,7 @@ def CreateLayout(root):
 
     root.outputField = ScrolledText(outputAreaFrame, font=("Courier", 16), bd=0, highlightthickness=0)
     root.outputField.pack(padx=0, pady=2, fill=BOTH, expand=True)
+    ConfigureOutputField(root)
 
 
 def TagSelected(evt,root,showDeleteOption=False):
@@ -312,6 +318,49 @@ class RightClick:
         self.tagId=tagId
         self.index=index
         self.aMenu.post(event.x_root, event.y_root)
+
+
+def ConfigureOutputField(root):
+    def enterTheTag(e,x):
+        root.outputField.tag_config(x, foreground="blue", underline=1)
+        root.outputField.config(cursor="hand2")
+    def leaveTheTag(e,x):
+        root.outputField.tag_config(x, foreground="blue", underline=0)
+        root.outputField.config(cursor='')
+
+    root.outputField.tag_config('label', foreground="green",font=("Courier", 14))
+    root.outputField.tag_config('data', foreground="black",font=("Courier", 14))
+    root.outputField.tag_config('line', foreground="gray50",font=("Courier", 14))
+    root.outputField.tag_config("filePath", foreground="blue", underline=0,font=("Courier", 12))
+    root.outputField.tag_config("barCode", foreground="blue", underline=0,font=("Courier", 14))
+    root.outputField.tag_bind("filePath", "<Enter>", lambda e, x="filePath":enterTheTag(e,x))
+    root.outputField.tag_bind("filePath", "<Leave>", lambda e,x="filePath":leaveTheTag(e,x))
+    root.outputField.tag_bind("barCode", "<Enter>", lambda e, x="barCode":enterTheTag(e,x))
+    root.outputField.tag_bind("barCode", "<Leave>", lambda e,x="barCode":leaveTheTag(e,x))
+    root.outputField.tag_bind("filePath", "<Button-1>", openImageFromPath)
+    root.outputField.tag_bind("barCode", "<Button-1>", openBarCodeInfo)
+
+
+
+def openImageFromPath(event):
+    path=gRoot.imagePathToOpen
+    if len(path)>0:
+        if 'http' in path:
+            webbrowser.open_new(path)
+        else:
+            webbrowser.open_new("file:///"+path)
+    pass
+
+def openBarCodeInfo(event):
+    if len(gRoot.barCode)>0:
+        webbrowser.open_new(f'{gRoot.barCodeSearchUrl}{gRoot.barCode}')
+
+
+
+
+
+
+
 
 
 
