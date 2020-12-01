@@ -65,7 +65,10 @@ def DisplayConfigurations(self,configFilePath):
     configFile=open(configFilePath,"r")
     configurations=configFile.readlines()
     configFile.close()
+    count=0;
     for line in configurations:
+        count+=1
+        line = line.strip('\n')
         if(len(line))>0:
             if(line[0]=='['):
                 self.outputField.insert(END,line,'section')
@@ -77,5 +80,5 @@ def DisplayConfigurations(self,configFilePath):
                     self.outputField.insert(END,val,'value')
                 else:
                     self.outputField.insert(END,line)
-        else:
-            self.outputField.insert(END,line)
+        if(count<len(configurations)):
+            self.outputField.insert(END,"\n")
