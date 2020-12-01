@@ -45,8 +45,10 @@ class PopupWindowEditConfig(object):
         configurations=self.outputField.get('1.0',END)
         configFile.write(configurations)
         configFile.close()
-        self.top.grab_release()
-        self.top.destroy()
+        try:
+            self.root.destroy()
+        except Exception as e:
+            print("Restarting..")
 
     def CommandCancel(self):
         self.top.grab_release()
