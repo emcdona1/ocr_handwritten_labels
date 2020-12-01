@@ -32,21 +32,21 @@ def getSearchXpathResult(searchUrlWithKey, xpath):
     return list(result)
 
 
-def buildPlantDictionary(destination):
+def buildPlantDictionary():
     buildFile=True
-    filePath=Path(destination)
+    filePath=Path(genusSpeciesFilePath)
     if filePath.is_file():
-        buildFile= confirm(destination+" already exists! Do you still want to build plant dictionary?")
+        buildFile= confirm(genusSpeciesFilePath+" already exists! Do you still want to build plant dictionary?")
         if buildFile:
             now = datetime.now()
             date_time = now.strftime("%Y_%d_%m_%H_%M_%S")
-            bakFilePath=destination+"."+date_time+".bak"
-            os.rename(destination, bakFilePath)
+            bakFilePath=genusSpeciesFilePath+"."+date_time+".bak"
+            os.rename(genusSpeciesFilePath, bakFilePath)
             print("Old file is backed up at:"+bakFilePath)
 
     if buildFile:
 
-        f = open(destination, "w")
+        f = open(genusSpeciesFilePath, "w")
         for a in ascii_lowercase:
             for b in ascii_lowercase:
                 for c in ascii_lowercase:
@@ -57,5 +57,3 @@ def buildPlantDictionary(destination):
                             f.write(r + "\n")
         f.close()
 
-
-buildPlantDictionary(genusSpeciesFilePath)

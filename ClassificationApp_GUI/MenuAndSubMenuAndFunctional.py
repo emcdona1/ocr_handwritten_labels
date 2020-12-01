@@ -1,6 +1,9 @@
-
+import os
+import webbrowser
 from tkinter import Menu, filedialog, simpledialog
 
+from BuildPlantDictionary import buildPlantDictionary
+from ClassificationApp_GUI.PopupWindowEditConfig import PopupWindowEditConfig
 from Helper.SaveDataFramesToExcelFile import ExportSingleTagToCSV, ExportAllTagsToCSV, ExportTagsWithImportDatesToCSV
 from ImageProcessor.ImageProcessorDriver import ProcessImagesInTheFolder, ProcessImagesFromTheUrlsInTheTextFile, \
     ExtractAndProcessSingleImage
@@ -32,6 +35,19 @@ def AddMenuAndSubMenu(root):
     root.smExportTag.add_command(label="Tags with import date:", command=lambda: ExportTagsWithImportDatesToCSV(GetDestination(),root.selectedFilter.split(" >")[0]),state="disabled")
     root.smExportTag.add_command(label="Export all Tags", command=lambda: ExportAllTagsToCSV(GetDestination()),state="normal")
 
+    # Tools
+    root.smTools=Menu(root.menuBar)
+    root.menuBar.add_cascade(label="Tools",menu=root.smTools)
+    root.smTools.add_command(label="Edit Configurations", command=lambda: EditConfiguration())
+    root.smTools.add_command(label="Rebuild plant dictionary", command=lambda:buildPlantDictionary())
+
+    def EditConfiguration():
+
+        root.popUpEditConfig = PopupWindowEditConfig(root.master, root, r'Configuration.cfg')
+        root.wait_window(root.popUpEditConfig.top)
+        if root.popUpEditConfig.top:
+            root.popUpEditConfig.top.destroy()
+
     def GetDestination():
         dirname = filedialog.askdirectory()+"/"
         if len(dirname)<2:
@@ -61,7 +77,6 @@ def AddMenuAndSubMenu(root):
             root.imagePath = singleImagePath
             ExtractAndProcessSingleImage(root.suggestEngine, root.imagePath,root.minimumConfidence, extractTag)
         pass
-
 
 
     def ExtractFromImageUrl(extractTag):
