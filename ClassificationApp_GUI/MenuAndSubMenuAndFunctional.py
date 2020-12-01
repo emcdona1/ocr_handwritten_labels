@@ -42,11 +42,13 @@ def AddMenuAndSubMenu(root):
     root.smTools.add_command(label="Rebuild plant dictionary", command=lambda:buildPlantDictionary())
 
     def EditConfiguration():
-
         root.popUpEditConfig = PopupWindowEditConfig(root.master, root, r'Configuration.cfg')
         root.wait_window(root.popUpEditConfig.top)
         if root.popUpEditConfig.top:
-            root.popUpEditConfig.top.destroy()
+            try:
+                root.popUpEditConfig.top.destroy()
+            except Exception as e:
+                print("Restarting the application..")
 
     def GetDestination():
         dirname = filedialog.askdirectory()+"/"
