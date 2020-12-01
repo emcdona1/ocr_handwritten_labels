@@ -25,6 +25,25 @@ def Call_SP_AddTag(originalImagePath, processingTime,img, wordsInfoAsXML,barCode
 
     return tagId,importDate,hasBarCodeInDb
 
+def Call_SP_UpdateBarCode(TagId,BarCode):
+    conn, isConnected, dbName= Get_Connection()
+    hasBarCodeInDb=False
+    if isConnected:
+        cursor = conn.cursor()
+        cursor.callproc('SP_UpdateBarCode', [TagId,BarCode,])
+        result = cursor.stored_results()
+        conn.commit()
+        cursor.close()
+        conn.close()
+        for r in result:
+            for row in r:
+                hasBarCodeInDb = row[0]
+        pass
+
+    return hasBarCodeInDb
+
+
+
 def Call_SP_AddUpdateTagClassification(TagId, classificationInfoAsXML):
     conn, isConnected, dbName= Get_Connection()
     if isConnected:
@@ -161,7 +180,6 @@ def Call_SP_GetTagDetail(tagIdIn):
         conn.close()
         return image,imagePath,processingTime, dataFrame,importDate,barCode
         pass
-
 
 def Call_SP_AddBarCodeInfo(BarCode, classificationInfoAsXML):
     conn, isConnected, dbName= Get_Connection()

@@ -11,6 +11,7 @@ DROP PROCEDURE IF EXISTS SP_AddUpdateTagClassification;
 DROP PROCEDURE IF EXISTS SP_GetTagClassification;
 DROP PROCEDURE IF EXISTS SP_GetDataForCSV;
 DROP PROCEDURE IF EXISTS SP_GetDataForCSVForImportDate;
+DROP PROCEDURE IF EXISTS SP_UpdateBarCode;
 
 DELIMITER $$
 
@@ -46,7 +47,23 @@ DELIMITER $$
     ELSE SELECT @newTagId,@ImportDate,0;
     END IF;
  END $$ 
-  
+ 
+ CREATE PROCEDURE SP_UpdateBarCode(
+	IN tagIdIn BIGINT,
+    IN barCodeIn VARCHAR(20)
+ )
+ BEGIN
+	UPDATE Tag_Info
+    SET BarCode=barCodeIn
+    WHERE TagId=tagIdIn;
+    
+	IF EXISTS (SELECT 1 FROM  Barcode_Info where Barcode=barCodeIn)
+    THEN SELECT 1;
+    ELSE SELECT 0;
+    END IF;
+ END $$ 
+ 
+ 
  DELIMITER $$
  CREATE PROCEDURE SP_UpdateWord(
 	IN tagidIn BIGINT,

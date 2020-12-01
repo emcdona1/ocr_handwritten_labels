@@ -1,12 +1,16 @@
 import tkinter
 import webbrowser
 from tkinter import *
+from tkinter import simpledialog
 from tkinter.scrolledtext import ScrolledText
 from tkinter.ttk import Combobox
 from ClassificationApp_GUI.ProcessTag import OpenTagId, DisplayClassificationEditor, RemoveRootData
 from ClassificationApp_GUI.StatusBar import SetStatusForWord
-from DatabaseProcessing.DatabaseProcessing import DeleteTag, GetImportDates, GetImportedTagTuples
+from DatabaseProcessing.DatabaseProcessing import DeleteTag, GetImportDates, GetImportedTagTuples, UpdateBarCode
 import re
+
+from ImageProcessor.InitializeBarCodeInfoTable import InitializeBarCodeInfoForAKey
+
 gRoot=None
 
 
@@ -118,13 +122,14 @@ def CreateLayout(root):
 def TagSelected(evt,root,showDeleteOption=False):
     try:
         root.tagId=0
+        root.barCode=""
         w = evt.widget
         index=int(w.curselection()[0])
         root.tagId,root.imagePath=root.tagIdImagePathHolder[index]
         if root.tagId>0:
-            if showDeleteOption:
-                root.selectTagListBox.rclick.popup(evt,root.tagId,root.imagePath.split('/')[-1],index)
             OpenTagId(root, root.tagId)
+            if showDeleteOption:
+                root.selectTagListBox.rclick.popup(evt,root,root.tagId,root.barCode,root.imagePath.split('/')[-1],index)
         UpdateExportTagLabel(root)
 
     except Exception as error:
@@ -243,6 +248,7 @@ def DeleteRecord(root,index,tagId):
     del root.tagIdImagePathHolder[index]
     del root.tagListDisplay[index]
     DeleteTag(tagId)
+    OpenTagId(root, root.tagId)
 
 
 def UpdateProcessingCount(count,processingTime=0,tagId=0,sdb='',tagPath='',imagePath='',importDate='',barCode='',classifiedData='',display=False):
@@ -316,18 +322,29 @@ class RightClick:
     def __init__(self, master):
         self.aMenu = Menu(master, tearoff=0)
         self.aMenu.add_command(label='Delete', command=self.delete)
+        self.aMenu.add_command(label='Update barcode', command=self.updateBarCode)
 
     def delete(self):
         print(f"Deleting TagId:{self.tagId}")
         gRoot.sdb = ''
         DeleteRecord(gRoot,self.index,self.tagId)
 
+    def updateBarCode(self):
+        barCode = simpledialog.askstring(title="Update Barcode", prompt="What is the barcode?:",initialvalue=self.barCode)
+        if not barCode==None:
+            alreadyExists=UpdateBarCode(self.tagId,barCode)
+            if not alreadyExists and len(barCode)>2:
+                InitializeBarCodeInfoForAKey(barCode)
+            OpenTagId(self.root, self.tagId)
 
 
-    def popup(self, event,tagId,fileName,index):
+
+    def popup(self, event,root,tagId,barCode,fileName,index):
+        self.root=root
         self.fileName=fileName
-        self.aMenu.entryconfigure(1, label=f"Delete: {fileName}")
+        self.aMenu.entryconfigure(0, label=f"Delete: {fileName}")
         self.tagId=tagId
+        self.barCode=barCode
         self.index=index
         self.aMenu.post(event.x_root, event.y_root)
 
