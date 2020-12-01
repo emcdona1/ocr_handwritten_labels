@@ -3,8 +3,9 @@ import os
 from ClassificationApp_GUI.LayoutGUI import CreateLayout, RefreshImportedDatesAndSelect
 from ClassificationApp_GUI.MenuAndSubMenuAndFunctional import AddMenuAndSubMenu
 from ClassificationApp_GUI.ScrollableImage import Tk
+from DatabaseProcessing.GetConnection import Initialize_DB_Properties
 from Helper.WordCategories import GetWordCategories
-from ImageProcessor.ImageProcessorDriver import setRoot, ExtractAndProcessSingleImage
+from ImageProcessor.ImageProcessorDriver import setRoot
 from ImageProcessor.InitializeBarCodeInfoTable import SetBarCodeInfoDetails
 from ImageProcessor.InitializeDataFromImage import SetGoogleCloudVisionClient, SetBarCodeRegx
 from SuggestEngine.Get_SuggestEngine import GetRunningServerEngineOrCreateLocalForSuggestion
@@ -12,8 +13,6 @@ from SuggestEngine.Get_SuggestEngine import GetRunningServerEngineOrCreateLocalF
 from configparser import ConfigParser
 
 class ClassificationApp():
-
-
 
     def __init__(self, **kw):
         root = Tk(className='ToolTip-demo')
@@ -27,6 +26,7 @@ class ClassificationApp():
         gRoot = root
         #initialize data
         InitializeConfiguration(root)
+        Initialize_DB_Properties()
         SetGoogleCloudVisionClient(root.serviceAccountTokenPath)
         root.minimumConfidence = 1
         root.processed=0
