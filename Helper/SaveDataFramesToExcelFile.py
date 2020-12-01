@@ -3,10 +3,6 @@ from pathlib import Path
 import pandas as pd
 
 from DatabaseProcessing.DatabaseProcessing import GetDataForCSV, GetDataForCSVForImportDate
-exportToDestinationFolder=""
-def SetExportFolder(destination):
-    global exportToDestinationFolder
-    exportToDestinationFolder=destination
 
 
 def SaveDataFramesToMultipleTabsInExcelFile(dfs,destination="test.xlsx"):
@@ -18,22 +14,24 @@ def SaveDataFramesToMultipleTabsInExcelFile(dfs,destination="test.xlsx"):
     writer.close()
     print(f"Successfully exported: {destination}");
 
-def ExportSingleTagToCSV(tagId,tagName):
-    dest=CreateFolderAndGetPath(f'SingleTag_{tagName.replace(".","_")[0]}')
+
+
+def ExportSingleTagToCSV(destination,tagId,tagName):
+    dest=CreateFolderAndGetPath(destination,f'SingleTag_{tagName.replace(".","_")[0]}')
     dfs=GetDataForCSV(tagId)
     SaveDataFramesToMultipleTabsInExcelFile(dfs,dest)
 
-def ExportAllTagsToCSV():
-    dest=CreateFolderAndGetPath('ExportedAllTags')
+def ExportAllTagsToCSV(destination):
+    dest=CreateFolderAndGetPath(destination,'ExportedAllTags')
     dfs=GetDataForCSV(0)
     SaveDataFramesToMultipleTabsInExcelFile(dfs,dest)
 
-def ExportTagsWithImportDatesToCSV(importDateFilter):
-    dest=CreateFolderAndGetPath(f'ExportedForFilter_{importDateFilter}')
+def ExportTagsWithImportDatesToCSV(destination,importDateFilter):
+    dest=CreateFolderAndGetPath(destination,f'ExportedForFilter_{importDateFilter}')
     dfs=GetDataForCSVForImportDate(importDateFilter)
     SaveDataFramesToMultipleTabsInExcelFile(dfs,dest)
 
-def CreateFolderAndGetPath(fileName):
+def CreateFolderAndGetPath(exportToDestinationFolder,fileName):
     Path(exportToDestinationFolder).mkdir(parents=True, exist_ok=True)
     destPath= exportToDestinationFolder+"/"+fileName+".xlsx"
     return destPath.replace("//","/")

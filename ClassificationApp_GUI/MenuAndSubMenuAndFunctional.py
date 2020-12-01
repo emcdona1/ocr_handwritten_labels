@@ -28,10 +28,15 @@ def AddMenuAndSubMenu(root):
     # Export to File
     root.smExportTag=Menu(root.menuBar)
     root.menuBar.add_cascade(label="Export To Excel File",menu=root.smExportTag)
-    root.smExportTag.add_command(label="Current Tag:", command=lambda: ExportSingleTagToCSV(root.tagId,root.imagePath.split("/")[-1]),state="disabled")
-    root.smExportTag.add_command(label="Tags with import date:", command=lambda: ExportTagsWithImportDatesToCSV(root.selectedFilter.split(" >")[0]),state="disabled")
-    root.smExportTag.add_command(label="Export all Tags", command=lambda: ExportAllTagsToCSV(),state="normal")
+    root.smExportTag.add_command(label="Current Tag:", command=lambda: ExportSingleTagToCSV(GetDestination(),root.tagId,root.imagePath.split("/")[-1]),state="disabled")
+    root.smExportTag.add_command(label="Tags with import date:", command=lambda: ExportTagsWithImportDatesToCSV(GetDestination(),root.selectedFilter.split(" >")[0]),state="disabled")
+    root.smExportTag.add_command(label="Export all Tags", command=lambda: ExportAllTagsToCSV(GetDestination()),state="normal")
 
+    def GetDestination():
+        dirname = filedialog.askdirectory()+"/"
+        if len(dirname)<2:
+            dirname=root.defaultExportFolderPath;
+        return dirname;
 
     def ExtractFromFolder(extractTag):
         imageSourceFolder = filedialog.askdirectory() + "/"
