@@ -48,7 +48,7 @@ class PopupWindowEditConfig(object):
         try:
             self.root.destroy()
         except Exception as e:
-            print("Restarting..")
+            raise Exception('Restart', 'Restart application due to configuration update!')
 
     def CommandCancel(self):
         self.top.grab_release()

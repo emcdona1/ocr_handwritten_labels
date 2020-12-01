@@ -12,8 +12,17 @@ from SuggestEngine.Get_SuggestEngine import GetRunningServerEngineOrCreateLocalF
 from configparser import ConfigParser
 
 class ClassificationApp():
+
+
+
     def __init__(self, **kw):
         root = Tk(className='ToolTip-demo')
+        self.loop=True
+        def on_closing():
+            root.destroy()
+            self.loop=False
+
+        root.protocol("WM_DELETE_WINDOW", on_closing)
         global gRoot
         gRoot = root
         #initialize data
@@ -40,7 +49,9 @@ class ClassificationApp():
         setRoot(root)
         SetBarCodeRegx(root.barCodeRegx)
         RefreshImportedDatesAndSelect()
+
         root.mainloop()
+
 
 def InitializeConfiguration(root):
     root.configParser = ConfigParser()

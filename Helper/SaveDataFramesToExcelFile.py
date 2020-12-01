@@ -14,8 +14,6 @@ def SaveDataFramesToMultipleTabsInExcelFile(dfs,destination="test.xlsx"):
     writer.close()
     print(f"Successfully exported: {destination}");
 
-
-
 def ExportSingleTagToCSV(destination,tagId,tagName):
     dest=CreateFolderAndGetPath(destination,f'Exported_{tagName.replace(".","_")}')
     dfs=GetDataForCSV(tagId)
