@@ -1,14 +1,23 @@
 import mysql.connector
 from configparser import ConfigParser
 
-configParser = ConfigParser()
-configFilePath = r'Configuration.cfg'
-configParser.read(configFilePath)
-userName = configParser.get('DATABASE', 'userName')
-password = configParser.get('DATABASE', 'password')
-host = configParser.get('DATABASE', 'host')
-databaseName = configParser.get('DATABASE', 'databaseName')
-portNo = configParser.get('DATABASE', 'portNo')
+
+
+def Initialize_DB_Properties():
+    configParser = ConfigParser()
+    configFilePath = r'Configuration.cfg'
+    configParser.read(configFilePath)
+    global  userName
+    global password
+    global host
+    global databaseName
+    global portNo
+    userName = configParser.get('DATABASE', 'userName')
+    password = configParser.get('DATABASE', 'password')
+    host = configParser.get('DATABASE', 'host')
+    databaseName = configParser.get('DATABASE', 'databaseName')
+    portNo = configParser.get('DATABASE', 'portNo')
+
 
 def Get_Connection():
     Connected=True

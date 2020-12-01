@@ -180,7 +180,12 @@ def RefreshImportedDatesAndSelect(selectedFilter='Filter: None'):
     gRoot.selectDateCBoxOptions=[]
     if len(gRoot.currentImportList)>0:
         gRoot.selectDateCBoxOptions.append(f'Current Import >{len(gRoot.currentImportList)}')
-    gRoot.selectDateCBoxOptions.extend(GetImportDates())
+    try:
+        gRoot.selectDateCBoxOptions.extend(GetImportDates())
+    except Exception as e:
+        print(f"Database connection error:{e}")
+        gRoot.selectDateCBoxOptions.extend(['Database Error>0'])
+
     gRoot.selectDateCBox['values']=gRoot.selectDateCBoxOptions
     if selectedFilter=='Filter: None':
         gRoot.selectedFilter=gRoot.selectDateCBoxOptions[0]
@@ -231,17 +236,18 @@ def InitializeTagListBox(lst):
     gRoot.tagIdImagePathHolder=[]
     i = 0
 
-    for x in gRoot.tagListDisplay:
-        #tagId,BarCode,ImportDate,OriginalImagePath
-        gRoot.selectTagListBox.insert(i,str(x[1])+"_" + str(x[3].split('/')[-1]))
-        if i%2==0:
-            gRoot.selectTagListBox.itemconfigure(i,background="gainsboro",selectbackground="gray80",
-                                                 selectforeground="sea green")
-        else:
-            gRoot.selectTagListBox.itemconfigure(i,selectbackground="gray80",selectforeground="sea green")
+    if gRoot.tagListDisplay:
+        for x in gRoot.tagListDisplay:
+            #tagId,BarCode,ImportDate,OriginalImagePath
+            gRoot.selectTagListBox.insert(i,str(x[1])+"_" + str(x[3].split('/')[-1]))
+            if i%2==0:
+                gRoot.selectTagListBox.itemconfigure(i,background="gainsboro",selectbackground="gray80",
+                                                     selectforeground="sea green")
+            else:
+                gRoot.selectTagListBox.itemconfigure(i,selectbackground="gray80",selectforeground="sea green")
 
-        gRoot.tagIdImagePathHolder.append((x[0], x[3]))
-        i+=1
+            gRoot.tagIdImagePathHolder.append((x[0], x[3]))
+            i+=1
 
 def DeleteRecord(root,index,tagId):
     root.selectTagListBox.delete(index)

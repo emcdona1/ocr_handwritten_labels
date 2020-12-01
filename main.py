@@ -6,4 +6,3 @@ if __name__ == '__main__':
     while loop:
        c= ClassificationApp()
        loop=c.loop
-
