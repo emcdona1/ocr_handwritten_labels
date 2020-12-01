@@ -330,7 +330,7 @@ class RightClick:
         DeleteRecord(gRoot,self.index,self.tagId)
 
     def updateBarCode(self):
-        barCode = simpledialog.askstring(title="Update Barcode", prompt="What is the barcode?:",initialvalue=self.barCode)
+        barCode = simpledialog.askstring(title="Update Barcode", prompt="What is the barcode?",initialvalue=self.barCode)
         if not barCode==None:
             alreadyExists=UpdateBarCode(self.tagId,barCode)
             if not alreadyExists and len(barCode)>2:
