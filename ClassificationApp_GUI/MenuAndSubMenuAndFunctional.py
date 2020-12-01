@@ -48,7 +48,8 @@ def AddMenuAndSubMenu(root):
             try:
                 root.popUpEditConfig.top.destroy()
             except Exception as e:
-                print("Restarting the application..")
+                print("Restart application due to configuration update!")
+                #raise Exception('Restart', 'Restart application due to configuration update!')
 
     def GetDestination():
         dirname = filedialog.askdirectory()+"/"
