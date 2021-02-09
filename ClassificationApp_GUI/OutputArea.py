@@ -9,9 +9,9 @@ def UpdateOutput(root, **kw):
     root.outputField.insert('end', '{0: <19}: '.format("Imported From "), 'label')
     root.outputField.insert('end', root.imagePath, 'filePath')
     root.outputField.insert('end', '\n')
-    if len(root.barCode) > 0:
+    if len(root.barcode) > 0:
         root.outputField.insert('end', '{0: <19}: '.format('Bar Code'), 'label')
-        root.outputField.insert('end', root.barCode, 'barCode')
+        root.outputField.insert('end', root.barcode, 'barcode')
         root.outputField.insert('end', '\n')
         for cb in root.classifiedDataForBarCode:
             if not ('barcode' in cb[0].lower()):

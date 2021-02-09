@@ -6,18 +6,20 @@ from google.api_core.exceptions import ServiceUnavailable
 from google.cloud import vision
 from grpc._channel import _InactiveRpcError
 
-client= None
-barCodeRegx=None
+client = None
+barcode_regex = None
+
 
 def SetGoogleCloudVisionClient(serviceAccountTokenPath):
     os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = serviceAccountTokenPath
     global client
-    client=vision.ImageAnnotatorClient()
+    client = vision.ImageAnnotatorClient()
     pass
-def SetBarCodeRegx(regx):
-    global barCodeRegx
-    barCodeRegx=regx
 
+
+def set_barcode_regex(regex):
+    global barcode_regex
+    barcode_regex = regex
 
 
 def GetWordProperties(index, text, full_text_annotation):
@@ -97,16 +99,16 @@ def GetInformationAsDataFrameFromImage(imageContent):
         index = index + 1
     return dataFrame
 
-def GetBarCodeFromText(textData):
-    barCode=""
+
+def get_barcode_from_text(textData):
+    barcode = ""
     try:
-        match=re.search(barCodeRegx,textData,re.MULTILINE)
+        match = re.search(barcode_regex, textData, re.MULTILINE)
         if match:
-            barCode=match.group(0)
+            barcode = match.group(0)
 
     except Exception as error:
         print(f"{error} (Error Code:IDFI_001)")
         print("Could not detect bar code using OCR Data and Regx")
         pass
-    return barCode
-
+    return barcode

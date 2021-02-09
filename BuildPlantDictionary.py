@@ -13,7 +13,7 @@ configParser = ConfigParser()
 configFilePath = r'Configuration.cfg'
 configParser.read(configFilePath)
 genusSpeciesFilePath = configParser.get('SNS_SERVER', 'genusSpeciesFilePath')
-searchurl = configParser.get('SNS_SERVER', 'searchUrl')
+search_url = configParser.get('SNS_SERVER', 'searchUrl')
 xpath = configParser.get('SNS_SERVER', 'xPathGenusSpecies')
 
 
@@ -51,7 +51,7 @@ def buildPlantDictionary():
             for b in ascii_lowercase:
                 for c in ascii_lowercase:
                     searchKey = str(a) + str(b) + str(c) + "*"
-                    result = getSearchXpathResult(searchurl + searchKey, xpath)
+                    result = getSearchXpathResult(search_url + searchKey, xpath)
                     if (len(result) > 0):
                         for r in result:
                             f.write(r + "\n")

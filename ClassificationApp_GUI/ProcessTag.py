@@ -17,9 +17,9 @@ def OpenTagId(root, tagId):
             ClearOldImage(root)
             RemoveRootData(root)
             root.tagId=tagId
-            root.tagPath, root.sdb,root.imagePath,root.processingTime,root.importDate,root.barCode= GetImgAndSDBFromTagId(root.tagId)
+            root.tagPath, root.sdb,root.imagePath,root.processingTime,root.importDate,root.barcode= GetImgAndSDBFromTagId(root.tagId)
             root.classifiedData=GetTagClassification(root.tagId)
-            root.classifiedDataForBarCode=GetBarCodeClassification(root.barCode) if len(root.barCode)>0 else []
+            root.classifiedDataForBarCode=GetBarCodeClassification(root.barcode) if len(root.barcode) > 0 else []
             DisplayClassificationEditor(root)
         except Exception as error:
             print(f"{error} (Error Code:CAG_001)")
@@ -33,7 +33,7 @@ def DisplayClassificationEditor(root):
     pass
 
 def RemoveRootData(root):
-    root.tagPath=root.sdb=root.imagePath=root.processingTime=root.importDate=root.barCode=root.irn=root.taxonomy=root.collector=root.details=None
+    root.tagPath=root.sdb=root.imagePath=root.processingTime=root.importDate=root.barcode=root.irn=root.taxonomy=root.collector=root.details=None
     ClearWordStatus(root)
     root.outputField.delete('1.0', END)
     root.importDetails['text']=''

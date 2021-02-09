@@ -17,8 +17,8 @@ from DetectCorrectAndClassify.DetectAndClassify import DetectAndClassify
 from Helper.AlgorithmicMethods import GetNormalizedSequentialDataBlocks, GetTempFilePath
 from Helper.GetWordsInformation import GetClassifiedDataTuples
 from ImageProcessor.GetBarCodeFromImage import GetBarCodeFromImage
-from ImageProcessor.InitializeBarCodeInfoTable import InitializeBarCodeInfoForAKey_InAThread
-from ImageProcessor.InitializeDataFromImage import GetInformationAsDataFrameFromImage, GetBarCodeFromText
+from ImageProcessor.InitializeBarCodeInfoTable import initialize_barcode_info_for_a_key_in_a_thread
+from ImageProcessor.InitializeDataFromImage import GetInformationAsDataFrameFromImage, get_barcode_from_text
 
 
 
@@ -65,23 +65,23 @@ class ImageProcessor():
         self.ocrThread.start()
         self.ExtractTagContentFromImageAndSetTempTagPath()
         self.ocrThread.join()
-        self.barCode=GetBarCodeFromText(self.imagePath.split("/")[-1])
-        if not len(self.barCode)>0:
-            self.barCode=GetBarCodeFromText(self.dataFrame['description'][0])
-        if not len(self.barCode)>0:
-            self.barCode=GetBarCodeFromImage(self.tempImagePath)
+        self.barcode=get_barcode_from_text(self.imagePath.split("/")[-1])
+        if not len(self.barcode) > 0:
+            self.barcode = get_barcode_from_text(self.dataFrame['description'][0])
+        if not len(self.barcode) > 0:
+            self.barcode = GetBarCodeFromImage(self.tempImagePath)
         self.sdb = GetNormalizedSequentialDataBlocks(self.startX, self.startY, self.dataFrame)
         DetectAndClassify(self.suggestEngine, self.sdb, self.minimumConfidence)
         ApplyCorrection(self.sdb)
         self.endTime = datetime.now()
         self.processingTime=(self.endTime - self.startTime).total_seconds()
-        self.tagId,self.importDate,self.hasBarCodeInDB = SaveTagtoDatabase(self.imagePath, self.processingTime, self.tagContent, self.sdb,self.barCode)
+        self.tagId,self.importDate,self.hasBarCodeInDB = SaveTagtoDatabase(self.imagePath, self.processingTime, self.tagContent, self.sdb, self.barcode)
         self.classifiedData = GetClassifiedDataTuples(self.sdb)
         AddUpdateTagClassification(self.tagId,self.classifiedData)
 
-        UpdateProcessingCount(-1,self.processingTime,self.tagId,self.sdb,self.tagPath,self.imagePath,self.importDate,self.barCode,self.classifiedData,self.displayAfterProcessing)
-        if len(self.barCode)>0 and self.hasBarCodeInDB==0:
-            InitializeBarCodeInfoForAKey_InAThread(self.barCode)
+        UpdateProcessingCount(-1, self.processingTime, self.tagId, self.sdb, self.tagPath, self.imagePath, self.importDate, self.barcode, self.classifiedData, self.displayAfterProcessing)
+        if len(self.barcode)>0 and self.hasBarCodeInDB==0:
+            initialize_barcode_info_for_a_key_in_a_thread(self.barcode)
 
 
     def InitializeOCRData(self):

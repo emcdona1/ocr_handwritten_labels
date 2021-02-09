@@ -6,8 +6,8 @@ from ClassificationApp_GUI.ScrollableImage import Tk
 from DatabaseProcessing.GetConnection import Initialize_DB_Properties
 from Helper.WordCategories import GetWordCategories
 from ImageProcessor.ImageProcessorDriver import setRoot
-from ImageProcessor.InitializeBarCodeInfoTable import SetBarCodeInfoDetails
-from ImageProcessor.InitializeDataFromImage import SetGoogleCloudVisionClient, SetBarCodeRegx
+from ImageProcessor.InitializeBarCodeInfoTable import set_barcode_info_details
+from ImageProcessor.InitializeDataFromImage import SetGoogleCloudVisionClient, set_barcode_regex
 from SuggestEngine.Get_SuggestEngine import GetRunningServerEngineOrCreateLocalForSuggestion
 
 from configparser import ConfigParser
@@ -47,7 +47,7 @@ class ClassificationApp():
 
         #initialize root links to multiple places if needed
         setRoot(root)
-        SetBarCodeRegx(root.barCodeRegx)
+        set_barcode_regex(root.barcode_regex)
         RefreshImportedDatesAndSelect()
 
         root.mainloop()
@@ -58,17 +58,17 @@ def InitializeConfiguration(root):
     root.configParser.read(r'Configuration.cfg')
     root.plantDictionaryPath = root.configParser.get('SNS_SERVER', 'genusSpeciesFilePath')
     root.serviceAccountTokenPath=root.configParser.get('GOOGLE_CLOUD_VISION_API', 'serviceAccountTokenPath')
-    root.barCodeRegx=root.configParser.get('BARCODE', 'barCodeRegx')
+    root.barcode_regex=root.configParser.get('BARCODE', 'barcode_regex')
     root.parallelProcess= True if root.configParser.get('IMAGE_PROCESSOR', 'parallelProcess').lower() in ['t','y','true','yes','1'] else False
     root.parallelProcessThreadCount=int(root.configParser.get('IMAGE_PROCESSOR', 'parallelProcessThreadCount'))
     root.sortItemsByBarCode= True if root.configParser.get('TAG_LIST', 'sortItemsByBarCode').lower() in ['t','y','true','yes','1'] else False
     root.noOfItemsInAPage=int(root.configParser.get('TAG_LIST', 'noOfItemsInAPage'))
-    root.barCodeSearchUrl=root.configParser.get('BARCODE', 'barCodeSearchUrl')
-    SetBarCodeInfoDetails(root.configParser.get('BARCODE', 'xPathIRN'),
-                          root.configParser.get('BARCODE', 'xPathTaxonomy'),
-                          root.configParser.get('BARCODE', 'xPathCollector'),
-                          root.configParser.get('BARCODE', 'xPathDetails'),
-                          root.configParser.get('BARCODE', 'barCodeSearchUrl'))
+    root.barcode_search_url=root.configParser.get('BARCODE', 'barcode_search_url')
+    set_barcode_info_details(root.configParser.get('BARCODE', 'xPathIRN'),
+                             root.configParser.get('BARCODE', 'xPathTaxonomy'),
+                             root.configParser.get('BARCODE', 'xPathCollector'),
+                             root.configParser.get('BARCODE', 'xPathDetails'),
+                             root.configParser.get('BARCODE', 'barcode_search_url'))
     root.defaultExportFolderPath=root.configParser.get('EXPORT_EXCEL', 'defaultExportFolder')
 
 
