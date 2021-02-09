@@ -12,7 +12,7 @@ from Helper.Confirm import confirm
 configParser = ConfigParser()
 configFilePath = r'Configuration.cfg'
 configParser.read(configFilePath)
-genusSpeciesFilePath = configParser.get('SNS_SERVER', 'genusSpeciesFilePath')
+genus_species_file_path = configParser.get('SNS_SERVER', 'genus_species_file_path')
 search_url = configParser.get('SNS_SERVER', 'searchUrl')
 xpath = configParser.get('SNS_SERVER', 'xPathGenusSpecies')
 
@@ -34,19 +34,19 @@ def getSearchXpathResult(searchUrlWithKey, xpath):
 
 def buildPlantDictionary():
     buildFile=True
-    filePath=Path(genusSpeciesFilePath)
+    filePath=Path(genus_species_file_path)
     if filePath.is_file():
-        buildFile= confirm(genusSpeciesFilePath+" already exists! Do you still want to build plant dictionary?")
+        buildFile= confirm(genus_species_file_path + " already exists! Do you still want to build plant dictionary?")
         if buildFile:
             now = datetime.now()
             date_time = now.strftime("%Y_%d_%m_%H_%M_%S")
-            bakFilePath=genusSpeciesFilePath+"."+date_time+".bak"
-            os.rename(genusSpeciesFilePath, bakFilePath)
+            bakFilePath= genus_species_file_path + "." + date_time + ".bak"
+            os.rename(genus_species_file_path, bakFilePath)
             print("Old file is backed up at:"+bakFilePath)
 
     if buildFile:
 
-        f = open(genusSpeciesFilePath, "w")
+        f = open(genus_species_file_path, "w")
         for a in ascii_lowercase:
             for b in ascii_lowercase:
                 for c in ascii_lowercase:

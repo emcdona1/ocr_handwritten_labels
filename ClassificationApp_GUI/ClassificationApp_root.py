@@ -56,7 +56,7 @@ class ClassificationApp():
 def InitializeConfiguration(root):
     root.configParser = ConfigParser()
     root.configParser.read(r'Configuration.cfg')
-    root.plantDictionaryPath = root.configParser.get('SNS_SERVER', 'genusSpeciesFilePath')
+    root.plantDictionaryPath = root.configParser.get('SNS_SERVER', 'genus_species_file_path')
     root.serviceAccountTokenPath=root.configParser.get('GOOGLE_CLOUD_VISION_API', 'serviceAccountTokenPath')
     root.barcode_regex=root.configParser.get('BARCODE', 'barcode_regex')
     root.parallelProcess= True if root.configParser.get('IMAGE_PROCESSOR', 'parallelProcess').lower() in ['t','y','true','yes','1'] else False
