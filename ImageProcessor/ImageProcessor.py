@@ -146,7 +146,7 @@ class ImageProcessor():
             return x,y,img_rgb[y:ih, x:iw]
 
     def SetImageRGBAndSaveToTempLocation(self):
-        if ":" in self.imagePath:
+        if 'http' in self.imagePath:
             resp = urlopen(self.imagePath)
             image = np.asarray(bytearray(resp.read()), dtype="uint8")
             img_rgb = cv2.imdecode(image, cv2.IMREAD_COLOR)
