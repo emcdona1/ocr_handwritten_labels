@@ -1,8 +1,11 @@
-# OCRProject by Keshab Panthi
+# OCRProject
+
+Project created by ([@kpanthi](https://github.com/kpanthi)), NEIU.
+
 
 ## Setup
-1. Create virtual environment to run the project, using Python 3.7. In Anaconda Terminal:
-    - `conda create -n <envname> python=3.7 pip`
+1. Create virtual environment to run the project, using Python 3.8. In Anaconda Terminal:
+    - `conda create -n <envname> python=3.8 pip`
     - `conda activate <envname>`
     - `pip install -r requirements.txt`
     - Install the necessary nltk libraries. In Python terminal (type `python`):
@@ -11,13 +14,17 @@
         - `nltk.download('averaged_perceptron_tagger')`
         - `nltk.download('maxent_ne_chunker')`
         - `nltk.download('words')`
-2. Open and edit Configuration.cfg file as needed - specifically the MySQL root password.
-3. Open CreateDb.sql, CreateSPs.sql and CreateTables.sql in mysql and execute them (e.g. in MySQL Workbench) to create the database.
-4. In conda terminl, execute `python BuildPlantDictionary.py` to build the plant dictionary (do not create new, as it takes a lot of time to build)
+2. Download your Google Cloud Service Account Key. Save the file in this main directory, e.g. `service_account_token.json`. ([Google Cloud help center](https://cloud.google.com/docs/authentication/production#cloud-console))
+3. Copy the `Configuration-plain.cfg` file as `Configuration.cfg`.
+    1. Edit the file to add your MySQL database password (in the `[DATABASE]` section, under `password={add-your-MySQL-password-here}`.
+    2. Edit the file to add the name of your service account token (in the `GOOGLE_CLOUD_VISION_API` section, under `serviceAccountTokenPath={name-of-your-service-account-token}`.
+    3. Update any other settings if desired.
+4. From the DatabaseSetupScripts folder, open `CreateDb.sql`, `CreateSPs.sql` and `CreateTables.sql` in mysql and execute them (e.g. in MySQL Workbench) to set up the database.
+5. In conda terminal, execute `python BuildPlantDictionary.py` to build the plant dictionary (do not create new, as it takes a lot of time to build).
 
 ## Execution
-1. In conda terminal, execute `python Start_SNS_Server.py` (it will start a SNS server which will provide service to suggest plant's scientific names)
-2. In a separate conda terminal with the same environment, execute `python main.py` (it will launch the application, which will use the server created on above step, if the server is not present/ready, it will create local search engine.)
+1. In one conda terminal, execute `python Start_SNS_Server.py` (it will start a SNS server which will provide service to suggest plant's scientific names)
+2. In a second conda terminal, activate the same environment, and execute `python main.py` (it will launch the application, which will use the server created on above step, if the server is not present/ready, it will create local search engine.)
 
 ## Usage Menus 
 1. File >> Process Tag (As is)
@@ -82,8 +89,3 @@
 1. To correct the regular words, enchant spell checker is used. Any incorrect word is replaced by the suggested word with the least levenshtein distance.
 2. To correct the scientific words, Trie plant dictionary is used. Where all words are visited until they exceed the maximum given levenshtein distance. maximum levenshtein distance is dynamically calculated with the following formula
    - maxCost = min((len(word) // 3) + 1, 8)
-
-
-  
- 
- 
