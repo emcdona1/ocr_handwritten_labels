@@ -3,14 +3,11 @@ import io
 import os
 from threading import Thread
 from urllib.request import urlopen
-
 import cv2
 import numpy as np
 from datetime import datetime
-
 from ClassificationApp_GUI.LayoutGUI import UpdateProcessingCount
 from DatabaseProcessing.DatabaseProcessing import SaveTagtoDatabase, AddUpdateTagClassification
-
 from DetectCorrectAndClassify.ApplyCorrection import ApplyCorrection
 from DetectCorrectAndClassify.DetectAndClassify import DetectAndClassify
 from Helper.AlgorithmicMethods import get_normalized_sequential_data_blocks, GetTempFilePath
@@ -18,9 +15,10 @@ from Helper.GetWordsInformation import GetClassifiedDataTuples
 from ImageProcessor.GetBarCodeFromImage import GetBarCodeFromImage
 from ImageProcessor.InitializeBarCodeInfoTable import initialize_barcode_info_for_a_key_in_a_thread
 from ImageProcessor.InitializeDataFromImage import GetInformationAsDataFrameFromImage, get_barcode_from_text
+import pandas as pd
 
 
-class ImageProcessor():
+class ImageProcessor:
     topLeftTemplates = []
     leftEdgeTemplates = []
     topEdgeTemplates = []
@@ -71,19 +69,21 @@ class ImageProcessor():
         if not len(self.barcode) > 0:
             self.barcode = GetBarCodeFromImage(self.tempImagePath)
         self.sdb = get_normalized_sequential_data_blocks(self.startX, self.startY, self.dataFrame)
+        global transcription_results
         str_gcv = ''
         for block_of_words in self.sdb:
             for a_word in block_of_words:
                 str_gcv += a_word.description + ' '
-        print('words from GCV: \n%s' % str_gcv)
+        # print('words from GCV: \n%s' % str_gcv)
 
         DetectAndClassify(self.suggestEngine, self.sdb, self.minimumConfidence)
         str_dc = ''
         for block_of_words in self.sdb:
             for a_word in block_of_words:
                 str_dc += a_word.description + ' '
-        print('words after DandC: \n%s' % str_dc)
-        exit(0)
+        # print('words after DandC: \n%s' % str_dc)
+        transcription_results = transcription_results.append(pd.DataFrame([['filename', str_gcv, str_dc]],
+                                                                          columns=transcription_results.columns))
 
         # ApplyCorrection(self.sdb)  # is empty
         self.endTime = datetime.now()

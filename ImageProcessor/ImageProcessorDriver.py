@@ -15,6 +15,9 @@ def setRoot(r):
     global root
     root=r
 
+def get_root():
+    return root
+
 def ProcessImagesInTheFolder(suggestEngine, imageFolder, minimumConfidence,extractTag):
     filePaths = []
     for filename in sorted(os.listdir(imageFolder)):
@@ -29,11 +32,12 @@ def ProcessImagesInTheFolder(suggestEngine, imageFolder, minimumConfidence,extra
 
 
 def ProcessImagesFromTheUrlsInTheTextFile(suggestEngine, textFile, minimumConfidence,extractTag):
+    print('ProcessImagesFromTheUrlsInTheTextFile')
     filePaths = []
     with open(textFile) as f:
         lines = f.readlines()
     for line in lines:
-        url = line.replace("\n", "")
+        url = line.replace('\n', '')
         filePaths.append(url)
     try:
         ProcessMultipleImages(suggestEngine, filePaths, minimumConfidence, extractTag)
@@ -49,29 +53,34 @@ def ExtractAndProcessSingleImage(suggestEngine, imagePath, minimumConfidence,ext
     ProcessMultipleImages(suggestEngine,[imagePath],minimumConfidence,extractTag,True)
 
 def ProcessMultipleImages(suggestEngine, filePaths,minimumConfidence,extractTag,displayAfterProcessing=False):
-    UpdateProcessingCount(len(filePaths))
-    args=(suggestEngine, filePaths,minimumConfidence,extractTag,displayAfterProcessing)
-    if root.parallelProcess:
-        Thread(target=ProcessListOfImagePaths_Parallel,args=args).start()
-    else:
-        Thread(target=ProcessListOfImagePaths_Sequential,args=args).start()
+    print('ProcessMultipleImages')
+    # UpdateProcessingCount(len(filePaths))
+    # args=(suggestEngine, filePaths,minimumConfidence,extractTag,displayAfterProcessing)
+    # if root.parallelProcess:
+    #     Thread(target=ProcessListOfImagePaths_Parallel,args=args).start()
+    # else:
+    # Thread(target=ProcessListOfImagePaths_Sequential,args=args).start()
+    ProcessListOfImagePaths_Sequential(suggestEngine, filePaths,minimumConfidence,extractTag,displayAfterProcessing)
 
 
 def ProcessListOfImagePaths_Sequential(suggestEngine, filePaths, minimumConfidence,extractTag,displayAfterProcessing=False):
-    i=0;
+    print('ProcessListOfImagePaths_Sequential')
+    i = 0
     for filePath in filePaths:
-        if not root.stopThread:
-            i+=1
-            imgProcessorObj = ImageProcessor(suggestEngine, filePath, minimumConfidence,extractTag,displayAfterProcessing)
-            imgProcessorObj.processImage()
-        else:
-            break
+        # if not root.stopThread:
+        #     i += 1
+        #     imgProcessorObj = ImageProcessor(suggestEngine, filePath, minimumConfidence,extractTag,displayAfterProcessing)
+        #     imgProcessorObj.processImage()
+        # else:
+        #     break
+        i += 1
+        imgProcessorObj = ImageProcessor(suggestEngine, filePath, minimumConfidence, extractTag, displayAfterProcessing)
+        imgProcessorObj.processImage()
 
-    if root.stopThread:
-        UpdateProcessingCount(-(len(filePaths) - i), 0.01)
-        SetStatusForWord(root, f"User interrupted the process! {i}/{len(filePaths)} files are processed!", "red")
-        root.stopThread=False
-
+    # if root.stopThread:
+    #     UpdateProcessingCount(-(len(filePaths) - i), 0.01)
+    #     SetStatusForWord(root, f"User interrupted the process! {i}/{len(filePaths)} files are processed!", "red")
+    #     root.stopThread=False
 
 
 def ProcessListOfImagePaths_Parallel(suggestEngine, filePaths, minimumConfidence,extractTag,displayAfterProcessing=False):
