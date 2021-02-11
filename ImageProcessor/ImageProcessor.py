@@ -69,7 +69,6 @@ class ImageProcessor:
         if not len(self.barcode) > 0:
             self.barcode = GetBarCodeFromImage(self.tempImagePath)
         self.sdb = get_normalized_sequential_data_blocks(self.startX, self.startY, self.dataFrame)
-        global transcription_results
         str_gcv = ''
         for block_of_words in self.sdb:
             for a_word in block_of_words:
@@ -82,21 +81,23 @@ class ImageProcessor:
             for a_word in block_of_words:
                 str_dc += a_word.description + ' '
         # print('words after DandC: \n%s' % str_dc)
-        transcription_results = transcription_results.append(pd.DataFrame([['filename', str_gcv, str_dc]],
-                                                                          columns=transcription_results.columns))
+        # transcription_results = transcription_results.append(pd.DataFrame([['filename', str_gcv, str_dc]],
+        #                                                                   columns=transcription_results.columns))
 
         # ApplyCorrection(self.sdb)  # is empty
         self.endTime = datetime.now()
         self.processingTime = (self.endTime - self.startTime).total_seconds()
-        self.tagId, self.importDate, self.hasBarCodeInDB = SaveTagtoDatabase(self.imagePath, self.processingTime,
-                                                                             self.tagContent, self.sdb, self.barcode)
-        self.classifiedData = GetClassifiedDataTuples(self.sdb)
-        AddUpdateTagClassification(self.tagId, self.classifiedData)
+        # self.tagId, self.importDate, self.hasBarCodeInDB = SaveTagtoDatabase(self.imagePath, self.processingTime,
+        #                                                                      self.tagContent, self.sdb, self.barcode)
+        # self.classifiedData = GetClassifiedDataTuples(self.sdb)
+        # AddUpdateTagClassification(self.tagId, self.classifiedData)
+        #
+        # UpdateProcessingCount(-1, self.processingTime, self.tagId, self.sdb, self.tagPath, self.imagePath,
+        #                       self.importDate, self.barcode, self.classifiedData, self.displayAfterProcessing)
+        # if len(self.barcode) > 0 and self.hasBarCodeInDB == 0:
+        #     initialize_barcode_info_for_a_key_in_a_thread(self.barcode)
 
-        UpdateProcessingCount(-1, self.processingTime, self.tagId, self.sdb, self.tagPath, self.imagePath,
-                              self.importDate, self.barcode, self.classifiedData, self.displayAfterProcessing)
-        if len(self.barcode) > 0 and self.hasBarCodeInDB == 0:
-            initialize_barcode_info_for_a_key_in_a_thread(self.barcode)
+        return str_gcv, str_dc
 
     def InitializeOCRData(self):
         with io.open(self.tempImagePath, 'rb') as image_file:

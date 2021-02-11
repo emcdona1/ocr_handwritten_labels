@@ -47,10 +47,10 @@ def ProcessImagesFromTheUrlsInTheTextFile(suggestEngine, textFile, minimumConfid
     pass
 
 
-def ExtractAndProcessSingleImage(suggestEngine, imagePath, minimumConfidence,extractTag):
+def ExtractAndProcessSingleImage(suggestEngine, imagePath, minimumConfidence, extractTag):
     #imgProcessorObj = ImageProcessor(suggestEngine, imagePath, minimumConfidence,extractTag)
     #imgProcessorObj.processImage()
-    ProcessMultipleImages(suggestEngine,[imagePath],minimumConfidence,extractTag,True)
+    return ProcessMultipleImages(suggestEngine,[imagePath],minimumConfidence,extractTag,True)
 
 def ProcessMultipleImages(suggestEngine, filePaths,minimumConfidence,extractTag,displayAfterProcessing=False):
     print('ProcessMultipleImages')
@@ -60,7 +60,7 @@ def ProcessMultipleImages(suggestEngine, filePaths,minimumConfidence,extractTag,
     #     Thread(target=ProcessListOfImagePaths_Parallel,args=args).start()
     # else:
     # Thread(target=ProcessListOfImagePaths_Sequential,args=args).start()
-    ProcessListOfImagePaths_Sequential(suggestEngine, filePaths,minimumConfidence,extractTag,displayAfterProcessing)
+    return ProcessListOfImagePaths_Sequential(suggestEngine, filePaths,minimumConfidence,extractTag,displayAfterProcessing)
 
 
 def ProcessListOfImagePaths_Sequential(suggestEngine, filePaths, minimumConfidence,extractTag,displayAfterProcessing=False):
@@ -75,12 +75,13 @@ def ProcessListOfImagePaths_Sequential(suggestEngine, filePaths, minimumConfiden
         #     break
         i += 1
         imgProcessorObj = ImageProcessor(suggestEngine, filePath, minimumConfidence, extractTag, displayAfterProcessing)
-        imgProcessorObj.processImage()
+        gcv, correct =imgProcessorObj.processImage()
 
     # if root.stopThread:
     #     UpdateProcessingCount(-(len(filePaths) - i), 0.01)
     #     SetStatusForWord(root, f"User interrupted the process! {i}/{len(filePaths)} files are processed!", "red")
     #     root.stopThread=False
+    return gcv, correct
 
 
 def ProcessListOfImagePaths_Parallel(suggestEngine, filePaths, minimumConfidence,extractTag,displayAfterProcessing=False):
