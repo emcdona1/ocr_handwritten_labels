@@ -42,14 +42,14 @@ class ImageProcessor:
         cls.topEdgeTemplates = cls.GetTemplateDataListFromFolder(tet)
         cls.templatesInitialized = True
 
-    def __init__(self, suggestEngine, imagePath, minimumConfidence, extractTag, displayAfterProcessing=False):
-        self.suggestEngine = suggestEngine
+    def __init__(self, imagePath, minimumConfidence, extractTag, vision_client, displayAfterProcessing=False):
         self.imagePath = imagePath
         self.tagPath = imagePath  # can be overwritten when tag is extracted.
         self.minimumConfidence = minimumConfidence
         self.sdb = None
         self.extractTag = extractTag
         self.displayAfterProcessing = displayAfterProcessing
+        self.client = vision_client
         if not ImageProcessor.templatesInitialized:
             ImageProcessor.InitializeTemplates()
         self.dataFrame = None
@@ -63,11 +63,6 @@ class ImageProcessor:
         #        self.ocrThread.start()
         #        self.ocrThread.join()
         self.ExtractTagContentFromImageAndSetTempTagPath()
-        self.barcode = get_barcode_from_text(self.imagePath.split("/")[-1])
-        if not len(self.barcode) > 0:
-            self.barcode = get_barcode_from_text(self.dataFrame['description'][0])
-        if not len(self.barcode) > 0:
-            self.barcode = GetBarCodeFromImage(self.tempImagePath)
         self.sdb = get_normalized_sequential_data_blocks(self.startX, self.startY, self.dataFrame)
         str_gcv = ''
         for block_of_words in self.sdb:
@@ -75,7 +70,7 @@ class ImageProcessor:
                 str_gcv += a_word.description + ' '
         # print('words from GCV: \n%s' % str_gcv)
 
-        DetectAndClassify(self.suggestEngine, self.sdb, self.minimumConfidence)
+        DetectAndClassify(self.sdb, self.minimumConfidence)
         str_dc = ''
         for block_of_words in self.sdb:
             for a_word in block_of_words:
@@ -102,7 +97,7 @@ class ImageProcessor:
     def InitializeOCRData(self):
         with io.open(self.tempImagePath, 'rb') as image_file:
             self.imageContent = image_file.read()
-        self.dataFrame = GetInformationAsDataFrameFromImage(self.imageContent)
+        self.dataFrame = GetInformationAsDataFrameFromImage(self.imageContent, self.client)
         pass
 
     def GetCoordinatesOfMatchingTemplateBetweenTwoPoints(self, cv2RgbImg, templates, xStart, yStart, xEnd, yEnd,

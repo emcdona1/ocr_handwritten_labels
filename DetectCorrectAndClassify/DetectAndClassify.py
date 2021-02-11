@@ -7,7 +7,7 @@ from DetectCorrectAndClassify.DetectAndClassifyTitle import DetectTitle
 from DetectCorrectAndClassify.DetectWrongWords import DetectWrongWords
 
 
-def DetectAndClassify(suggestEngine, sdb, minimumConfidence):
+def DetectAndClassify(sdb, minimumConfidence):
     """ Updates ImageProcessor.sdb object with word suggestions """
     # notDetected = 0
     # if not DetectTitle(sdb[:2]):

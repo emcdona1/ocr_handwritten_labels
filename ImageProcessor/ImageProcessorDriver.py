@@ -24,14 +24,14 @@ def ProcessImagesInTheFolder(suggestEngine, imageFolder, minimumConfidence,extra
         if filename.endswith(".jpg"):
             filePaths.append(os.path.join(imageFolder, filename))
     try:
-        ProcessMultipleImages(suggestEngine, filePaths, minimumConfidence,extractTag)
+        ProcessMultipleImages(filePaths, minimumConfidence, extractTag)
     except Exception as error:
         print(f"{error} (Error Code:IPD_001)")
         pass
     pass
 
 
-def ProcessImagesFromTheUrlsInTheTextFile(suggestEngine, textFile, minimumConfidence,extractTag):
+def ProcessImagesFromTheUrlsInTheTextFile(textFile, minimumConfidence, extractTag, vision_client):
     print('ProcessImagesFromTheUrlsInTheTextFile')
     filePaths = []
     with open(textFile) as f:
@@ -40,19 +40,19 @@ def ProcessImagesFromTheUrlsInTheTextFile(suggestEngine, textFile, minimumConfid
         url = line.replace('\n', '')
         filePaths.append(url)
     try:
-        ProcessMultipleImages(suggestEngine, filePaths, minimumConfidence, extractTag)
+        ProcessMultipleImages(filePaths, minimumConfidence, extractTag, vision_client)
     except Exception as error:
         print(f"{error} (Error Code:IPD_002)")
         pass
     pass
 
 
-def ExtractAndProcessSingleImage(suggestEngine, imagePath, minimumConfidence, extractTag):
+def ExtractAndProcessSingleImage(imagePath, minimumConfidence, extractTag, vision_client):
     #imgProcessorObj = ImageProcessor(suggestEngine, imagePath, minimumConfidence,extractTag)
     #imgProcessorObj.processImage()
-    return ProcessMultipleImages(suggestEngine,[imagePath],minimumConfidence,extractTag,True)
+    return ProcessMultipleImages([imagePath], minimumConfidence, extractTag, vision_client, True)
 
-def ProcessMultipleImages(suggestEngine, filePaths,minimumConfidence,extractTag,displayAfterProcessing=False):
+def ProcessMultipleImages(filePaths, minimumConfidence, extractTag, vision_client, displayAfterProcessing=False):
     print('ProcessMultipleImages')
     # UpdateProcessingCount(len(filePaths))
     # args=(suggestEngine, filePaths,minimumConfidence,extractTag,displayAfterProcessing)
@@ -60,10 +60,10 @@ def ProcessMultipleImages(suggestEngine, filePaths,minimumConfidence,extractTag,
     #     Thread(target=ProcessListOfImagePaths_Parallel,args=args).start()
     # else:
     # Thread(target=ProcessListOfImagePaths_Sequential,args=args).start()
-    return ProcessListOfImagePaths_Sequential(suggestEngine, filePaths,minimumConfidence,extractTag,displayAfterProcessing)
+    return ProcessListOfImagePaths_Sequential(filePaths, minimumConfidence, extractTag, vision_client, displayAfterProcessing)
 
 
-def ProcessListOfImagePaths_Sequential(suggestEngine, filePaths, minimumConfidence,extractTag,displayAfterProcessing=False):
+def ProcessListOfImagePaths_Sequential(filePaths, minimumConfidence, extractTag, vision_client, displayAfterProcessing=False):
     print('ProcessListOfImagePaths_Sequential')
     i = 0
     for filePath in filePaths:
@@ -74,40 +74,11 @@ def ProcessListOfImagePaths_Sequential(suggestEngine, filePaths, minimumConfiden
         # else:
         #     break
         i += 1
-        imgProcessorObj = ImageProcessor(suggestEngine, filePath, minimumConfidence, extractTag, displayAfterProcessing)
-        gcv, correct =imgProcessorObj.processImage()
+        img_processor_obj = ImageProcessor(filePath, minimumConfidence, extractTag, vision_client, displayAfterProcessing)
+        gcv, correct = img_processor_obj.processImage()
 
     # if root.stopThread:
     #     UpdateProcessingCount(-(len(filePaths) - i), 0.01)
     #     SetStatusForWord(root, f"User interrupted the process! {i}/{len(filePaths)} files are processed!", "red")
     #     root.stopThread=False
     return gcv, correct
-
-
-def ProcessListOfImagePaths_Parallel(suggestEngine, filePaths, minimumConfidence,extractTag,displayAfterProcessing=False):
-    num_cores = root.parallelProcessThreadCount
-    queue = Queue()
-    for x in range(num_cores):
-        infoExtractor = ImageThreadProcessor(queue)
-        infoExtractor.daemon = True
-        infoExtractor.start()
-
-    for filePath in filePaths:
-        imgProcessorObj = ImageProcessor(suggestEngine, filePath, minimumConfidence,extractTag,displayAfterProcessing)
-        queue.put(imgProcessorObj)
-    queue.join()
-
-
-class ImageThreadProcessor(Thread):
-    def __init__(self, queue):
-        Thread.__init__(self)
-        self.queue = queue
-
-    def run(self):
-        while True:
-            imageProcessorObj = self.queue.get()
-            try:
-                imageProcessorObj.processImage()
-            finally:
-                self.queue.task_done()
-                print(imageProcessorObj.imagePath,": done")

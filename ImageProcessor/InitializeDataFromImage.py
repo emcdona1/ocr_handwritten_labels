@@ -49,8 +49,7 @@ def GetWordProperties(index, text, full_text_annotation):
     return t, confidence, sp, ep
 
 
-def GetInformationAsDataFrameFromImage(imageContent):
-    global client
+def GetInformationAsDataFrameFromImage(imageContent, client):
     image = vision.types.Image(content=imageContent)
     # response = client.text_detection(image=image)
     response = None
