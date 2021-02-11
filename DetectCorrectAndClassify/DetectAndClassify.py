@@ -8,29 +8,30 @@ from DetectCorrectAndClassify.DetectWrongWords import DetectWrongWords
 
 
 def DetectAndClassify(suggestEngine, sdb, minimumConfidence):
+    """ Updates ImageProcessor.sdb object with word suggestions """
     notDetected = 0
     if not DetectTitle(sdb[:2]):
-        ++notDetected
+        notDetected += 1
         print("Could not detect Title!")
 
     if not DetectCollector(sdb):
-        ++notDetected
+        notDetected += 1
         print("Could not detect Collector!")
 
     if not DetectAndSuggestDates(sdb):
-        ++notDetected
+        notDetected += 1
         print("Could not detect Dates!")
 
     if not DetectRegistrationNumber(sdb):
-        ++notDetected
+        notDetected += 1
         print("Could not detect Registration Number!")
 
     if not DetectAndSuggestScienteficWords(suggestEngine, sdb):
-        ++notDetected
+        notDetected += 1
         print("Could not suggest any scientific words!")
 
-    DetectWrongWords(sdb, minimumConfidence)
-
     if not DetectLocation(notDetected, sdb):
-        ++notDetected
+        notDetected += 1
         print("Could not detect location!")
+
+    DetectWrongWords(sdb, minimumConfidence)

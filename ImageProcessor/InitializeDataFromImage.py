@@ -66,7 +66,6 @@ def GetInformationAsDataFrameFromImage(imageContent):
         print("\nCheck the internet connection!")
         client = vision.ImageAnnotatorClient()
         response = client.document_text_detection(image=image)
-
     except Exception as error:
         print(f"{error} (Error Code:IDFI_002)")
         print("Unexpected error:", sys.exc_info()[0])

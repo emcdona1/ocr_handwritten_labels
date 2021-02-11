@@ -4,8 +4,8 @@ from shapely.geometry import Point
 from shapely.geometry.polygon import Polygon
 
 
-def AddToLastLineOrNewLine(lines, w):
-    if (len(lines) > 0):
+def add_to_last_line_or_new_line(lines, w):
+    if len(lines) > 0:
         lWord = lines[-1][-1]
         if AreWordsInAcceptableOffsetDistance(lWord, w):
             lines[-1].append(w)
@@ -22,51 +22,51 @@ def SortBySp(line):
     return sorted(line, key=sortKey)
 
 
-def SortByFirstY(blocks):
-    def sortKey(line):
+def sort_by_first_y(blocks):
+    def sort_key(line):
         return int(line[0]['sp'][1])
+    return sorted(blocks, key=sort_key)
 
-    return sorted(blocks, key=sortKey)
 
-
-def SortByLastX(blocks):
-    def sortKey(line):
+def sort_by_last_x(blocks):
+    def sort_key(line):
         return int(line[-1]['sp'][0])
+    return sorted(blocks, key=sort_key)
 
-    return sorted(blocks, key=sortKey)
 
-
-def GetSequentialBlocks(lines):
+def get_sequential_blocks(lines):
     blocks = []
     for line in lines:
         blocks.append(SortBySp(line))
-    return SortByFirstY(blocks)
+    return sort_by_first_y(blocks)
 
 
-def GetSequencialDataList(d):
+def get_sequential_data_list(d):
     lines = []
     for w in d:
-        AddToLastLineOrNewLine(lines, w)
-    return GetSequentialBlocks(lines)
+        add_to_last_line_or_new_line(lines, w)
+    return get_sequential_blocks(lines)
 
 
-def GetNormalizedSequentialDataBlocks(startX, startY, df):
+def get_normalized_sequential_data_blocks(start_x, start_y, df):
+    """ Converts ImageProcessor.dataFrame into a list -- unsure why it gives it a certain shape.
+    StartX and start_y refer to attempting to detect a label. These are both 0 if a label ('tag') image is used. """
     d = []
-    if(startX==0 and startY==0):#processing whole image
+    if start_x == 0 and start_y == 0:  # processing whole image
         for index, w in df.iterrows():
-            if (w['index'] > 0):
+            if w['index'] > 0:
                 d.append(w)
-    else:#processing part of image
+    else:  # processing part of image
         for index, w in df.iterrows():
-            if (w['index'] > 0):
-                if NormalizePosition(startX,startY,w):
+            if w['index'] > 0:
+                if normalize_position(start_x, start_y, w):
                     d.append(w)
-    return GetSequencialDataList(d)
+    return get_sequential_data_list(d)
 
-def NormalizePosition(startX,startY,w):
-    w['tupleVertices']=[(x-startX,y-startY)for x,y in w['tupleVertices']]
-    return w['tupleVertices'][0][0]>=0 and w['tupleVertices'][0][1]>=0
 
+def normalize_position(start_x, start_y, w):
+    w['tupleVertices'] = [(x - start_x, y - start_y) for x, y in w['tupleVertices']]
+    return w['tupleVertices'][0][0] >= 0 and w['tupleVertices'][0][1] >= 0
 
 
 def DetectAndRemoveSmallRepeatedWordArea(x, y):
@@ -100,8 +100,8 @@ def MeetVerticalAlignment(w1, w2, verticleOffset=15):
 def AreWordsInAcceptableOffsetDistance(w1, w2):
     return MeetHorizontalAlignment(w1, w2) and MeetVerticalAlignment(w1, w2)
 
+
 def GetTempFilePath(ending):
     tf = tempfile.NamedTemporaryFile()
     return tf.name + ending
     pass
-
