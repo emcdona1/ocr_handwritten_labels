@@ -1,84 +1,55 @@
-
-import os
-
-from queue import Queue
-
-from ClassificationApp_GUI.LayoutGUI import UpdateProcessingCount
-from ClassificationApp_GUI.StatusBar import SetStatusForWord
 from ImageProcessor.ImageProcessor import ImageProcessor
-from threading import Thread
+import pandas as pd
 
 ParallelProcessingSizeDefault = 4
-root=None
+root = None
+
 
 def setRoot(r):
     global root
-    root=r
+    root = r
+
 
 def get_root():
     return root
 
-def ProcessImagesInTheFolder(suggestEngine, imageFolder, minimumConfidence,extractTag):
-    filePaths = []
-    for filename in sorted(os.listdir(imageFolder)):
-        if filename.endswith(".jpg"):
-            filePaths.append(os.path.join(imageFolder, filename))
-    try:
-        ProcessMultipleImages(filePaths, minimumConfidence, extractTag)
-    except Exception as error:
-        print(f"{error} (Error Code:IPD_001)")
-        pass
-    pass
 
+def process_images_from_text_file_with_urls(file_path: str, min_confidence: float, extract_tag: bool,
+                                            google_vision_client) -> pd.DataFrame:
+    """ Process a list of images from a text file and return OCR and spellcheck results for all images.
+    Returns a pd.DataFrame with values for the processed images.
 
-def ProcessImagesFromTheUrlsInTheTextFile(textFile, minimumConfidence, extractTag, vision_client):
-    print('ProcessImagesFromTheUrlsInTheTextFile')
-    filePaths = []
-    with open(textFile) as f:
+    Parameters
+    ----------
+    file_path : str
+        File path location for a txt file, which contains one image URL per line (no other data).
+    min_confidence : float
+        Value [0,1] which would be used for setting a confidence threshold.
+    extract_tag : bool
+        True if you would like to use the program that extracts the tag from the image, or just
+        process the whole image.
+    google_vision_client
+        Already initialized Google Cloud Vision client with proper token."""
+    list_of_urls = []
+    with open(file_path) as f:
         lines = f.readlines()
     for line in lines:
-        url = line.replace('\n', '')
-        filePaths.append(url)
-    try:
-        ProcessMultipleImages(filePaths, minimumConfidence, extractTag, vision_client)
-    except Exception as error:
-        print(f"{error} (Error Code:IPD_002)")
-        pass
-    pass
+        list_of_urls.append(line.strip())
+    print('%i images in list.' % len(list_of_urls))
+    return process_list_of_image_paths(list_of_urls, min_confidence, extract_tag, google_vision_client)
 
 
-def ExtractAndProcessSingleImage(imagePath, minimumConfidence, extractTag, vision_client):
-    #imgProcessorObj = ImageProcessor(suggestEngine, imagePath, minimumConfidence,extractTag)
-    #imgProcessorObj.processImage()
-    return ProcessMultipleImages([imagePath], minimumConfidence, extractTag, vision_client, True)
-
-def ProcessMultipleImages(filePaths, minimumConfidence, extractTag, vision_client, displayAfterProcessing=False):
-    print('ProcessMultipleImages')
-    # UpdateProcessingCount(len(filePaths))
-    # args=(suggestEngine, filePaths,minimumConfidence,extractTag,displayAfterProcessing)
-    # if root.parallelProcess:
-    #     Thread(target=ProcessListOfImagePaths_Parallel,args=args).start()
-    # else:
-    # Thread(target=ProcessListOfImagePaths_Sequential,args=args).start()
-    return ProcessListOfImagePaths_Sequential(filePaths, minimumConfidence, extractTag, vision_client, displayAfterProcessing)
+def process_one_image(image_path: str, min_confidence: float, extract_tag: bool, google_vision_client) -> pd.DataFrame:
+    """ Wrapper function to process a single image (instead of a batch)."""
+    return process_list_of_image_paths([image_path], min_confidence, extract_tag, google_vision_client)
 
 
-def ProcessListOfImagePaths_Sequential(filePaths, minimumConfidence, extractTag, vision_client, displayAfterProcessing=False):
-    print('ProcessListOfImagePaths_Sequential')
-    i = 0
-    for filePath in filePaths:
-        # if not root.stopThread:
-        #     i += 1
-        #     imgProcessorObj = ImageProcessor(suggestEngine, filePath, minimumConfidence,extractTag,displayAfterProcessing)
-        #     imgProcessorObj.processImage()
-        # else:
-        #     break
-        i += 1
-        img_processor_obj = ImageProcessor(filePath, minimumConfidence, extractTag, vision_client, displayAfterProcessing)
-        gcv, correct = img_processor_obj.processImage()
-
-    # if root.stopThread:
-    #     UpdateProcessingCount(-(len(filePaths) - i), 0.01)
-    #     SetStatusForWord(root, f"User interrupted the process! {i}/{len(filePaths)} files are processed!", "red")
-    #     root.stopThread=False
-    return gcv, correct
+def process_list_of_image_paths(file_paths, min_confidence, extract_tag, vision_client) -> pd.DataFrame:
+    df = pd.DataFrame([], columns=['filename', 'gcv_results', 'correction_results'])
+    for one_path in file_paths:
+        img_processor_obj = ImageProcessor(one_path, min_confidence, extract_tag, vision_client, False)
+        gcv, corrected = img_processor_obj.processImage()
+        new_row = pd.DataFrame([[one_path, gcv, corrected]], columns=df.columns)
+        df = df.append(new_row)
+        # print(df.shape)
+    return df

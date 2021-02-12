@@ -5,8 +5,8 @@ from tkinter import Menu, filedialog, simpledialog
 from BuildPlantDictionary import buildPlantDictionary
 from ClassificationApp_GUI.PopupWindowEditConfig import PopupWindowEditConfig
 from Helper.SaveDataFramesToExcelFile import ExportSingleTagToCSV, ExportAllTagsToCSV, ExportTagsWithImportDatesToCSV
-from ImageProcessor.ImageProcessorDriver import ProcessImagesInTheFolder, ProcessImagesFromTheUrlsInTheTextFile, \
-    ExtractAndProcessSingleImage
+from ImageProcessor.ImageProcessorDriver import ProcessImagesInTheFolder, process_images_from_text_file_with_urls, \
+    process_one_image
 
 def AddMenuAndSubMenu(root):
     # menu bar
@@ -69,7 +69,7 @@ def AddMenuAndSubMenu(root):
             filetypes=(("TXT", "*.txt"), ("text", "*.txt"))
         )
         if len(txtFileContainingUrls) > 0:
-            ProcessImagesFromTheUrlsInTheTextFile(txtFileContainingUrls, root.minimumConfidence, extractTag)
+            process_images_from_text_file_with_urls(txtFileContainingUrls, root.minimumConfidence, extractTag)
         pass
 
     def ExtractFromImagePath(extractTag):
@@ -78,7 +78,7 @@ def AddMenuAndSubMenu(root):
         )
         if len(singleImagePath) > 1:
             root.imagePath = singleImagePath
-            ExtractAndProcessSingleImage(root.imagePath, root.minimumConfidence, extractTag)
+            process_one_image(root.imagePath, root.minimumConfidence, extractTag)
         pass
 
 
@@ -86,7 +86,7 @@ def AddMenuAndSubMenu(root):
         imageUrl = simpledialog.askstring("Input", "Enter the image URL: ", parent=root)
         if len(imageUrl) > 1:
             root.imagePath = imageUrl
-            ExtractAndProcessSingleImage(root.imagePath, root.minimumConfidence, extractTag)
+            process_one_image(root.imagePath, root.minimumConfidence, extractTag)
         pass
 
     def StopBatchProcessing(root):

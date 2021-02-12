@@ -82,13 +82,13 @@ class ImageProcessor:
         # ApplyCorrection(self.sdb)  # is empty
         self.endTime = datetime.now()
         self.processingTime = (self.endTime - self.startTime).total_seconds()
-        # self.tagId, self.importDate, self.hasBarCodeInDB = SaveTagtoDatabase(self.imagePath, self.processingTime,
+        # self.tagId, self.importDate, self.hasBarCodeInDB = SaveTagtoDatabase(self.image_path, self.processingTime,
         #                                                                      self.tagContent, self.sdb, self.barcode)
         # self.classifiedData = GetClassifiedDataTuples(self.sdb)
         # AddUpdateTagClassification(self.tagId, self.classifiedData)
         #
-        # UpdateProcessingCount(-1, self.processingTime, self.tagId, self.sdb, self.tagPath, self.imagePath,
-        #                       self.importDate, self.barcode, self.classifiedData, self.displayAfterProcessing)
+        # UpdateProcessingCount(-1, self.processingTime, self.tagId, self.sdb, self.tagPath, self.image_path,
+        #                       self.importDate, self.barcode, self.classifiedData, self.display_after_processing)
         # if len(self.barcode) > 0 and self.hasBarCodeInDB == 0:
         #     initialize_barcode_info_for_a_key_in_a_thread(self.barcode)
 
