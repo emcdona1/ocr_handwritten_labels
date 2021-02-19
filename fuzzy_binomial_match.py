@@ -14,7 +14,7 @@ def main():
 
 def load_search_queries() -> list:
     list_of_queries = list()
-    with open('list_of_gcv_names.txt', 'r') as f:
+    with open('temp_list_of_gcv_names.txt', 'r') as f:
         lines = f.readlines()
         for name in lines:
             name = name.strip()

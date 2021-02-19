@@ -3,3 +3,6 @@ Configuration.cfg
 /__pycache__
 /*/__pycache__
 .idea
+*test*
+*temp*
+*tmp*
