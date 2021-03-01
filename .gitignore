@@ -3,3 +3,8 @@ Configuration.cfg
 /__pycache__
 /*/__pycache__
 .idea
+*test*
+*temp*
+*tmp*
+/gcv_responses/*
+/processed_images/*
