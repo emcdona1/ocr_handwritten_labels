@@ -21,7 +21,7 @@ def GetLocalSuggestEngine(WORDS_FILE_PATH, ENGINE_NAME='TRIE'):
 monthSuggestEngine = None
 
 
-def GetMonthSuggestEngine(monthsFilePath='InputResources/Months.txt', ENGINE_NAME='TRIE'):
+def GetMonthSuggestEngine(monthsFilePath='file_resources/Months.txt', ENGINE_NAME='TRIE'):
     global monthSuggestEngine
     if not monthSuggestEngine is None:
         return monthSuggestEngine

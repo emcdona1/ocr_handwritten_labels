@@ -6,3 +6,5 @@ Configuration.cfg
 *test*
 *temp*
 *tmp*
+/gcv_responses/*
+/processed_images/*

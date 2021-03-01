@@ -1,7 +1,7 @@
 import os
 from datetime import datetime
 
-from Helper.GetWordsInformation import GetDescriptionFromDataBlocks
+from Helper.get_words_information import get_description_from_data_blocks
 from SuggestEngine.Get_SuggestEngine import GetLocalSuggestEngine
 from SuggestEngine.SuggestEngine_Client import SuggestEngineClient
 
