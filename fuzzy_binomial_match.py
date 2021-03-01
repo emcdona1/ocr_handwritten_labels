@@ -14,7 +14,8 @@ def main():
 
 def load_search_queries() -> list:
     list_of_queries = list()
-    with open('temp_list_of_gcv_names.txt', 'r') as f:
+    filename_of_search_queries = 'temp_list_of_gcv_names.txt'
+    with open(filename_of_search_queries, 'r') as f:
         lines = f.readlines()
         for name in lines:
             name = name.strip()
@@ -33,7 +34,7 @@ def generate_ratios(search_query_lower: str, names: list) -> dict:
 
 def load_names() -> list:
     names = list()
-    with open('InputResources' + os.path.sep + 'genusspecies_data.txt', 'r') as f:
+    with open('file_resources' + os.path.sep + 'list_of_scientific_names.txt', 'r') as f:
         lines = f.readlines()
         for a_line in lines:
             a_line = a_line.strip().lower()
