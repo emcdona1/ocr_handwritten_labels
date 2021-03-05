@@ -32,6 +32,7 @@ def extract_image_url(base_url: str, page: requests.models.Response) -> str:
 
 
 if __name__ == '__main__':
+    assert len(sys.argv) > 1, 'Provide an argument of the file (CSV) to be read.'
     csv_filename = sys.argv[1]
     occurrences = pd.read_csv(csv_filename, encoding='ISO-8859-1')
     main()
