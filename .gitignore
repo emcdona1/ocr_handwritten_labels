@@ -8,3 +8,7 @@ Configuration.cfg
 *tmp*
 /gcv_responses/*
 /processed_images/*
+/processed_images_nn/
+/processed_images_zooniverse/
+/label_images/
+/file_resources/test_images/
