@@ -4,7 +4,8 @@ import cv2
 import numpy as np
 from imageprocessor.algorithmic_methods import get_normalized_sequential_data_blocks, get_temp_file_path
 from imageprocessor.initialize_data_from_image import get_gcv_ocr_as_data_frame_from_image
-from imageprocessor.detect_wrong_words import detect_wrong_words
+from imageprocessor.get_words_information import detect_wrong_words
+
 
 class ImageProcessor:
     def __init__(self, vision_client, image_path=None, min_confidence=None, extract_tag=None,
