@@ -1,10 +1,10 @@
-import ImageProcessor.image_processor_driver as ipd
+import imageprocessor.image_processor_driver as ipd
 import pandas as pd
 from configparser import ConfigParser
 import os
 from google.cloud import vision
 import re
-import ImageProcessor.image_processor as ip
+import imageprocessor.image_processor as ip
 
 
 def main():

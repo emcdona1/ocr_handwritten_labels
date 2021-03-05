@@ -1,4 +1,4 @@
-from ImageProcessor.image_processor import ImageProcessor
+from imageprocessor.image_processor import ImageProcessor
 import pandas as pd
 
 ParallelProcessingSizeDefault = 4

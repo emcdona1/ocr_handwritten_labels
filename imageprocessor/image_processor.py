@@ -2,10 +2,9 @@ import io
 from urllib.request import urlopen
 import cv2
 import numpy as np
-from DetectCorrectAndClassify.detect_and_classify import detect_and_classify
-from Helper.algorithmic_methods import get_normalized_sequential_data_blocks, get_temp_file_path
-from ImageProcessor.initialize_data_from_image import get_gcv_ocr_as_data_frame_from_image
-
+from imageprocessor.algorithmic_methods import get_normalized_sequential_data_blocks, get_temp_file_path
+from imageprocessor.initialize_data_from_image import get_gcv_ocr_as_data_frame_from_image
+from imageprocessor.detect_wrong_words import detect_wrong_words
 
 class ImageProcessor:
     def __init__(self, vision_client, image_path=None, min_confidence=None, extract_tag=None,
@@ -32,7 +31,7 @@ class ImageProcessor:
             for a_word in block_of_words:
                 str_gcv += a_word.description + ' '
 
-        detect_and_classify(self.sdb, self.minimumConfidence)
+        detect_wrong_words(self.sdb, self.minimumConfidence)
         str_dc = ''
         for block_of_words in self.sdb:
             for a_word in block_of_words:

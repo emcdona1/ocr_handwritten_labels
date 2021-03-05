@@ -9,7 +9,7 @@ import numpy as np
 from urllib.request import urlopen
 import cv2
 from google.cloud import vision
-import ImageProcessor.image_processor as ip
+import imageprocessor.image_processor as ip
 
 zooniverse_manifest = pd.DataFrame()
 letter_metadata = pd.DataFrame()

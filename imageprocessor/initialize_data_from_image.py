@@ -1,5 +1,3 @@
-import os
-import re
 import sys
 import pandas as pd
 from google.api_core.exceptions import ServiceUnavailable

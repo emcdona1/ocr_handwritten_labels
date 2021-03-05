@@ -1,7 +1,5 @@
 import re
-from shapely.geometry import Point
-from shapely.geometry.polygon import Polygon
-from Helper.word_categories import WordCategories
+from detect_wrong_words import WordCategories
 
 
 def get_classified_categories_in_order(main_categories, classified_categories):
