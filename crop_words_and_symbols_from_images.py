@@ -39,6 +39,7 @@ def main():
                         word_filename = generate_zooniverse_images(image_to_draw_on, image_barcode, word, symbol,
                                                                    b_idx, p_idx, w_idx, s_idx,
                                                                    '' if s_idx == 0 else word_filename)
+    clean_and_save_manifests()
 
 
 def setup() -> ip.ImageProcessor:
@@ -62,6 +63,8 @@ def setup() -> ip.ImageProcessor:
 def load_list_of_images() -> list:
     if os.path.isdir(folder_or_image_file):
         list_of_images = os.listdir(folder_or_image_file)
+        list_of_images = [folder_or_image_file + os.path.sep + filename for filename in list_of_images]
+        list_of_images = [item for item in list_of_images if not os.path.isdir(item)]  # remove subdirectories
     elif os.path.isfile(folder_or_image_file):
         list_of_images = [folder_or_image_file]
     else:
@@ -226,10 +229,11 @@ def clean_and_save_manifests():
 
 
 if __name__ == '__main__':
+    assert len(sys.argv) > 1, 'Include one command line argument (either an image file or a directory of images).'
     folder_or_image_file = sys.argv[1]
     pickle_folder = 'gcv_responses'
     image_folder_zooniverse = 'processed_images_zooniverse'
     image_folder_nn = 'processed_images_nn'
     box_drawing_color = (240, 17, 17)  # blue
+
     main()
-    clean_and_save_manifests()
