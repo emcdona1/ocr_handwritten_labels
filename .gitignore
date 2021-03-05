@@ -12,3 +12,5 @@ Configuration.cfg
 /processed_images_zooniverse/
 /label_images/
 /file_resources/test_images/
+/file_resources/Steyermark-label-occur-2021-02-27.csv
+/file_resources/Steyermark-label-occur-with-image-urls-2021-02-27.csv
