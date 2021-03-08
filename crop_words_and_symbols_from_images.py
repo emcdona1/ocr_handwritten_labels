@@ -23,10 +23,10 @@ def main():
     for one_image in list_of_images:
         image_to_draw_on = open_image_in_cv2(one_image)
         image_barcode = extract_barcode_from_image_name(one_image)
-        print('Image %s loaded' % one_image)
+        print('%s loaded.' % one_image, sep='\t | \t')
         gcv_response = analyze_image_in_google_cloud(one_image, image_processor)
-        print('Successful GCV query generated for %s.' % one_image)
         pickle_an_object(pickle_folder, image_barcode, gcv_response)
+        print('GCV query generated and saved.', sep='\t | \t')
 
         page = gcv_response.full_text_annotation.pages[0]  # there's only one page in an image file
         for b_idx, block in enumerate(page.blocks):
@@ -39,6 +39,7 @@ def main():
                         word_filename = generate_zooniverse_images(image_to_draw_on, image_barcode, word, symbol,
                                                                    b_idx, p_idx, w_idx, s_idx,
                                                                    '' if s_idx == 0 else word_filename)
+        print('Processing complete.' % one_image)
     clean_and_save_manifests()
 
 
@@ -187,9 +188,14 @@ def crop_image(image_to_crop: np.ndarray, bounding_box: vision.types.BoundingPol
     """ Subsets the image based on the bounding box, and returns a deep copy of the crop. """
     x_values = []
     y_values = []
+    max_x_value = image_to_crop.shape[1]
+    max_y_value = image_to_crop.shape[0]
     for vertex in bounding_box.vertices:
-        x_values.append(vertex.x)
-        y_values.append(vertex.y)
+        # GCV has returned some negative X values, e.g. for C0601389F-label.jpg
+        x_value_within_valid_range = min(max(0, vertex.x), max_x_value)
+        y_value_within_valid_range = min(max(0, vertex.y), max_y_value)
+        x_values.append(x_value_within_valid_range)
+        y_values.append(y_value_within_valid_range)
     x_min = sorted(x_values)[0]
     x_max = sorted(x_values)[-1]
     y_min = sorted(y_values)[0]
