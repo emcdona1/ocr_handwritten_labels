@@ -16,7 +16,7 @@ def process_file_of_urls_into_a_list(file_path: str) -> list:
 
 def process_images_from_text_file_with_urls(file_path: str, min_confidence: float, extract_tag: bool,
                                             google_vision_client) -> pd.DataFrame:
-    """ Process a list of images from a text file and return OCR and spellcheck results for all images.
+    """ Process a list of images from a text file and return OCR and spellcheck top_match_results for all images.
     Returns a pd.DataFrame with values for the processed images.
 
     Parameters
