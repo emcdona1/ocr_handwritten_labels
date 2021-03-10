@@ -27,7 +27,7 @@ def extract_image_url(base_url: str, page: requests.models.Response) -> str:
         if 'http' not in image_link:
             image_link = base_url + image_link
     except AttributeError as e:
-        image_link = 'No image; specimen is likely protected.'
+        image_link = 'None'
     return image_link
 
 
@@ -36,4 +36,4 @@ if __name__ == '__main__':
     csv_filename = sys.argv[1]
     occurrences = pd.read_csv(csv_filename, encoding='ISO-8859-1')
     main()
-    occurrences.to_csv(csv_filename[0:-4] + 'updated.csv', encoding='ISO-8859-1')
+    occurrences.to_csv(csv_filename[0:-4] + '-updated.csv', encoding='ISO-8859-1')
