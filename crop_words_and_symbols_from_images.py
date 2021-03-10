@@ -17,12 +17,11 @@ letter_metadata = pd.DataFrame()
 
 def main():
     image_processor = setup()
-    # todo: test folder input
-    list_of_images = load_list_of_images()
+    list_of_images: list = load_list_of_images()
 
     for one_image in list_of_images:
-        image_to_draw_on = open_image_in_cv2(one_image)
-        image_barcode = extract_barcode_from_image_name(one_image)
+        image_to_draw_on: np.ndarray = open_image_in_cv2(one_image)
+        image_barcode: str = extract_barcode_from_image_name(one_image)
         print('%s loaded.' % one_image, sep='\t | \t')
         gcv_response = analyze_image_in_google_cloud(one_image, image_processor)
         pickle_an_object(pickle_folder, image_barcode, gcv_response)
@@ -73,7 +72,7 @@ def load_list_of_images() -> list:
     return list_of_images
 
 
-def extract_barcode_from_image_name(one_image):
+def extract_barcode_from_image_name(one_image) -> str:
     image_name_without_extension = os.path.basename(one_image).split('.')[0]
     image_barcode = image_name_without_extension.split('_')[0]
     return image_barcode
@@ -159,7 +158,7 @@ def generate_zooniverse_images(image, image_barcode, word, symbol, b_idx, p_idx,
     return word_filename
 
 
-def open_image_in_cv2(one_image):
+def open_image_in_cv2(one_image) -> np.ndarray:
     if 'http' in one_image:
         resp = urlopen(one_image)
         image = np.asarray(bytearray(resp.read()), dtype="uint8")
