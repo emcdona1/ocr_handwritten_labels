@@ -4,38 +4,27 @@ import os
 import requests
 from zipfile import ZipFile
 from fuzzywuzzy import fuzz
+working_dir = os.path.dirname(os.path.realpath(__file__))
+parent_dir = os.path.dirname(working_dir)
+sys.path.append(parent_dir)
+from utilities.dataloader import load_list_from_txt
 
-WORLD_FLORA_ONLINE_URL = 'http://104.198.143.165/files/WFO_Backbone/_WFOCompleteBackbone/WFO_Backbone.zip'
 
-
-class NameMatcher:
+class FuzzyTextMatcher:
+    """ Stores a DataFrame and the name of the column containing the desired reference material,
+    which can then be compared to any desired search string(s). """
     def __init__(self):
-        classification_file_path: str = self.download_classification_file_if_needed()
-        self.taxonomic_names: pd.DataFrame = self.load_classification_file(classification_file_path)
+        self.expert_file = pd.DataFrame()
+        self.reference_column = ''
+        self.load_taxonomy_file()
         self.top_match_results = pd.DataFrame(columns=['search_query', 'best_matches', 'best_match_ratio'])
 
-    def download_classification_file_if_needed(self) -> str:
-        """ If not downloaded, this downloads latest World Flora Online backbone and extracts the classification file
-        (*.txt, but is tab-separated).  Returns relative file path of classification.tsv. """
-        # todo: if a new version comes out, it wouldn't update....
-        classification_path = 'file_resources' + os.path.sep + 'classification.tsv'
-        if not os.path.exists(classification_path):
-            wfo_backbone = requests.get(WORLD_FLORA_ONLINE_URL)
-            zip_path = 'file_resources' + os.path.sep + 'WFO_Backbone.zip'
-            with open(zip_path, 'wb') as f:
-                f.write(wfo_backbone.content)
-
-            with ZipFile(zip_path, 'r') as zipped_file:
-                zipped_file.extract('classification.txt', path='file_resources')
-            os.remove(zip_path)
-            classification_path = 'file_resources' + os.path.sep + 'classification.tsv'
-            os.rename('file_resources' + os.path.sep + 'classification.txt', classification_path)
-
-        return classification_path
-
-    def load_classification_file(self, file_path: str) -> pd.DataFrame:
+    def load_taxonomy_file(self) -> None:
         """ Given the TSV file from World Flora Online, import the file and remove all non-species.
-        Returns a DataFrame with only the taxonomic name/status information."""
+        Sets the value for expert_file and reference_column."""
+        file_path = 'file_resources' + os.path.sep + 'classification.tsv'
+        if not os.path.exists(file_path):
+            file_path = self.download_classification_file()
         classifications = pd.read_csv(file_path, sep='\t',
                                       usecols=['taxonID', 'scientificName', 'taxonRank', 'taxonomicStatus',
                                                'genus', 'specificEpithet', 'acceptedNameUsageID'],
@@ -43,10 +32,35 @@ class NameMatcher:
                                           'specificEpithet': 'string'})  # unclear why I need to specify, but fixes it
         classifications = classifications[classifications.taxonRank == 'SPECIES']
         del classifications['taxonRank']
-        # todo: save this filtered classifications file for quicker future reference
-        return classifications
+        self.expert_file = classifications
+        self.reference_column = 'scientificName'
+
+    def download_classification_file(self) -> str:
+        """ If not downloaded, this downloads latest World Flora Online backbone and extracts the classification file
+        (*.txt, but is tab-separated).  Returns relative file path of classification.tsv. """
+        world_flora_online_url = 'http://104.198.143.165/files/WFO_Backbone/_WFOCompleteBackbone/WFO_Backbone.zip'
+        wfo_backbone = requests.get(world_flora_online_url)
+        zip_path = 'file_resources' + os.path.sep + 'WFO_Backbone.zip'
+        with open(zip_path, 'wb') as f:
+            f.write(wfo_backbone.content)
+
+        with ZipFile(zip_path, 'r') as zipped_file:
+            zipped_file.extract('classification.txt', path='file_resources')
+        os.remove(zip_path)
+        classification_path = 'file_resources' + os.path.sep + 'classification.tsv'
+        os.rename('file_resources' + os.path.sep + 'classification.txt', classification_path)
+
+        return classification_path
+
+    def process_query_list(self, list_of_strings: list) -> None:
+        """ Wrapper of find_best_match_for_query, which will find best matches for a list of string queries. """
+        for one_string in list_of_strings:
+            print('Finding matches for %s' % one_string)
+            self.find_best_matches_for_query(one_string)
 
     def find_best_matches_for_query(self, search_query: str):
+        """ Search all strings in the reference_column of expert_file and find the best match(es) for the search_query,
+        using fuzzy matching ratios. Best match(es) are stored in the top_match_result attribute."""
         fuzz_ratio = self.generate_ratios(search_query)
         fuzz_ratio = sorted(fuzz_ratio.items(), reverse=True)
         best_match = fuzz_ratio[0]
@@ -59,41 +73,32 @@ class NameMatcher:
         self.top_match_results = self.top_match_results.append(one_name_results, ignore_index=True)
 
     def generate_ratios(self, search_query: str) -> dict:
+        """ For a given search_query, calculate the fuzzy match ratio for all items in the reference_column of
+        expert_file, and return a dictionary of the results, where key is the ratio (0-100) and value is a list
+        of strings with that match ratio."""
         fuzz_ratio = dict()
-        for genus_species in self.taxonomic_names['scientificName']:
-            ratio = fuzz.ratio(search_query.lower(), genus_species.lower())
+        for expert_name_entry in self.expert_file[self.reference_column]:
+            ratio = fuzz.ratio(search_query.lower(), expert_name_entry.lower())
             if ratio in fuzz_ratio.keys():
-                fuzz_ratio[ratio].append(genus_species)
+                fuzz_ratio[ratio].append(expert_name_entry)
             else:
-                fuzz_ratio[ratio] = [genus_species]
+                fuzz_ratio[ratio] = [expert_name_entry]
         return fuzz_ratio
 
     def save_best_match_results(self, original_filename: str):
-        filename = os.path.basename(original_filename).split('.')[0] + '-name_match_results.csv'
-        self.top_match_results.to_csv(filename, index=False)
-        print('Name matching results saved as %s' % filename)
+        """ Save the contents of top_match_results to a CSV file. """
+        filename = os.path.basename(original_filename).split('.')[0] + '-match_results.csv'
+        self.top_match_results.to_csv(os.path.join('file_resources', filename), index=False)
+        print('Matching results saved as %s' % filename)
 
 
 def main():
-    matcher = NameMatcher()
-    list_of_queries: list = load_query_file()
+    matcher = FuzzyTextMatcher()
+    list_of_queries: list = load_list_from_txt(query_filename)
     # todo: remove this temp query
-    list_of_queries = ['Adiantum pedatum', 'Isoeter engelmanni']  # [0] is exact match, [1] is fuzzy
-
-    for one_name in list_of_queries:
-        print('Finding matches for %s' % one_name)
-        matcher.find_best_matches_for_query(one_name)
+    # list_of_queries = ['Adiantum pedatum', 'Isoeter engelmanni']  # [0] is exact match, [1] is fuzzy
+    matcher.process_query_list(list_of_queries)
     matcher.save_best_match_results(query_filename)
-
-
-def load_query_file() -> list:
-    list_of_queries = list()
-    with open(query_filename, 'r') as f:
-        lines = f.readlines()
-        for name in lines:
-            name = name.strip()
-            list_of_queries.append(name)
-    return list_of_queries
 
 
 if __name__ == '__main__':
