@@ -13,6 +13,9 @@ ___
 3. Copy the `Configuration-plain.cfg` file as `Configuration.cfg`.
     2. Edit the file to add the name of your service account token (in the `GOOGLE_CLOUD_VISION_API` section, under `serviceAccountTokenPath={name-of-your-service-account-token}`.
     3. Update any other settings if desired.
+4. (under development) Set up your Amazon Web Services account and store your credentials in the proper location 
+   ([documentation link](https://docs.aws.amazon.com/textract/latest/dg/setup-awscli-sdk.html)).
+
 ___
 ## Workflow/Scripts
 *under development, 10 March 2021*
