@@ -32,3 +32,4 @@ numpy~=1.19.5
 bs4~=0.0.1
 beautifulsoup4~=4.9.3
 python-levenshtein-wheels=0.13.2
+boto3==1.17.33
