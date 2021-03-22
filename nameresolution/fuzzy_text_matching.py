@@ -1,9 +1,9 @@
-import sys
 import pandas as pd
 import os
 import requests
 from zipfile import ZipFile
 from fuzzywuzzy import fuzz
+import copy
 
 
 class TextMatcherTemplate:
@@ -12,6 +12,7 @@ class TextMatcherTemplate:
     def __init__(self):
         self.expert_file = pd.DataFrame()
         self.reference_column = ''
+        self.reference_id = ''
         self.load_expert_file()
         self.top_match_results = pd.DataFrame(columns=['search_query', 'best_matches', 'best_match_ratio'])
 
@@ -74,6 +75,7 @@ class TaxonMatcher(TextMatcherTemplate):
         del classifications['taxonRank']
         self.expert_file = classifications
         self.reference_column = 'scientificName'
+        self.reference_id = 'taxonID'
 
     def download_classification_file(self) -> str:
         """ If not downloaded, this downloads latest World Flora Online backbone and extracts the classification file
@@ -91,3 +93,13 @@ class TaxonMatcher(TextMatcherTemplate):
         os.rename('file_resources' + os.path.sep + 'classification.txt', classification_path)
 
         return classification_path
+
+    def resolve_synonyms(self) -> pd.Series:
+        synonym_matches = pd.DataFrame()
+        synonym_matches[['search_query', 'best_matches']] = \
+            copy.deepcopy(self.top_match_results[['search_query', 'best_matches']])
+        synonym_matches['accepted_name'] = None
+        for idx, row in synonym_matches.iterrows():
+            # todo : only looking at the first one for now
+            name_to_match = row['best_matches'][0]
+        return pd.Series()
