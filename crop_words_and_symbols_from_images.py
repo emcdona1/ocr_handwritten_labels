@@ -53,9 +53,7 @@ def setup() -> ip.ImageProcessor:
     config_parser = ConfigParser()
     config_parser.read(r'Configuration.cfg')
     service_account_token_path = config_parser.get('GOOGLE_CLOUD_VISION_API', 'serviceAccountTokenPath')
-    os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = service_account_token_path
-    google_vision_client = vision.ImageAnnotatorClient()
-    image_processor = ip.ImageProcessor(google_vision_client)
+    image_processor = ip.ImageProcessor(service_account_token_path)
 
     return image_processor
 

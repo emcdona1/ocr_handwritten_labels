@@ -1,18 +1,17 @@
 import io
+import os
 from urllib.request import urlopen
 import cv2
 import numpy as np
 from imageprocessor.algorithmic_methods import get_normalized_sequential_data_blocks, get_temp_file_path
 from imageprocessor.initialize_data_from_image import get_gcv_ocr_as_data_frame_from_image
-from imageprocessor.get_words_information import detect_wrong_words
+from google.cloud import vision
 
 
 class ImageProcessor:
-    def __init__(self, vision_client, image_path=None, min_confidence=None, extract_tag=None,
-                 display_after_processing=False):
-        self.client = vision_client
-        self.tagPath = image_path  # can be overwritten when tag is extracted.
-        self.minimumConfidence = min_confidence
+    def __init__(self, service_account_token_path):
+        os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = service_account_token_path
+        self.client = vision.ImageAnnotatorClient()
         self.sdb = None
         self.extractTag = extract_tag
         self.displayAfterProcessing = display_after_processing
