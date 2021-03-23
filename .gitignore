@@ -8,10 +8,11 @@ Configuration.cfg
 *tmp*
 /gcv_responses/*
 /processed_images/*
-/processed_images_nn/
-/processed_images_zooniverse/
+/processed_images_nn*/
+/processed_images_zooniverse*/
 /label_images/
 /file_resources/test_images/
 /file_resources/Steyermark-label-occur-2021-02-27.csv
 /file_resources/Steyermark-label-occur-with-image-urls-2021-02-27.csv
 /file_resources/list_of_gcv_identified_names.txt
+/test_results/
