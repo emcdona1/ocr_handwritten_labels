@@ -3,7 +3,7 @@ import os
 from urllib.request import urlopen
 import cv2
 import numpy as np
-from imageprocessor.algorithmic_methods import get_normalized_sequential_data_blocks, get_temp_file_path
+from imageprocessor.algorithmic_methods import get_normalized_sequential_data_blocks
 from imageprocessor.initialize_data_from_image import get_gcv_ocr_as_data_frame_from_image
 from google.cloud import vision
 
@@ -28,7 +28,6 @@ class ImageProcessor:
             for a_word in block_of_words:
                 str_gcv += a_word.description + ' '
 
-        detect_wrong_words(self.sdb, self.minimumConfidence)
         str_dc = ''
         for block_of_words in self.sdb:
             for a_word in block_of_words:
