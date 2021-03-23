@@ -2,8 +2,8 @@ import re
 import nltk
 from enchant.checker import SpellChecker
 
-
 engSpellCheck = SpellChecker('en_US')
+
 
 def get_classified_categories_in_order(main_categories, classified_categories):
     categories = []
