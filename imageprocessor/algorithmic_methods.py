@@ -1,6 +1,3 @@
-import tempfile
-
-
 def add_to_last_line_or_new_line(lines, w):
     if len(lines) > 0:
         l_word = lines[-1][-1]
@@ -55,9 +52,3 @@ def are_words_in_acceptable_offset_distance(w1, w2):
     vertical_offset = 15
     vert_alignment = abs(w2['sp'][1] - w1['ep'][1]) <= vertical_offset
     return horiz_alignment and vert_alignment
-
-
-def get_temp_file_path(ending):
-    tf = tempfile.NamedTemporaryFile()
-    return tf.name + ending
-    pass
