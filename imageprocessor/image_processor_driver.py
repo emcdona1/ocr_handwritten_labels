@@ -1,4 +1,3 @@
-from imageprocessor.image_processor import ImageProcessor
 import pandas as pd
 
 ParallelProcessingSizeDefault = 4
@@ -15,7 +14,7 @@ def process_file_of_urls_into_a_list(file_path: str) -> list:
 
 
 def process_images_from_text_file_with_urls(file_path: str, min_confidence: float, extract_tag: bool,
-                                            google_vision_client) -> pd.DataFrame:
+                                            image_processor) -> pd.DataFrame:
     """ Process a list of images from a text file and return OCR and spellcheck top_match_results for all images.
     Returns a pd.DataFrame with values for the processed images.
 
@@ -36,19 +35,18 @@ def process_images_from_text_file_with_urls(file_path: str, min_confidence: floa
     for line in lines:
         list_of_urls.append(line.strip())
     print('%i images in list.' % len(list_of_urls))
-    return process_list_of_image_paths(list_of_urls, min_confidence, extract_tag, google_vision_client)
+    return process_list_of_image_paths(list_of_urls, min_confidence, extract_tag, image_processor)
 
 
-def process_one_image(image_path: str, min_confidence: float, extract_tag: bool, google_vision_client) -> pd.DataFrame:
+def process_one_image(image_path: str, min_confidence: float, extract_tag: bool, image_processor) -> pd.DataFrame:
     """ Wrapper function to process a single image (instead of a batch)."""
-    return process_list_of_image_paths([image_path], min_confidence, extract_tag, google_vision_client)
+    return process_list_of_image_paths([image_path], min_confidence, extract_tag, image_processor)
 
 
-def process_list_of_image_paths(file_paths, min_confidence, extract_tag, vision_client) -> pd.DataFrame:
+def process_list_of_image_paths(file_paths, min_confidence, extract_tag, image_processor) -> pd.DataFrame:
     df = pd.DataFrame([], columns=['filename', 'gcv_results', 'correction_results'])
     for one_path in file_paths:
-        img_processor_obj = ImageProcessor(vision_client, one_path, min_confidence, extract_tag, False)
-        gcv_response_object, gcv_text, corrected_text = img_processor_obj.process_image(one_path)
+        gcv_response_object, gcv_text, corrected_text = image_processor.process_image(one_path)
         new_row = pd.DataFrame([[one_path, gcv_text, corrected_text]], columns=df.columns)
         df = df.append(new_row)
     return df
