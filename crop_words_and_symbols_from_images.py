@@ -38,7 +38,7 @@ def main():
                         word_filename = generate_zooniverse_images(image_to_draw_on, image_barcode, word, symbol,
                                                                    b_idx, p_idx, w_idx, s_idx,
                                                                    '' if s_idx == 0 else word_filename)
-        print('Processing complete.' % one_image)
+        print('Processing complete for %s.' % one_image)
     clean_and_save_manifests()
 
 
