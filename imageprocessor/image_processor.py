@@ -13,17 +13,14 @@ class ImageProcessor:
         os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = service_account_token_path
         self.client = vision.ImageAnnotatorClient()
         self.sdb = None
-        self.extractTag = extract_tag
-        self.displayAfterProcessing = display_after_processing
         self.dataFrame = None
         self.img_rgb = None
         self.imageContent = None
-        self.temp_image_path = None
 
-    def process_image(self, image_path):
+    def process_image(self, image_path: str):
         print('Processing: ' + image_path)
         self.set_image_rgb_and_save_to_temp_location(image_path)
-        gcv_response_object = self.initialize_ocr_data()
+        gcv_response_object = self.initialize_ocr_data(image_path)
         self.sdb = get_normalized_sequential_data_blocks(self.dataFrame)
 
         str_gcv = ''
@@ -39,8 +36,8 @@ class ImageProcessor:
 
         return gcv_response_object, str_gcv, str_dc
 
-    def initialize_ocr_data(self):
-        with io.open(self.temp_image_path, 'rb') as image_file:
+    def initialize_ocr_data(self, image_path: str):
+        with io.open(image_path, 'rb') as image_file:
             self.imageContent = image_file.read()
         self.dataFrame, gcv_response_object = get_gcv_ocr_as_data_frame_from_image(self.imageContent, self.client)
         return gcv_response_object
@@ -53,5 +50,3 @@ class ImageProcessor:
         else:
             img_rgb = cv2.imread(image_path)
         self.img_rgb = img_rgb
-        self.temp_image_path = get_temp_file_path('_temp_wholeImage.png')
-        cv2.imwrite(self.temp_image_path, img_rgb)
