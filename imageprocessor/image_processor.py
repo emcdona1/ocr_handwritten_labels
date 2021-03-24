@@ -8,6 +8,7 @@ from imageprocessor.algorithmic_methods import get_normalized_sequential_data_bl
 from imageprocessor.initialize_data_from_image import get_gcv_ocr_as_data_frame_from_image
 from google.cloud import vision
 from abc import ABC, abstractmethod
+import boto3
 
 
 class ImageProcessor(ABC):
@@ -64,3 +65,7 @@ class GCVProcessor(ImageProcessor):
         os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = service_account_token_path
         return vision.ImageAnnotatorClient()
 
+
+class AWSProcessor(ImageProcessor):
+    def initialize_client(self):
+        return boto3.client('textract')
