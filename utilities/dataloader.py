@@ -1,4 +1,5 @@
 import os
+import pickle
 
 
 def load_list_from_txt(file_path: str) -> list:
@@ -23,3 +24,9 @@ def load_file_list_from_filesystem(directory_or_file: str) -> list:
         raise FileNotFoundError('Not a valid directory or file: %s' % directory_or_file)
 
     return results
+
+
+def load_pickle(pickle_file_path: str):
+    with open(pickle_file_path, 'rb') as file:
+        de_pickled = pickle.load(file)
+    return de_pickled
