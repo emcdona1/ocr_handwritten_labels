@@ -1,10 +1,15 @@
 import sys
 from utilities.dataloader import load_file_list_from_filesystem
+from imageprocessor.image_processor import GCVProcessor, AWSProcessor
 
 
 def main():
     list_of_images = load_file_list_from_filesystem(folder_or_image_file)
-    print(list_of_images)
+    gcv_processor = GCVProcessor()
+    aws_processor = AWSProcessor()
+    for one_image in list_of_images:
+        pass
+    pass
 
 
 if __name__ == '__main__':
