@@ -1,4 +1,3 @@
-from configparser import ConfigParser
 import sys
 import os
 import pickle
@@ -9,7 +8,7 @@ import numpy as np
 from urllib.request import urlopen
 import cv2
 from google.cloud import vision
-import imageprocessor.image_processor as ip
+from imageprocessor.image_processor import GCVProcessor
 
 zooniverse_manifest = pd.DataFrame()
 letter_metadata = pd.DataFrame()
@@ -42,7 +41,7 @@ def main():
     clean_and_save_manifests()
 
 
-def setup() -> ip.ImageProcessor:
+def setup() -> GCVProcessor:
     if not os.path.exists(pickle_folder):
         os.mkdir(pickle_folder)
     if not os.path.exists(image_folder_zooniverse):
@@ -50,11 +49,7 @@ def setup() -> ip.ImageProcessor:
     if not os.path.exists(image_folder_nn):
         os.mkdir(image_folder_nn)
 
-    config_parser = ConfigParser()
-    config_parser.read(r'Configuration.cfg')
-    service_account_token_path = config_parser.get('GOOGLE_CLOUD_VISION_API', 'serviceAccountTokenPath')
-    image_processor = ip.ImageProcessor(service_account_token_path)
-
+    image_processor = GCVProcessor()
     return image_processor
 
 
