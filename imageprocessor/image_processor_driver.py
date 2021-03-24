@@ -1,17 +1,5 @@
 import pandas as pd
 
-ParallelProcessingSizeDefault = 4
-
-
-def process_file_of_urls_into_a_list(file_path: str) -> list:
-    list_of_urls = []
-    with open(file_path) as f:
-        lines = f.readlines()
-    for line in lines:
-        list_of_urls.append(line.strip())
-    print('%i images in list.' % len(list_of_urls))
-    return list_of_urls
-
 
 def process_images_from_text_file_with_urls(file_path: str, min_confidence: float, extract_tag: bool,
                                             image_processor) -> pd.DataFrame:

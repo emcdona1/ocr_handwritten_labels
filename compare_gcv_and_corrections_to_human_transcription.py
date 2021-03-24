@@ -4,7 +4,8 @@ from configparser import ConfigParser
 import os
 from google.cloud import vision
 import re
-import imageprocessor.image_processor as ip
+from imageprocessor.image_processor import GCVProcessor
+from utilities.dataloader import load_list_from_txt
 
 
 def main():
@@ -32,7 +33,7 @@ def process_one_image(filename: str, image_processor) -> pd.DataFrame:
 
 
 def process_list_of_images(filename_of_list: str, image_processor) -> pd.DataFrame:
-    list_of_images = ipd.process_file_of_urls_into_a_list(filename_of_list)
+    list_of_images = load_list_from_txt(filename_of_list)
     df = pd.DataFrame([], columns=['filename', 'gcv_results', 'correction_results'])
     gcv, corrected = image_processor.process_image()
     new_row = pd.DataFrame([[one_path, gcv, corrected]], columns=df.columns)
