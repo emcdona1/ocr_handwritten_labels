@@ -9,6 +9,7 @@ from imageprocessor.initialize_data_from_image import get_gcv_ocr_as_data_frame_
 from google.cloud import vision
 from abc import ABC, abstractmethod
 import boto3
+from utilities.dataloader import load_pickle
 
 
 class ImageProcessor(ABC):
@@ -17,11 +18,33 @@ class ImageProcessor(ABC):
         self.sdb = None
         self.dataFrame = None
         self.img_rgb = None
-        self.imageContent = None
+        self.imageContent = self.image_content = None
+        self.save_directory = 'ocr_responses'
+        if not os.path.exists(self.save_directory):
+            os.mkdir(self.save_directory)
+        self.initialize_save_directory()
 
     @abstractmethod
     def initialize_client(self):
         pass
+
+    @abstractmethod
+    def initialize_save_directory(self):
+        pass
+
+    @abstractmethod
+    def perform_ocr(self, image_path: str):
+        pass
+
+    def check_for_existing_pickle_file(self, image_id=None):
+        response = None
+        if image_id:
+            file_list = os.listdir(self.save_directory)
+            matches = [path for path in file_list if (image_id in path and '.pickle' in path)]
+            response = None
+            if len(matches) > 0:
+                response = load_pickle(os.path.join(self.save_directory, matches[0]))
+        return response
 
     def process_image(self, image_path: str):
         print('Processing: ' + image_path)
@@ -65,7 +88,38 @@ class GCVProcessor(ImageProcessor):
         os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = service_account_token_path
         return vision.ImageAnnotatorClient()
 
+    def initialize_save_directory(self):
+        self.save_directory = self.save_directory + os.path.sep + 'gcv'
+        if not os.path.exists(self.save_directory):
+            os.mkdir(self.save_directory)
+
+    def perform_ocr(self, image_path: str, image_id=None):
+        response = self.check_for_existing_pickle_file(image_id)
+        if not response:
+            with io.open(image_path, 'rb') as image_file:
+                self.image_content = image_file.read()
+            image = vision.types.Image(content=self.image_content)
+            response = self.client.document_text_detection(image=image)
+        return response
+
 
 class AWSProcessor(ImageProcessor):
     def initialize_client(self):
         return boto3.client('textract')
+
+    def initialize_save_directory(self):
+        self.save_directory = self.save_directory + os.path.sep + 'aws'
+        if not os.path.exists(self.save_directory):
+            os.mkdir(self.save_directory)
+
+    def perform_ocr(self, image_path: str, image_id=None):
+        response = self.check_for_existing_pickle_file(image_id)
+        if not response:
+            with open(image_path, 'rb') as img:
+                f = img.read()
+                image_binary = bytes(f)
+            response = self.client.detect_document_text(
+                Document={
+                    'Bytes': image_binary
+                })
+        return response
