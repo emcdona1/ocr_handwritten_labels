@@ -30,3 +30,11 @@ def load_pickle(pickle_file_path: str):
     with open(pickle_file_path, 'rb') as file:
         de_pickled = pickle.load(file)
     return de_pickled
+
+
+def pickle_an_object(save_directory: str, object_id: str, obj_to_pickle) -> None:
+    if not os.path.exists(save_directory):
+        os.mkdir(save_directory)
+    filename = object_id + '.pickle'
+    with open(os.path.join(save_directory, filename), 'wb') as file:
+        pickle.dump(obj_to_pickle, file)

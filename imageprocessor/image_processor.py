@@ -9,7 +9,7 @@ from imageprocessor.initialize_data_from_image import get_gcv_ocr_as_data_frame_
 from google.cloud import vision
 from abc import ABC, abstractmethod
 import boto3
-from utilities.dataloader import load_pickle
+from utilities.dataloader import load_pickle, pickle_an_object
 
 
 class ImageProcessor(ABC):
@@ -114,6 +114,8 @@ class GCVProcessor(ImageProcessor):
                 self.image_content = image_file.read()
             image = vision.types.Image(content=self.image_content)
             response = self.client.document_text_detection(image=image)
+            pickle_an_object(self.save_directory, image_id, response)
+
         return response
 
 
@@ -138,4 +140,5 @@ class AWSProcessor(ImageProcessor):
                 Document={
                     'Bytes': image_binary
                 })
+            pickle_an_object(self.save_directory, image_id, response)
         return response
