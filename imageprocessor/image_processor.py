@@ -15,14 +15,17 @@ from utilities.dataloader import load_pickle
 class ImageProcessor(ABC):
     def __init__(self):
         self.client = self.initialize_client()
-        self.sdb = None
-        self.dataFrame = None
-        self.img_rgb = None
-        self.imageContent = self.image_content = None
         self.save_directory = 'ocr_responses'
         if not os.path.exists(self.save_directory):
             os.mkdir(self.save_directory)
         self.initialize_save_directory()
+        self.image_content = None
+
+        # phase these out
+        self.sdb = None
+        self.dataFrame = None
+        self.img_rgb = None
+        self.imageContent = None
 
     @abstractmethod
     def initialize_client(self):
