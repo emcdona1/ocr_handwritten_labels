@@ -80,6 +80,15 @@ class ImageProcessor(ABC):
         self.img_rgb = img_rgb
 
 
+def extract_barcode_from_image_name(image_path: str) -> str:
+    image_name_without_extension = os.path.basename(image_path).split('.')[0]
+    image_barcode_split = image_name_without_extension.split('_')
+    if len(image_barcode_split) == 1:
+        image_barcode_split = image_name_without_extension.split('-')
+    image_barcode = image_barcode_split[0]
+    return image_barcode
+
+
 class GCVProcessor(ImageProcessor):
     def initialize_client(self):
         config_parser = ConfigParser()
@@ -96,6 +105,8 @@ class GCVProcessor(ImageProcessor):
     def perform_ocr(self, image_path: str, image_id=None):
         response = self.check_for_existing_pickle_file(image_id)
         if not response:
+            if not image_id:
+                image_id = extract_barcode_from_image_name(image_path)
             with io.open(image_path, 'rb') as image_file:
                 self.image_content = image_file.read()
             image = vision.types.Image(content=self.image_content)
@@ -115,6 +126,8 @@ class AWSProcessor(ImageProcessor):
     def perform_ocr(self, image_path: str, image_id=None):
         response = self.check_for_existing_pickle_file(image_id)
         if not response:
+            if not image_id:
+                image_id = extract_barcode_from_image_name(image_path)
             with open(image_path, 'rb') as img:
                 f = img.read()
                 image_binary = bytes(f)

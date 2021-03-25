@@ -1,6 +1,6 @@
 """ To run tests, execute in CLI: pytest -p no:warnings imageprocessor\test_image_processor.py """
 import pytest
-import imageprocessor.image_processor as ip
+from imageprocessor import image_processor
 from google.cloud import vision
 import os
 
@@ -15,11 +15,11 @@ def test_directory():
 
 @pytest.fixture
 def gcv_processor():
-    return ip.GCVProcessor()
+    return image_processor.GCVProcessor()
 
 @pytest.fixture
 def aws_processor():
-    return ip.AWSProcessor()
+    return image_processor.AWSProcessor()
 
 
 def test_gcv_client(gcv_processor):
@@ -54,3 +54,15 @@ def test_check_for_pickle_with_invalid_search_parameter(gcv_processor):
     response = gcv_processor.check_for_existing_pickle_file('foo')
     print(response)
     assert response is None
+
+
+def test_barcode_parser_underscore(gcv_processor):
+    filename = 'foo' + os.path.sep + 'C0123456F_label.pickle'
+    barcode = image_processor.extract_barcode_from_image_name(filename)
+    assert barcode == 'C0123456F'
+
+
+def test_barcode_parser_hyphen(gcv_processor):
+    filename = 'foo' + os.path.sep + 'C0123456F-label.pickle'
+    barcode = image_processor.extract_barcode_from_image_name(filename)
+    assert barcode == 'C0123456F'
