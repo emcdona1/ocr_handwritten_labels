@@ -1,25 +1,40 @@
-""" To run tests, execute in CLI: pytest -p no:warnings imageprocessor\test_image_processor.py """
+""" To run tests, execute in CLI: pytest -p no:warnings imageprocessor\test_imageprocessor_module.py """
 import pytest
+
 from imageprocessor import image_processor
 from google.cloud import vision
 import os
+from utilities import dataloader, dataprocessor
 
 
 @pytest.fixture
 def test_image():
     return 'test_label_image.jpg'
 
+
 @pytest.fixture
 def test_directory():
     return 'label_images'
+
 
 @pytest.fixture
 def gcv_processor():
     return image_processor.GCVProcessor()
 
+
 @pytest.fixture
 def aws_processor():
     return image_processor.AWSProcessor()
+
+
+@pytest.fixture
+def aws_response():
+    return dataloader.load_pickle(os.path.join('imageprocessor', 'test_aws_response.pickle'))
+
+
+@pytest.fixture
+def gcv_response():
+    return dataloader.load_pickle(os.path.join('imageprocessor', 'test_gcv_response.pickle'))
 
 
 def test_gcv_client(gcv_processor):
@@ -58,11 +73,11 @@ def test_check_for_pickle_with_invalid_search_parameter(gcv_processor):
 
 def test_barcode_parser_underscore(gcv_processor):
     filename = 'foo' + os.path.sep + 'C0123456F_label.pickle'
-    barcode = image_processor.extract_barcode_from_image_name(filename)
+    barcode = dataprocessor.extract_barcode_from_image_name(filename)
     assert barcode == 'C0123456F'
 
 
 def test_barcode_parser_hyphen(gcv_processor):
     filename = 'foo' + os.path.sep + 'C0123456F-label.pickle'
-    barcode = image_processor.extract_barcode_from_image_name(filename)
+    barcode = dataprocessor.extract_barcode_from_image_name(filename)
     assert barcode == 'C0123456F'
