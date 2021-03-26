@@ -10,6 +10,8 @@ from google.cloud import vision
 from abc import ABC, abstractmethod
 import boto3
 from utilities.dataloader import load_pickle, pickle_an_object
+from utilities.dataprocessor import extract_barcode_from_image_name
+from imageprocessor import image_annotator
 
 
 class ImageProcessor(ABC):
@@ -51,11 +53,9 @@ class ImageProcessor(ABC):
             return True
         return False
 
-    def initialize_ocr_data(self, image_path: str):
-        with io.open(image_path, 'rb') as image_file:
-            self.imageContent = image_file.read()
-        self.dataFrame, gcv_response_object = get_gcv_ocr_as_data_frame_from_image(self.imageContent, self.client)
-        return gcv_response_object
+    @abstractmethod
+    def get_image_annotator(self):
+        pass
 
     def set_image_rgb(self, image_path):
         if 'http' in image_path:
@@ -100,7 +100,8 @@ class GCVProcessor(ImageProcessor):
             self.current_ocr_response = self.client.document_text_detection(image=image)
             pickle_an_object(self.save_directory, self.current_image_barcode, self.current_ocr_response)
 
-        return response
+    def get_image_annotator(self):
+        return image_annotator.GCVImageAnnotator()
 
 
 class AWSProcessor(ImageProcessor):
