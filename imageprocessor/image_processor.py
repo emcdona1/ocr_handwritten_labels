@@ -20,6 +20,9 @@ class ImageProcessor(ABC):
             os.mkdir(self.save_directory)
         self.initialize_save_directory()
         self.image_content = None
+        self.current_image_location = None
+        self.current_image_barcode = None
+        self.current_ocr_response = None
 
         # phase these out
         self.sdb = None
@@ -39,33 +42,14 @@ class ImageProcessor(ABC):
     def load_processed_ocr_response(self, image_path: str):
         pass
 
-    def check_for_existing_pickle_file(self, image_id=None):
-        response = None
-        if image_id:
-            file_list = os.listdir(self.save_directory)
-            matches = [path for path in file_list if (image_id in path and '.pickle' in path)]
-            response = None
-            if len(matches) > 0:
-                response = load_pickle(os.path.join(self.save_directory, matches[0]))
-        return response
-
-    def process_image(self, image_path: str):
-        print('Processing: ' + image_path)
-        self.set_image_rgb(image_path)
-        gcv_response_object = self.initialize_ocr_data(image_path)
-        self.sdb = get_normalized_sequential_data_blocks(self.dataFrame)
-
-        str_gcv = ''
-        for block_of_words in self.sdb:
-            for a_word in block_of_words:
-                str_gcv += a_word.description + ' '
-
-        str_dc = ''
-        for block_of_words in self.sdb:
-            for a_word in block_of_words:
-                str_dc += a_word.description + ' '
-
-        return gcv_response_object, str_gcv, str_dc
+    def check_for_existing_pickle_file(self) -> bool:
+        self.current_ocr_response = None
+        file_list = os.listdir(self.save_directory)
+        matches = [path for path in file_list if (self.current_image_barcode in path and '.pickle' in path)]
+        if len(matches) > 0:
+            self.current_ocr_response = load_pickle(os.path.join(self.save_directory, matches[0]))
+            return True
+        return False
 
     def initialize_ocr_data(self, image_path: str):
         with io.open(image_path, 'rb') as image_file:
@@ -105,16 +89,16 @@ class GCVProcessor(ImageProcessor):
         if not os.path.exists(self.save_directory):
             os.mkdir(self.save_directory)
 
-    def load_processed_ocr_response(self, image_path: str, image_id=None):
-        response = self.check_for_existing_pickle_file(image_id)
-        if not response:
-            if not image_id:
-                image_id = extract_barcode_from_image_name(image_path)
+    def load_processed_ocr_response(self, image_path: str):
+        self.current_image_location = image_path
+        self.current_image_barcode = extract_barcode_from_image_name(self.current_image_location)
+        found: bool = self.check_for_existing_pickle_file()
+        if not found:
             with io.open(image_path, 'rb') as image_file:
                 self.image_content = image_file.read()
             image = vision.types.Image(content=self.image_content)
-            response = self.client.document_text_detection(image=image)
-            pickle_an_object(self.save_directory, image_id, response)
+            self.current_ocr_response = self.client.document_text_detection(image=image)
+            pickle_an_object(self.save_directory, self.current_image_barcode, self.current_ocr_response)
 
         return response
 
@@ -128,17 +112,19 @@ class AWSProcessor(ImageProcessor):
         if not os.path.exists(self.save_directory):
             os.mkdir(self.save_directory)
 
-    def load_processed_ocr_response(self, image_path: str, image_id=None):
-        response = self.check_for_existing_pickle_file(image_id)
-        if not response:
-            if not image_id:
-                image_id = extract_barcode_from_image_name(image_path)
-            with open(image_path, 'rb') as img:
+    def load_processed_ocr_response(self, image_path: str):
+        self.current_image_location = image_path
+        self.current_image_barcode = extract_barcode_from_image_name(self.current_image_location)
+        found: bool = self.check_for_existing_pickle_file()
+        if not found:
+            with open(self.current_image_location, 'rb') as img:
                 f = img.read()
-                image_binary = bytes(f)
-            response = self.client.detect_document_text(
+                self.image_content = bytes(f)
+            self.current_ocr_response = self.client.detect_document_text(
                 Document={
-                    'Bytes': image_binary
+                    'Bytes': self.image_content
                 })
-            pickle_an_object(self.save_directory, image_id, response)
-        return response
+            pickle_an_object(self.save_directory, self.current_image_barcode, self.current_ocr_response)
+
+    def get_image_annotator(self):
+        return image_annotator.AWSImageAnnotator()
