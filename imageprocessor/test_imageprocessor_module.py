@@ -52,25 +52,6 @@ def test_aws_save_directory(aws_processor):
     assert os.path.exists(aws_processor.save_directory)
 
 
-def test_check_for_pickle_with_no_parameters(gcv_processor):
-    response = gcv_processor.check_for_existing_pickle_file()
-    print(response)
-    assert response is None
-
-
-def test_check_for_pickle_with_valid_search_parameter(gcv_processor):
-    print(gcv_processor.save_directory)
-    response = gcv_processor.check_for_existing_pickle_file('test_gcv')
-    print(type(response))
-    assert type(response) is vision.types.AnnotateImageResponse
-
-
-def test_check_for_pickle_with_invalid_search_parameter(gcv_processor):
-    response = gcv_processor.check_for_existing_pickle_file('foo')
-    print(response)
-    assert response is None
-
-
 def test_barcode_parser_underscore(gcv_processor):
     filename = 'foo' + os.path.sep + 'C0123456F_label.pickle'
     barcode = dataprocessor.extract_barcode_from_image_name(filename)
