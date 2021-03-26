@@ -1,17 +1,16 @@
 import sys
 from utilities.dataloader import load_file_list_from_filesystem
-from imageprocessor.image_processor import GCVProcessor, AWSProcessor, extract_barcode_from_image_name
+from imageprocessor.image_processor import GCVProcessor, AWSProcessor
 
 
 def main():
     list_of_images = load_file_list_from_filesystem(folder_or_image_file)
-    gcv_processor = GCVProcessor()
-    aws_processor = AWSProcessor()
+    image_processors = [GCVProcessor(), AWSProcessor()]
     for one_image_location in list_of_images:
-        one_image_barcode = extract_barcode_from_image_name(one_image_location)
-        gcv_response = gcv_processor.load_processed_ocr_response(one_image_location, one_image_barcode)
-        aws_response = aws_processor.load_processed_ocr_response(one_image_location, one_image_barcode)
-        # todo: drawing time
+        for processor in image_processors:
+            processor.load_processed_ocr_response(one_image_location)
+            annotator = processor.get_image_annotator()
+            # todo: drawing time
     pass
 
 
