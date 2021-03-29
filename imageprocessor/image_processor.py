@@ -122,15 +122,10 @@ class GCVProcessor(ImageProcessor):
         return image_annotator.GCVImageAnnotator(self.current_image_location)
 
     def get_full_text(self) -> str:
-        gcv_text = ''
+        gcv_text = ' '
         if self.current_ocr_response:
-            for page in self.current_ocr_response.full_text_annotation.pages:
-                for block in page.blocks:
-                    for paragraph in block.paragraphs:
-                        for word in paragraph.words:
-                            for symbol in word.symbols:
-                                gcv_text = gcv_text + symbol.text
-        return gcv_text
+            gcv_text = self.current_ocr_response.full_text_annotation.text
+        return gcv_text.strip()
 
     def get_list_of_words(self) -> list:
         all_words = []
@@ -175,6 +170,15 @@ class AWSProcessor(ImageProcessor):
 
     def get_image_annotator(self):
         return image_annotator.AWSImageAnnotator(self.current_image_location)
+
+    def get_full_text(self) -> str:
+        aws_text = ' '
+        if self.current_ocr_response:
+            blocks = self.current_ocr_response['Blocks']
+            lines = [block for block in blocks if block['BlockType'] == 'LINE']
+            for line in lines:
+                aws_text = aws_text + line['Text'] + '\n'
+        return aws_text.strip()
 
     def get_list_of_words(self) -> list:
         words = [block for block in self.current_ocr_response['Blocks'] if block['BlockType'] == 'WORD']
