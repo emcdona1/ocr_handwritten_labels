@@ -49,12 +49,13 @@ class GCVImageAnnotator(ImageAnnotator):
             os.mkdir(self.save_location)
 
     def organize_vertices(self, points_object) -> ((int, int), (int, int), (int, int), (int, int)):
-        """ Given a bounding_box.vertices object, returns a 4-tuple with x-y coordinates organized in the following way:
+        """ Given a response object with a bounding_box, returns a 4-tuple with x-y coordinates organized in the following way:
         (top_left, top_right, bottom_right, bottom_left). """
-        sorted_x_values = sorted([vertex.x for vertex in points_object])
-        left_side = tuple([(vertex.x, vertex.y) for vertex in points_object
+        vertices = points_object.bounding_box.vertices
+        sorted_x_values = sorted([vertex.x for vertex in vertices])
+        left_side = tuple([(vertex.x, vertex.y) for vertex in vertices
                            if vertex.x == sorted_x_values[0] or vertex.x == sorted_x_values[1]])
-        right_side = tuple([(vertex.x, vertex.y) for vertex in points_object
+        right_side = tuple([(vertex.x, vertex.y) for vertex in vertices
                             if vertex.x == sorted_x_values[2] or vertex.x == sorted_x_values[3]])
         if left_side[0][1] > left_side[1][1]:
             left_side = (left_side[1], left_side[0])
