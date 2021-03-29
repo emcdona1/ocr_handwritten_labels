@@ -69,5 +69,5 @@ class AWSImageAnnotator(ImageAnnotator):
         height, width, _ = self.current_image_to_annotate.shape
         vertices = []
         for block in points_object['Geometry']['Polygon']:
-            vertices.append((width * block['X'], height * block['Y']))
+            vertices.append((int(width * block['X']), int(height * block['Y'])))
         return tuple(vertices)
