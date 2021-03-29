@@ -52,15 +52,13 @@ class ImageProcessor(ABC):
     def get_image_annotator(self):
         pass
 
-    def set_image_rgb(self, image_path):
-        if 'http' in image_path:
-            resp = urlopen(image_path)
-            image = np.asarray(bytearray(resp.read()), dtype='uint8')
-            img_rgb = cv2.imdecode(image, cv2.IMREAD_COLOR)
-        else:
-            img_rgb = cv2.imread(image_path)
-        self.img_rgb = img_rgb
+    @abstractmethod
+    def get_list_of_words(self) -> list:
+        pass
 
+    @abstractmethod
+    def get_list_of_lines(self) -> list:
+        pass
 
     # def process_image(self, image_path: str):
     #     print('Processing: ' + image_path)
@@ -121,7 +119,35 @@ class GCVProcessor(ImageProcessor):
             pickle_an_object(self.save_directory, self.current_image_barcode, self.current_ocr_response)
 
     def get_image_annotator(self):
-        return image_annotator.GCVImageAnnotator()
+        return image_annotator.GCVImageAnnotator(self.current_image_location)
+
+    def get_full_text(self) -> str:
+        gcv_text = ''
+        if self.current_ocr_response:
+            for page in self.current_ocr_response.full_text_annotation.pages:
+                for block in page.blocks:
+                    for paragraph in block.paragraphs:
+                        for word in paragraph.words:
+                            for symbol in word.symbols:
+                                gcv_text = gcv_text + symbol.text
+        return gcv_text
+
+    def get_list_of_words(self) -> list:
+        all_words = []
+        page = self.current_ocr_response.full_text_annotation.pages[0]
+        for block in page.blocks:
+            for paragraph in block.paragraphs:
+                for word in paragraph.words:
+                    all_words.append(word)
+        return all_words
+
+    def get_list_of_lines(self) -> list:
+        all_lines = []
+        page = self.current_ocr_response.full_text_annotation.pages[0]
+        for block in page.blocks:
+            for paragraph in block.paragraphs:
+                all_lines.append(paragraph)
+        return all_lines
 
 
 class AWSProcessor(ImageProcessor):
@@ -148,4 +174,12 @@ class AWSProcessor(ImageProcessor):
             pickle_an_object(self.save_directory, self.current_image_barcode, self.current_ocr_response)
 
     def get_image_annotator(self):
-        return image_annotator.AWSImageAnnotator()
+        return image_annotator.AWSImageAnnotator(self.current_image_location)
+
+    def get_list_of_words(self) -> list:
+        words = [block for block in self.current_ocr_response['Blocks'] if block['BlockType'] == 'WORD']
+        return words
+
+    def get_list_of_lines(self) -> list:
+        lines = [block for block in self.current_ocr_response['Blocks'] if block['BlockType'] == 'LINE']
+        return lines
