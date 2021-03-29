@@ -8,7 +8,7 @@ def main():
     list_of_queries: list = load_list_from_txt(query_filename)
     # list_of_queries = ['Adiantum pedatum', 'Isoeter engelmanni']  # [0] is exact match, [1] is fuzzy
     taxon_matcher.process_query_list(list_of_queries)
-    taxon_matcher.save_best_match_results(query_filename)
+    taxon_matcher.save_results(query_filename)
 
 
 if __name__ == '__main__':

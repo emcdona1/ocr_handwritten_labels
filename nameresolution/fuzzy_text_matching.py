@@ -52,7 +52,7 @@ class TextMatcherTemplate:
                 fuzz_ratio[ratio] = [expert_name_entry]
         return fuzz_ratio
 
-    def save_best_match_results(self, original_filename: str):
+    def save_results(self, original_filename: str):
         """ Save the contents of top_match_results to a CSV file. """
         filename = os.path.basename(original_filename).split('.')[0] + '-match_results.csv'
         self.top_match_results.to_csv(os.path.join('file_resources', filename), index=False)
