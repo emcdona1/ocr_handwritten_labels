@@ -4,6 +4,7 @@ import numpy as np
 from urllib.request import urlopen
 import cv2
 from datetime import datetime
+import pandas as pd
 
 
 def load_list_from_txt(file_path: str) -> list:
@@ -63,3 +64,9 @@ def save_cv2_image(save_location: str, image_id: str, image_to_save: np.ndarray)
 
 def get_timestamp_for_file_saving() -> str:
     return datetime.strftime(datetime.now(), '%Y_%m_%d-%H_%M_%S')
+
+
+def save_dataframe_as_csv(save_location: str, file_id: str, df: pd.DataFrame) -> str:
+    file_location = os.path.join(save_location, file_id + get_timestamp_for_file_saving() + '.csv')
+    df.to_csv(file_location, index=False)
+    return file_location
