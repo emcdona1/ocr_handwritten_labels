@@ -8,17 +8,20 @@ import cv2
 class ImageAnnotator(ABC):
     def __init__(self, starting_image_location=None):
         self.save_location = 'annotated_images'
-        if not os.path.exists(self.save_location):
-            os.mkdir(self.save_location)
-        self.set_save_location()
+        self.initial_save_location()
         self.current_image_location = None
         self.current_image_id = None
         self.current_image_to_annotate = None
         if starting_image_location:
             self.load_image(starting_image_location)
 
+    def set_save_location(self, path: str):
+        if not os.path.exists(path):
+            os.makedirs(path)
+        self.save_location = path
+
     @abstractmethod
-    def set_save_location(self) -> None:
+    def initial_save_location(self) -> None:
         pass
 
     def load_image(self, image_path: str):
@@ -43,10 +46,10 @@ class ImageAnnotator(ABC):
 
 
 class GCVImageAnnotator(ImageAnnotator):
-    def set_save_location(self):
+    def initial_save_location(self):
         self.save_location = self.save_location + os.path.sep + 'gcv'
         if not os.path.exists(self.save_location):
-            os.mkdir(self.save_location)
+            os.makedirs(self.save_location)
 
     def organize_vertices(self, points_object) -> ((int, int), (int, int), (int, int), (int, int)):
         """ Given a response object with a bounding_box, returns a 4-tuple with x-y coordinates organized in the following way:
@@ -65,7 +68,7 @@ class GCVImageAnnotator(ImageAnnotator):
 
 
 class AWSImageAnnotator(ImageAnnotator):
-    def set_save_location(self):
+    def initial_save_location(self):
         self.save_location = self.save_location + os.path.sep + 'aws'
         if not os.path.exists(self.save_location):
             os.mkdir(self.save_location)
