@@ -4,9 +4,11 @@ import requests
 from zipfile import ZipFile
 from fuzzywuzzy import fuzz
 import copy
+from abc import ABC, abstractmethod
+from utilities.dataloader import save_dataframe_as_csv
 
 
-class TextMatcherTemplate:
+class TextMatcherTemplate(ABC):
     """ Stores a DataFrame and the name of the column containing the desired reference material,
     which can then be compared to any desired search string(s). """
     def __init__(self):
@@ -16,8 +18,9 @@ class TextMatcherTemplate:
         self.load_expert_file()
         self.top_match_results = pd.DataFrame(columns=['search_query', 'best_matches', 'best_match_ratio'])
 
+    @abstractmethod
     def load_expert_file(self) -> None:
-        raise NotImplementedError()
+        pass
 
     def process_query_list(self, list_of_strings: list) -> None:
         """ Wrapper of find_best_match_for_query, which will find best matches for a list of string queries. """
