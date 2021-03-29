@@ -1,13 +1,19 @@
 import sys
-from utilities.dataloader import load_file_list_from_filesystem
+import os
+from utilities.dataloader import load_file_list_from_filesystem, get_timestamp_for_file_saving
 from imageprocessor.image_processor import GCVProcessor, AWSProcessor
 from imageprocessor.image_annotator import ImageAnnotator
+import csv
 
 
 def main():
     list_of_images = load_file_list_from_filesystem(folder_or_image_file)
     gcv_processor = GCVProcessor()
     aws_processor = AWSProcessor()
+    csv_filename = 'test_results' + os.path.sep + 'aws_gcv_comparison-' + get_timestamp_for_file_saving() + '.csv'
+    csv_file = open(csv_filename, 'w')
+    csv_writer = csv.writer(csv_file)
+    csv_writer.writerow(['gcv_response', 'aws_response'])
     for one_image_location in list_of_images:
         gcv_processor.load_processed_ocr_response(one_image_location)
         gcv_annotator = gcv_processor.get_image_annotator()
@@ -16,8 +22,8 @@ def main():
         aws_processor.load_processed_ocr_response(one_image_location)
         aws_annotator = aws_processor.get_image_annotator()
         draw_comparison_images(aws_processor, aws_annotator)
-
-    pass
+        csv_writer.writerow([gcv_processor.get_full_text(), aws_processor.get_full_text()])
+    csv_file.close()
 
 
 def draw_comparison_images(processor, annotator) -> None:
