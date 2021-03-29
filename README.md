@@ -9,10 +9,16 @@ ___
     - `pip install -r requirements.txt`
     - Install the needed nltk corpora by running the `requirements-nltk.py` script. For example, in the same Anaconda window, execute:
         - `python requirements-nltk.py`
-2. Download your Google Cloud Service Account Key. Save the file in this main directory, e.g. `service_account_token.json`. (See [Google Cloud help center](https://cloud.google.com/docs/authentication/production#cloud-console) for more guidance.)
-3. Copy the `Configuration-plain.cfg` file as `Configuration.cfg`.
-    2. Edit the file to add the name of your service account token (in the `GOOGLE_CLOUD_VISION_API` section, under `serviceAccountTokenPath={name-of-your-service-account-token}`.
-    3. Update any other settings if desired.
+2. Set up Google Cloud Vision.
+    - Download your Google Cloud Service Account Key. Save the file in this main directory, e.g. `service_account_token.json`. (See [Google Cloud help center](https://cloud.google.com/docs/authentication/production#cloud-console) for more guidance.)
+    - Copy the `Configuration-plain.cfg` file as `Configuration.cfg`.
+        - Edit the file to add the name of your service account token (in the `GOOGLE_CLOUD_VISION_API` section, under `serviceAccountTokenPath={name-of-your-service-account-token}`.
+        - Update any other settings if desired.
+3. Set up Amazone Web Services.
+    - *under development* Set up your Amazon Web Services account and store your credentials in the proper location
+      (this is OS-dependent, please consult the [AWS documentation](https://docs.aws.amazon.com/textract/latest/dg/setup-awscli-sdk.html))
+      for full instructions).
+
 ___
 ## Workflow/Scripts
 *under development, 10 March 2021*
