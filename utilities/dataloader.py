@@ -3,6 +3,7 @@ import pickle
 import numpy as np
 from urllib.request import urlopen
 import cv2
+from datetime import datetime
 
 
 def load_list_from_txt(file_path: str) -> list:
@@ -54,7 +55,11 @@ def open_cv2_image(image_location: str) -> np.ndarray:
 
 
 def save_cv2_image(save_location: str, image_id: str, image_to_save: np.ndarray) -> str:
-    filename = image_id + '-annotated.jpg'
+    filename = image_id + '-annotated' + get_timestamp_for_file_saving() + '.jpg'
     file_path = os.path.join(save_location, filename)
     cv2.imwrite(file_path, image_to_save)
     return filename
+
+
+def get_timestamp_for_file_saving() -> str:
+    return datetime.strftime(datetime.now(), '%Y_%m_%d-%H_%M_%S')
