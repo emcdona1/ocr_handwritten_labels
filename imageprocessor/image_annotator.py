@@ -6,12 +6,14 @@ import cv2
 
 
 class ImageAnnotator(ABC):
-    def __init__(self):
+    def __init__(self, starting_image_location=None):
         self.save_location = 'annotated_images'
         self.set_save_location()
         self.current_image_location = None
         self.current_image_id = None
         self.current_image_to_annotate = None
+        if starting_image_location:
+            self.load_image(starting_image_location)
 
     @abstractmethod
     def set_save_location(self) -> None:
