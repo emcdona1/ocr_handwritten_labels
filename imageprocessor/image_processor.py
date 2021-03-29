@@ -36,7 +36,7 @@ class ImageProcessor(ABC):
         pass
 
     @abstractmethod
-    def load_processed_ocr_response(self, image_path: str):
+    def load_processed_ocr_response(self, image_path: str) -> None:
         pass
 
     def check_for_existing_pickle_file(self) -> bool:
@@ -109,7 +109,7 @@ class GCVProcessor(ImageProcessor):
         if not os.path.exists(self.save_directory):
             os.mkdir(self.save_directory)
 
-    def load_processed_ocr_response(self, image_path: str):
+    def load_processed_ocr_response(self, image_path: str) -> None:
         self.current_image_location = image_path
         self.current_image_barcode = extract_barcode_from_image_name(self.current_image_location)
         found: bool = self.check_for_existing_pickle_file()
@@ -133,7 +133,7 @@ class AWSProcessor(ImageProcessor):
         if not os.path.exists(self.save_directory):
             os.mkdir(self.save_directory)
 
-    def load_processed_ocr_response(self, image_path: str):
+    def load_processed_ocr_response(self, image_path: str) -> None:
         self.current_image_location = image_path
         self.current_image_barcode = extract_barcode_from_image_name(self.current_image_location)
         found: bool = self.check_for_existing_pickle_file()
