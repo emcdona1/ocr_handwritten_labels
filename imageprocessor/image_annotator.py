@@ -30,7 +30,7 @@ class ImageAnnotator(ABC):
     def organize_vertices(self, points_object) -> ((int, int), (int, int), (int, int), (int, int)):
         pass
 
-    def draw_line(self, point1, point2,  color=(0, 0, 0), width=1):
+    def draw_line(self, point1, point2, color=(0, 0, 0), width=1):
         cv2.line(self.current_image_to_annotate, point1, point2, color, width)
 
     def draw_polygon(self, points: list, color):
@@ -38,8 +38,8 @@ class ImageAnnotator(ABC):
             self.draw_line(points[idx], points[idx + 1], color)
         self.draw_line(points[-1], points[0], color)
 
-    def save_annotated_image_to_file(self, image_id: str):
-        save_cv2_image(self.save_location, 'image_id', self.current_image_to_annotate)
+    def save_annotated_image_to_file(self):
+        save_cv2_image(self.save_location, self.current_image_id, self.current_image_to_annotate)
 
 
 class GCVImageAnnotator(ImageAnnotator):
