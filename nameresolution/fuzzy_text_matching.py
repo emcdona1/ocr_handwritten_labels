@@ -16,6 +16,7 @@ class TextMatcherTemplate(ABC):
         self.reference_column = ''
         self.reference_id = ''
         self.load_expert_file()
+        self.save_location = 'file_resources'
         self.top_match_results = pd.DataFrame(columns=['search_query', 'best_matches', 'best_match_ratio'])
 
     @abstractmethod
@@ -57,16 +58,16 @@ class TextMatcherTemplate(ABC):
 
     def save_results(self, original_filename: str):
         """ Save the contents of top_match_results to a CSV file. """
-        filename = os.path.basename(original_filename).split('.')[0] + '-match_results.csv'
-        self.top_match_results.to_csv(os.path.join('file_resources', filename), index=False)
-        print('Matching results saved as %s' % filename)
+        base_file_name = os.path.basename(original_filename).split('.')[0] + '-match_results'
+        file_location = save_dataframe_as_csv(self.save_location, base_file_name, self.top_match_results)
+        print('Matching results saved to %s' % file_location)
 
 
 class TaxonMatcher(TextMatcherTemplate):
     def load_expert_file(self):
         """ Given the TSV file from World Flora Online, import the file and remove all non-species.
                 Sets the value for expert_file and reference_column."""
-        file_path = 'file_resources' + os.path.sep + 'classification.tsv'
+        file_path = os.path.join(self.save_location, 'classification.tsv')
         if not os.path.exists(file_path):
             file_path = self.download_classification_file()
         classifications = pd.read_csv(file_path, sep='\t',
@@ -85,15 +86,15 @@ class TaxonMatcher(TextMatcherTemplate):
         (*.txt, but is tab-separated).  Returns relative file path of classification.tsv. """
         world_flora_online_url = 'http://104.198.143.165/files/WFO_Backbone/_WFOCompleteBackbone/WFO_Backbone.zip'
         wfo_backbone = requests.get(world_flora_online_url)
-        zip_path = 'file_resources' + os.path.sep + 'WFO_Backbone.zip'
+        zip_path = os.path.join(self.save_location, 'WFO_Backbone.zip')
         with open(zip_path, 'wb') as f:
             f.write(wfo_backbone.content)
 
         with ZipFile(zip_path, 'r') as zipped_file:
-            zipped_file.extract('classification.txt', path='file_resources')
+            zipped_file.extract('classification.txt', path=self.save_location)
         os.remove(zip_path)
-        classification_path = 'file_resources' + os.path.sep + 'classification.tsv'
-        os.rename('file_resources' + os.path.sep + 'classification.txt', classification_path)
+        classification_path = os.path.join(self.save_location, 'classification.tsv')
+        os.rename(os.path.join(self.save_location, 'classification.txt'), classification_path)
 
         return classification_path
 
