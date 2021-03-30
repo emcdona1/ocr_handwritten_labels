@@ -1,9 +1,8 @@
 import sys
 import os
-from utilities.dataloader import load_file_list_from_filesystem, get_timestamp_for_file_saving
+from utilities.dataloader import load_file_list_from_filesystem, get_timestamp_for_file_saving, save_dataframe_as_csv
 from imageprocessor.image_processor import GCVProcessor, AWSProcessor
-from imageprocessor.image_annotator import ImageAnnotator
-import csv
+import pandas as pd
 
 
 def main():
@@ -13,22 +12,17 @@ def main():
     folder_path = os.path.join('test_results', 'cloud_compare-' + get_timestamp_for_file_saving())
     if not os.path.exists(folder_path):
         os.makedirs(folder_path)
-    csv_file = open(os.path.join(folder_path, 'comparison.csv'), 'w')
-    csv_writer = csv.writer(csv_file)
-    csv_writer.writerow(['gcv_response', 'aws_response'])
+    text_comparison = pd.DataFrame(columns=['gcv', 'aws'])
+
     for one_image_location in list_of_images:
         gcv_processor.load_processed_ocr_response(one_image_location)
         gcv_annotator = gcv_processor.get_image_annotator()
         gcv_annotator.set_save_location(os.path.join(folder_path, 'gcv'))
         draw_comparison_images(gcv_processor, gcv_annotator)
 
-        aws_processor.load_processed_ocr_response(one_image_location)
-        aws_annotator = aws_processor.get_image_annotator()
-        aws_annotator.set_save_location(os.path.join(folder_path, 'aws'))
-        draw_comparison_images(aws_processor, aws_annotator)
-        csv_writer.writerow([gcv_processor.get_full_text(), aws_processor.get_full_text()])
-    csv_file.close()
+        text_comparison = text_comparison.append(new_text_comparison, ignore_index=True)
 
+    save_dataframe_as_csv(folder_path, 'comparison', text_comparison)
 
 def draw_comparison_images(processor, annotator) -> None:
     lines = processor.get_list_of_lines()
