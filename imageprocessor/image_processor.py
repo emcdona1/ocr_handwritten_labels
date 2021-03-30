@@ -20,12 +20,7 @@ class ImageProcessor(ABC):
         self.current_image_location = None
         self.current_image_barcode = None
         self.current_ocr_response = None
-
-        # phase these out
-        self.sdb = None
-        self.dataFrame = None
-        self.img_rgb = None
-        self.imageContent = None
+        self.name = 'imageprocessor'
 
     @abstractmethod
     def initialize_client(self):
@@ -66,6 +61,10 @@ class ImageProcessor(ABC):
 
 
 class GCVProcessor(ImageProcessor):
+    def __init__(self):
+        super().__init__()
+        self.name = 'gcv'
+
     def initialize_client(self):
         config_parser = ConfigParser()
         config_parser.read(r'Configuration.cfg')
@@ -117,6 +116,10 @@ class GCVProcessor(ImageProcessor):
 
 
 class AWSProcessor(ImageProcessor):
+    def __init__(self):
+        super().__init__()
+        self.name = 'aws'
+
     def initialize_client(self):
         return boto3.client('textract')
 
