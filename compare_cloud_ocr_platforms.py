@@ -11,13 +11,14 @@ def main():
     folder_path = os.path.join('test_results', 'cloud_compare-' + get_timestamp_for_file_saving())
     if not os.path.exists(folder_path):
         os.makedirs(folder_path)
-    text_comparison = pd.DataFrame(columns=['gcv', 'aws'])
+    text_comparison = pd.DataFrame(columns=['barcode', 'gcv', 'aws'])
 
     for one_image_location in list_of_images:
         new_text_comparison = dict()
         for processor in processors:
             processor.load_processed_ocr_response(one_image_location)
             new_text_comparison[processor.name] = processor.get_full_text()
+            new_text_comparison['barcode'] = processor.current_image_barcode
 
             annotator = processor.get_image_annotator()
             annotator.set_save_location(os.path.join(folder_path, processor.name))
