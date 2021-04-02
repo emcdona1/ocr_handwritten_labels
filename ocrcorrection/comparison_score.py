@@ -7,22 +7,20 @@ from fuzzywuzzy import fuzz
 
 
 def main():
-    # Ground truth from the following extracted fields, \n separated:
-    # scientificName + scientificNameAuthorship, recordNumber **ADDED "No." **, verbatimEventDate, habitat,
-    # stateProvince, county **ADDED "Co."**, locality, verbatimElevation
-    ground_truth = 'Asplenium pinnatifidum Nutt.\nNo. 1867\nOct. 26 1930\nOn north exposure, in crevices of granite\n' + \
-                   'Missouri\nWashington Co.\nNear summit of Hughes Mountain, 4 miles SW of Irondale\n\n'.strip()
     ocr = load_ocr_from_file()
-    ground_truth_filtered_words = preprocess_text(word_tokenize(ground_truth))
-    # todo: why is '.' still a word after filtering?
-    top_match_results = pd.DataFrame(columns=['search_query',
-                                              'aws_best_matches', 'aws_best_match_ratio',
-                                              'gcv_best_matches', 'gcv_best_match_ratio'])
+    ocr = add_ground_truth_text(ocr)
     for idx, ocr_row in ocr.iterrows():
+        aws_tokens = word_tokenize(ocr_row['aws'])
+        gcv_tokens = word_tokenize(ocr_row['gcv'])
+        top_match_results = pd.DataFrame(columns=['search_query',
+                                                  'aws_best_matches', 'aws_best_match_ratio',
+                                                  'gcv_best_matches', 'gcv_best_match_ratio'])
+        ground_truth_filtered_words = preprocess_text(word_tokenize(ocr_row['ground_truth']))
+        # todo: why is '.' still a word after filtering?
+
         for search_word in ground_truth_filtered_words:
-            barcode = ocr_row['barcode']
-            aws_best_matches_list, aws_best_ratio = fuzzy_match_with_token_list(search_word, ocr_row['aws'])
-            gcv_best_matches_list, gcv_best_ratio = fuzzy_match_with_token_list(search_word, ocr_row['gcv'])
+            aws_best_matches_list, aws_best_ratio = fuzzy_match_with_token_list(search_word, aws_tokens)
+            gcv_best_matches_list, gcv_best_ratio = fuzzy_match_with_token_list(search_word, gcv_tokens)
 
             one_word_results = {'search_query': search_word,
                                 'aws_best_matches': aws_best_matches_list,
@@ -30,26 +28,46 @@ def main():
                                 'gcv_best_matches': gcv_best_matches_list,
                                 'gcv_best_match_ratio': gcv_best_ratio}
             top_match_results = top_match_results.append(one_word_results, ignore_index=True)
+        ocr['aws_score'][idx] = generate_score('aws', top_match_results)
+        ocr['gcv_score'][idx] = generate_score('gcv', top_match_results)
+    return ocr
 
         aws_score = generate_score('aws', top_match_results)
         gcv_score = generate_score('gcv', top_match_results)
     return top_match_results
 
-
-def load_ocr_from_file():
+def load_ocr_from_file() -> pd.DataFrame:
     ocr = pd.DataFrame(columns=['barcode', 'aws', 'gcv'])
     aws = 'FLORA OF MISSOURI\nasplenium pinnatifidum nutt\non north exposure in crevices\n' + \
-              'of granite, mear summit of\nstughes mt., 4 miles S.rt. Co. of\nGrandale Kashington\nNo. 1867\n' + \
-              'Oct. 26 1930\nJULIAN A. STEYERMARK, COLLECTOR'
-    aws = word_tokenize(aws)
+          'of granite, mear summit of\nstughes mt., 4 miles S.rt. Co. of\nGrandale Kashington\nNo. 1867\n' + \
+          'Oct. 26 1930\nJULIAN A. STEYERMARK, COLLECTOR'
 
     gcv = 'FLORA OF MISSOURI\nAsplenium pinnatifidum\nOn north exposure, in crevices\n' + \
-              'Hughes int., 4 miles 8.tt. of\nFrondale, Hashington Co.\nNo. 1867\nOct. 26 1930\n' + \
-              'JULIAN A. STEYERMARK, COLLECTOR'
-    gcv = word_tokenize(gcv)
+          'Hughes int., 4 miles 8.tt. of\nFrondale, Hashington Co.\nNo. 1867\nOct. 26 1930\n' + \
+          'JULIAN A. STEYERMARK, COLLECTOR'
 
     ocr_row = {'barcode': 'C0601155F', 'aws': aws, 'gcv': gcv}
     ocr = ocr.append(ocr_row, ignore_index=True)
+    return ocr
+
+
+def add_ground_truth_text(ocr: pd.DataFrame) -> pd.DataFrame:
+    # Ground truth from the following extracted fields, \n separated:
+    # scientificName + scientificNameAuthorship, recordNumber **ADDED "No." **, verbatimEventDate, habitat,
+    # stateProvince, county **ADDED "Co."**, locality, verbatimElevation
+    ground_truth = 'Asplenium pinnatifidum Nutt.\nNo. 1867\nOct. 26 1930\nOn north exposure, in crevices of granite\n' + \
+                   'Missouri\nWashington Co.\nNear summit of Hughes Mountain, 4 miles SW of Irondale\n\n'.strip()
+    occur = pd.read_csv('1617207806-occur.csv')
+    ocr['ground_truth'] = ''
+    for idx, one_line in ocr.iterrows():
+        row = occur[occur['catalogNumber'] == one_line['barcode']]
+        ground_truth_string = row['scientificName'][0] + '\n' + row['scientificNameAuthorship'][0] + '\n' + \
+                              str(row['recordNumber'][0]) + '\n' + row['verbatimEventDate'][0] + '\n' + \
+                              row['habitat'][0] + '\n' + row['stateProvince'][0] + '\n' + row['county'][0] + \
+                              '\n' + row['locality'][0]
+        if not pd.isna(row['verbatimElevation'][0]):
+            ground_truth_string = ground_truth_string + '\n' + str(row['verbatimElevation'][0])
+        ocr['ground_truth'][idx]= ground_truth_string
     return ocr
 
 
