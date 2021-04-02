@@ -32,9 +32,6 @@ def main():
         ocr['gcv_score'][idx] = generate_score('gcv', top_match_results)
     return ocr
 
-        aws_score = generate_score('aws', top_match_results)
-        gcv_score = generate_score('gcv', top_match_results)
-    return top_match_results
 
 def load_ocr_from_file() -> pd.DataFrame:
     ocr = pd.DataFrame(columns=['barcode', 'aws', 'gcv'])
@@ -118,7 +115,7 @@ def generate_score(service_name: str, top_match_results: pd.DataFrame):
     accuracy_score = (len(perfect_matches) + len(near_matches) / 2) / num_of_words
 
     print('Score for %s service: perfect = %i, near match = %i, score = %.2f%%' %
-          (service_name, len(perfect_matches), len(near_matches), accuracy_score*100))
+          (service_name, len(perfect_matches), len(near_matches), accuracy_score * 100))
     if len(perfect_matches) < 10:
         print('%s perfect matches: %s' % (service_name, str(perfect_matches)))
     if len(near_matches) < 10:
