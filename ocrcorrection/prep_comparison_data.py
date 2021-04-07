@@ -33,22 +33,23 @@ def main():
     return ocr
 
 
-def load_ocr_from_file() -> pd.DataFrame:
-    ocr = pd.DataFrame(columns=['barcode', 'aws', 'gcv'])
-    aws = 'FLORA OF MISSOURI\nasplenium pinnatifidum nutt\non north exposure in crevices\n' + \
-          'of granite, mear summit of\nstughes mt., 4 miles S.rt. Co. of\nGrandale Kashington\nNo. 1867\n' + \
-          'Oct. 26 1930\nJULIAN A. STEYERMARK, COLLECTOR'
+def load_ocr_from_file(ocr: pd.DataFrame, filepath=None) -> None:
+    """ Loads in OCR transcriptions and ground truth text from a file as a pd.DataFrame."""
+    for i in range(0, 1):  # todo: load from file
+        aws = 'FLORA OF MISSOURI\nasplenium pinnatifidum nutt\non north exposure in crevices\n' + \
+              'of granite, mear summit of\nstughes mt., 4 miles S.rt. Co. of\nGrandale Kashington\nNo. 1867\n' + \
+              'Oct. 26 1930\nJULIAN A. STEYERMARK, COLLECTOR'
 
-    gcv = 'FLORA OF MISSOURI\nAsplenium pinnatifidum\nOn north exposure, in crevices\n' + \
-          'Hughes int., 4 miles 8.tt. of\nFrondale, Hashington Co.\nNo. 1867\nOct. 26 1930\n' + \
-          'JULIAN A. STEYERMARK, COLLECTOR'
+        gcv = 'FLORA OF MISSOURI\nAsplenium pinnatifidum\nOn north exposure, in crevices\n' + \
+              'Hughes int., 4 miles 8.tt. of\nFrondale, Hashington Co.\nNo. 1867\nOct. 26 1930\n' + \
+              'JULIAN A. STEYERMARK, COLLECTOR'
 
     ocr_row = {'barcode': 'C0601155F', 'aws': aws, 'gcv': gcv}
     ocr = ocr.append(ocr_row, ignore_index=True)
     return ocr
 
 
-def add_ground_truth_text(ocr: pd.DataFrame) -> pd.DataFrame:
+def add_ground_truth_text(ocr: pd.DataFrame, filepath=None) -> None:
     # Ground truth from the following extracted fields, \n separated:
     # scientificName + scientificNameAuthorship, recordNumber **ADDED "No." **, verbatimEventDate, habitat,
     # stateProvince, county **ADDED "Co."**, locality, verbatimElevation
