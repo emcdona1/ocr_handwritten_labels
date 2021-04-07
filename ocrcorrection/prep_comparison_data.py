@@ -7,29 +7,32 @@ from fuzzywuzzy import fuzz
 
 
 def main():
-    ocr = load_ocr_from_file()
-    ocr = add_ground_truth_text(ocr)
-    for idx, ocr_row in ocr.iterrows():
-        aws_tokens = word_tokenize(ocr_row['aws'])
-        gcv_tokens = word_tokenize(ocr_row['gcv'])
-        top_match_results = pd.DataFrame(columns=['search_query',
-                                                  'aws_best_matches', 'aws_best_match_ratio',
-                                                  'gcv_best_matches', 'gcv_best_match_ratio'])
-        ground_truth_filtered_words = preprocess_text(word_tokenize(ocr_row['ground_truth']))
-        # todo: why is '.' still a word after filtering?
+    """ Load, populate, and return a pd.DataFrame with OCR text and quality analysis. """
+    mi = pd.MultiIndex.from_arrays(
+        [['ground_truth', 'ground_truth', 'ground_truth', 'aws', 'aws', 'aws', 'gcv', 'gcv', 'gcv'],
+         ['barcode', 'text', 'filtered_tokens'] + ['text', 'fuzzy_match_list', 'score']*2],
+        names=('dataset', 'item'))
+    ocr = pd.DataFrame(columns=mi)
+    load_ocr_from_file(ocr)
+    add_ground_truth_text(ocr)
 
-        for search_word in ground_truth_filtered_words:
+    for idx, ocr_row in ocr.iterrows():
+        aws_tokens = word_tokenize(ocr_row['aws']['text'])
+        gcv_tokens = word_tokenize(ocr_row['gcv']['text'])
+        aws_match_results = list()
+        gcv_match_results = list()
+        ground_truth_filtered_words = preprocess_text(word_tokenize(ocr_row['ground_truth']['text']))
+        ocr.at[[idx], ('ground_truth', 'filtered_tokens')] = pd.Series([ground_truth_filtered_words], index=[idx])
+        for search_word in ocr.at[idx, ('ground_truth', 'filtered_tokens')]:
             aws_best_matches_list, aws_best_ratio = fuzzy_match_with_token_list(search_word, aws_tokens)
             gcv_best_matches_list, gcv_best_ratio = fuzzy_match_with_token_list(search_word, gcv_tokens)
+            aws_match_results.append((aws_best_matches_list, aws_best_ratio))
+            gcv_match_results.append((gcv_best_matches_list, gcv_best_ratio))
 
-            one_word_results = {'search_query': search_word,
-                                'aws_best_matches': aws_best_matches_list,
-                                'aws_best_match_ratio': aws_best_ratio,
-                                'gcv_best_matches': gcv_best_matches_list,
-                                'gcv_best_match_ratio': gcv_best_ratio}
-            top_match_results = top_match_results.append(one_word_results, ignore_index=True)
-        ocr['aws_score'][idx] = generate_score('aws', top_match_results)
-        ocr['gcv_score'][idx] = generate_score('gcv', top_match_results)
+        ocr.at[idx, ('aws', 'score')] = generate_score('aws', aws_match_results)
+        ocr.at[idx, ('gcv', 'score')] = generate_score('gcv', gcv_match_results)
+        ocr.at[[idx], ('aws', 'fuzzy_match_list')] = pd.Series([aws_match_results], index=[idx])
+        ocr.at[[idx], ('gcv', 'fuzzy_match_list')] = pd.Series([gcv_match_results], index=[idx])
     return ocr
 
 
@@ -44,9 +47,8 @@ def load_ocr_from_file(ocr: pd.DataFrame, filepath=None) -> None:
               'Hughes int., 4 miles 8.tt. of\nFrondale, Hashington Co.\nNo. 1867\nOct. 26 1930\n' + \
               'JULIAN A. STEYERMARK, COLLECTOR'
 
-    ocr_row = {'barcode': 'C0601155F', 'aws': aws, 'gcv': gcv}
-    ocr = ocr.append(ocr_row, ignore_index=True)
-    return ocr
+        ocr_row = {('ground_truth', 'barcode'): 'C0601155F', ('aws', 'text'): aws, ('gcv', 'text'): gcv}
+        ocr = ocr.append(ocr_row, ignore_index=True)
 
 
 def add_ground_truth_text(ocr: pd.DataFrame, filepath=None) -> None:
@@ -56,17 +58,15 @@ def add_ground_truth_text(ocr: pd.DataFrame, filepath=None) -> None:
     ground_truth = 'Asplenium pinnatifidum Nutt.\nNo. 1867\nOct. 26 1930\nOn north exposure, in crevices of granite\n' + \
                    'Missouri\nWashington Co.\nNear summit of Hughes Mountain, 4 miles SW of Irondale\n\n'.strip()
     occur = pd.read_csv('1617207806-occur.csv')
-    ocr['ground_truth'] = ''
     for idx, one_line in ocr.iterrows():
-        row = occur[occur['catalogNumber'] == one_line['barcode']]
+        row = occur[occur['catalogNumber'] == one_line['ground_truth']['barcode']]
         ground_truth_string = row['scientificName'][0] + '\n' + row['scientificNameAuthorship'][0] + '\n' + \
                               str(row['recordNumber'][0]) + '\n' + row['verbatimEventDate'][0] + '\n' + \
                               row['habitat'][0] + '\n' + row['stateProvince'][0] + '\n' + row['county'][0] + \
                               '\n' + row['locality'][0]
         if not pd.isna(row['verbatimElevation'][0]):
             ground_truth_string = ground_truth_string + '\n' + str(row['verbatimElevation'][0])
-        ocr['ground_truth'][idx]= ground_truth_string
-    return ocr
+        ocr.at[idx, ('ground_truth', 'text')] = ground_truth_string
 
 
 def preprocess_text(word_tokens: list):
@@ -102,17 +102,11 @@ def fuzzy_match_with_token_list(search_word, token_list):
     return best_matches_list, best_ratio
 
 
-def generate_score(service_name: str, top_match_results: pd.DataFrame):
-    perfect_matches = top_match_results[top_match_results[service_name + '_best_match_ratio'] == 100]
-    perfect_matches = list(perfect_matches[service_name + '_best_matches'])
-    perfect_matches = [item[0] for item in perfect_matches]
+def generate_score(service_name: str, match_results: list) -> float:
+    perfect_matches = [word[0][0] for word in match_results if word[1] == 100]
+    near_matches = [word[0][0] for word in match_results if 60 < word[1] < 100]
+    num_of_words = len(match_results)
 
-    near_matches = top_match_results[top_match_results[service_name + '_best_match_ratio'] < 100]
-    near_matches = near_matches[near_matches[service_name + '_best_match_ratio'] > 60]
-    near_matches = list(near_matches[service_name + '_best_matches'])
-    near_matches = [item[0] for item in near_matches]
-
-    num_of_words = top_match_results.shape[0]
     accuracy_score = (len(perfect_matches) + len(near_matches) / 2) / num_of_words
 
     print('Score for %s service: perfect = %i, near match = %i, score = %.2f%%' %
