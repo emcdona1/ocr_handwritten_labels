@@ -87,7 +87,7 @@ def preprocess_text(word_tokens: list):
     return filtered_words
 
 
-def fuzzy_match_with_token_list(search_word, token_list):
+def fuzzy_match_with_token_list(search_word: str, token_list: list) -> (list, int):
     fuzz_ratio = dict()
     for word in token_list:
         ratio = fuzz.ratio(search_word.lower(), word.lower())
