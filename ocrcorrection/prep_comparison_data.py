@@ -7,37 +7,38 @@ from fuzzywuzzy import fuzz
 from utilities.dataloader import save_dataframe_as_csv
 
 
-def main():
+def main(occurrence_filepath, ocr_filepath):
     """ Load, populate, and return a pd.DataFrame with OCR text and quality analysis. """
     mi = pd.MultiIndex.from_arrays(
         [['ground_truth', 'ground_truth', 'ground_truth', 'aws', 'aws', 'aws', 'gcv', 'gcv', 'gcv'],
          ['barcode', 'text', 'filtered_tokens'] + ['text', 'fuzzy_match_list', 'score']*2],
         names=('dataset', 'item'))
-    ocr = pd.DataFrame(columns=mi)
-    load_ocr_from_file(ocr)
-    add_ground_truth_text(ocr)
+    analysis = pd.DataFrame(columns=mi)
+    analysis = load_ocr_from_file(analysis, ocr_filepath)
+    analysis = add_ground_truth_text(analysis, occurrence_filepath)
 
-    for idx, ocr_row in ocr.iterrows():
+    for idx, ocr_row in analysis.iterrows():
         aws_tokens = word_tokenize(ocr_row['aws']['text'])
         gcv_tokens = word_tokenize(ocr_row['gcv']['text'])
         aws_match_results = list()
         gcv_match_results = list()
         ground_truth_filtered_words = preprocess_text(word_tokenize(ocr_row['ground_truth']['text']))
-        ocr.at[[idx], ('ground_truth', 'filtered_tokens')] = pd.Series([ground_truth_filtered_words], index=[idx])
-        for search_word in ocr.at[idx, ('ground_truth', 'filtered_tokens')]:
+        analysis.at[[idx], ('ground_truth', 'filtered_tokens')] = pd.Series([ground_truth_filtered_words], index=[idx])
+        for search_word in analysis.at[idx, ('ground_truth', 'filtered_tokens')]:
             aws_best_matches_list, aws_best_ratio = fuzzy_match_with_token_list(search_word, aws_tokens)
             gcv_best_matches_list, gcv_best_ratio = fuzzy_match_with_token_list(search_word, gcv_tokens)
             aws_match_results.append((aws_best_matches_list, aws_best_ratio))
             gcv_match_results.append((gcv_best_matches_list, gcv_best_ratio))
 
-        ocr.at[idx, ('aws', 'score')] = generate_score('aws', aws_match_results)
-        ocr.at[idx, ('gcv', 'score')] = generate_score('gcv', gcv_match_results)
-        ocr.at[[idx], ('aws', 'fuzzy_match_list')] = pd.Series([aws_match_results], index=[idx])
-        ocr.at[[idx], ('gcv', 'fuzzy_match_list')] = pd.Series([gcv_match_results], index=[idx])
-    return ocr
+        analysis.at[idx, ('aws', 'score')] = generate_score('aws', aws_match_results)
+        analysis.at[idx, ('gcv', 'score')] = generate_score('gcv', gcv_match_results)
+        analysis.at[[idx], ('aws', 'fuzzy_match_list')] = pd.Series([aws_match_results], index=[idx])
+        analysis.at[[idx], ('gcv', 'fuzzy_match_list')] = pd.Series([gcv_match_results], index=[idx])
+    filename = save_dataframe_as_csv('test_results', 'compare_ocr', analysis)
+    print('%i row(s) processed and saved to %s' % (analysis.shape[0], filename))
 
 
-def load_ocr_from_file(ocr: pd.DataFrame, filepath=None) -> None:
+def load_ocr_from_file(analysis: pd.DataFrame, filepath: str) -> pd.DataFrame:
     """ Loads in OCR transcriptions and ground truth text from a file as a pd.DataFrame."""
     ocr_data: pd.DataFrame = pd.read_csv(filepath)
     for idx, ocr_row in ocr_data.iterrows():
@@ -51,15 +52,12 @@ def load_ocr_from_file(ocr: pd.DataFrame, filepath=None) -> None:
         #       'Hughes int., 4 miles 8.tt. of\nFrondale, Hashington Co.\nNo. 1867\nOct. 26 1930\n' + \
         #       'JULIAN A. STEYERMARK, COLLECTOR'
 
-        gcv = 'FLORA OF MISSOURI\nAsplenium pinnatifidum\nOn north exposure, in crevices\n' + \
-              'Hughes int., 4 miles 8.tt. of\nFrondale, Hashington Co.\nNo. 1867\nOct. 26 1930\n' + \
-              'JULIAN A. STEYERMARK, COLLECTOR'
-
-        ocr_row = {('ground_truth', 'barcode'): 'C0601155F', ('aws', 'text'): aws, ('gcv', 'text'): gcv}
-        ocr = ocr.append(ocr_row, ignore_index=True)
+        new_row_for_analysis = {('ground_truth', 'barcode'): barcode, ('aws', 'text'): aws, ('gcv', 'text'): gcv}
+        analysis = analysis.append(new_row_for_analysis, ignore_index=True)
+    return analysis
 
 
-def add_ground_truth_text(ocr: pd.DataFrame, filepath=None) -> None:
+def add_ground_truth_text(analysis: pd.DataFrame, filepath=None) -> pd.DataFrame:
     # Ground truth from the following extracted fields, \n separated:
     # scientificName + scientificNameAuthorship, recordNumber **ADDED "No." **, verbatimEventDate, habitat,
     # stateProvince, county **ADDED "Co."**, locality, verbatimElevation
