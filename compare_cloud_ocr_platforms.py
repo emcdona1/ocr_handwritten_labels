@@ -27,7 +27,7 @@ def main():
 
         text_comparison = text_comparison.append(new_text_comparison, ignore_index=True)
 
-    save_dataframe_as_csv(folder_path, 'comparison', text_comparison)
+    save_dataframe_as_csv(folder_path, 'ocr_texts', text_comparison, timestamp=False)
 
 
 def draw_comparison_image(processor, annotator) -> None:
