@@ -4,6 +4,7 @@ from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 import pandas as pd
 from fuzzywuzzy import fuzz
+from utilities.dataloader import save_dataframe_as_csv
 
 
 def main():
@@ -38,10 +39,17 @@ def main():
 
 def load_ocr_from_file(ocr: pd.DataFrame, filepath=None) -> None:
     """ Loads in OCR transcriptions and ground truth text from a file as a pd.DataFrame."""
-    for i in range(0, 1):  # todo: load from file
-        aws = 'FLORA OF MISSOURI\nasplenium pinnatifidum nutt\non north exposure in crevices\n' + \
-              'of granite, mear summit of\nstughes mt., 4 miles S.rt. Co. of\nGrandale Kashington\nNo. 1867\n' + \
-              'Oct. 26 1930\nJULIAN A. STEYERMARK, COLLECTOR'
+    ocr_data: pd.DataFrame = pd.read_csv(filepath)
+    for idx, ocr_row in ocr_data.iterrows():
+        barcode = ocr_row['barcode']
+        aws = ocr_row['aws']
+        # aws = 'FLORA OF MISSOURI\nasplenium pinnatifidum nutt\non north exposure in crevices\n' + \
+        #       'of granite, mear summit of\nstughes mt., 4 miles S.rt. Co. of\nGrandale Kashington\nNo. 1867\n' + \
+        #       'Oct. 26 1930\nJULIAN A. STEYERMARK, COLLECTOR'
+        gcv = ocr_row['gcv']
+        # gcv = 'FLORA OF MISSOURI\nAsplenium pinnatifidum\nOn north exposure, in crevices\n' + \
+        #       'Hughes int., 4 miles 8.tt. of\nFrondale, Hashington Co.\nNo. 1867\nOct. 26 1930\n' + \
+        #       'JULIAN A. STEYERMARK, COLLECTOR'
 
         gcv = 'FLORA OF MISSOURI\nAsplenium pinnatifidum\nOn north exposure, in crevices\n' + \
               'Hughes int., 4 miles 8.tt. of\nFrondale, Hashington Co.\nNo. 1867\nOct. 26 1930\n' + \
@@ -57,16 +65,36 @@ def add_ground_truth_text(ocr: pd.DataFrame, filepath=None) -> None:
     # stateProvince, county **ADDED "Co."**, locality, verbatimElevation
     ground_truth = 'Asplenium pinnatifidum Nutt.\nNo. 1867\nOct. 26 1930\nOn north exposure, in crevices of granite\n' + \
                    'Missouri\nWashington Co.\nNear summit of Hughes Mountain, 4 miles SW of Irondale\n\n'.strip()
-    occur = pd.read_csv('1617207806-occur.csv')
-    for idx, one_line in ocr.iterrows():
-        row = occur[occur['catalogNumber'] == one_line['ground_truth']['barcode']]
-        ground_truth_string = row['scientificName'][0] + '\n' + row['scientificNameAuthorship'][0] + '\n' + \
-                              str(row['recordNumber'][0]) + '\n' + row['verbatimEventDate'][0] + '\n' + \
-                              row['habitat'][0] + '\n' + row['stateProvince'][0] + '\n' + row['county'][0] + \
-                              '\n' + row['locality'][0]
-        if not pd.isna(row['verbatimElevation'][0]):
-            ground_truth_string = ground_truth_string + '\n' + str(row['verbatimElevation'][0])
-        ocr.at[idx, ('ground_truth', 'text')] = ground_truth_string
+    occur_data = pd.read_csv(filepath)
+    bad_query_indices = []
+    for idx, one_line in analysis.iterrows():
+        current_barcode = one_line['ground_truth']['barcode']
+        occur_row = occur_data[occur_data['catalogNumber'] == current_barcode].reset_index()
+        if occur_row.shape[0] > 1:
+            occur_row = occur_row.loc[0, :] # select only the first row
+        if occur_row.shape[0] == 1:
+            ground_truth_string = ''
+            data_to_add = [occur_row.at[0, 'scientificName'],
+                           occur_row.at[0, 'scientificNameAuthorship'],
+                           occur_row.at[0, 'recordNumber'],
+                           occur_row.at[0,'verbatimEventDate'],
+                           occur_row.at[0, 'habitat'],
+                           occur_row.at[0, 'stateProvince'],
+                           occur_row.at[0, 'county'],
+                           occur_row.at[0, 'locality'],
+                           occur_row.at[0, 'verbatimElevation']
+                           ]
+            for data in data_to_add:
+                if not pd.isna(data):
+                    ground_truth_string += data + '\n'
+            analysis.at[idx, ('ground_truth', 'text')] = ground_truth_string
+        else:
+            print('Warning! No occurrence record found for barcode %s. Removing from query list.' % current_barcode)
+            bad_query_indices.append(idx)
+    if bad_query_indices:
+        analysis = analysis.drop(index=bad_query_indices)
+    return analysis
+
 
 
 def preprocess_text(word_tokens: list):
@@ -120,8 +148,8 @@ def generate_score(service_name: str, match_results: list) -> float:
 
 
 if __name__ == '__main__':
-    # assert len(sys.argv) > 4, 'Provide 3 arguments: one ground truth file, and 2 files of OCR data to compare.'
-    # ground_truth_file = sys.argv[1]
-    # ocr_1_file = sys.argv[2]
-    # ocr_2_file = sys.argv[3]
-    main()
+    assert len(sys.argv) > 4, 'Provide 2 arguments: filepath for 1 occurrence (from the Fern Portal), ' +\
+                                'and filepath for 1 CSV file with the headers "barcode", "aws", and "gcv" to compare.'
+    occur = sys.argv[1]
+    ocr = sys.argv[2]
+    main(occur, ocr)
