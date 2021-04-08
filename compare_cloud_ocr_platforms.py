@@ -8,7 +8,7 @@ import pandas as pd
 def main():
     list_of_images = load_file_list_from_filesystem(folder_or_image_file)
     processors = [GCVProcessor(), AWSProcessor()]
-    folder_path = os.path.join('test_results', 'cloud_compare-' + get_timestamp_for_file_saving())
+    folder_path = os.path.join('test_results', 'cloud_ocr-' + get_timestamp_for_file_saving())
     if not os.path.exists(folder_path):
         os.makedirs(folder_path)
     text_comparison = pd.DataFrame(columns=['barcode', 'gcv', 'aws'])
