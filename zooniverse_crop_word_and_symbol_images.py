@@ -121,24 +121,15 @@ def generate_neural_net_symbol_images(image, image_barcode, symbol, b_idx, p_idx
 
 def generate_zooniverse_images(image, image_barcode, word, symbol, b_idx, p_idx, w_idx, s_idx,
                                word_filename: str) -> str:
-    """ Creates copy of provided image, saves two images to disk:
-    (1) full image with word box,
-    (2) image cropped to the word, with symbol boxed.
-    And adds a row to the manifest."""
+    """ **updated v2** Creates copy of provided image, saves full image of label (w/ one boxed symbol) to disk,
+    and adds a row to the manifest."""
     whole_image = copy.deepcopy(image)
-    if s_idx == 0:
-        image_with_word_box = draw_box(whole_image, word.bounding_box, box_drawing_color)
-        word_filename = save_image_to_file(image_with_word_box, image_folder_zooniverse,
-                                                      'wordbox', image_barcode, b_idx, p_idx, w_idx)
     image_with_one_symbol_boxed = draw_box(whole_image, symbol.bounding_box, box_drawing_color)
-    image_with_one_symbol_boxed_cropped_to_word = crop_image(image_with_one_symbol_boxed,
-                                                             word.bounding_box)
-    image_filename = save_image_to_file(image_with_one_symbol_boxed_cropped_to_word,
+    image_filename = save_image_to_file(image_with_one_symbol_boxed,
                                         image_folder_zooniverse, 'symbox', image_barcode,
                                         b_idx, p_idx, w_idx, s_idx)
 
-    new_manifest_row = {'image_of_boxed_word': word_filename,
-                        'image_of_word_boxed_letter': image_filename,
+    new_manifest_row = {'image_of_boxed_letter': image_filename,
                         'barcode': image_barcode,
                         'block_no': b_idx,
                         'paragraph_no': p_idx,
@@ -212,7 +203,7 @@ def clean_and_save_manifests():
     zooniverse_manifest['paragraph_no'] = zooniverse_manifest['paragraph_no'].astype(int)
     zooniverse_manifest['word_no'] = zooniverse_manifest['word_no'].astype(int)
     zooniverse_manifest['symbol_no'] = zooniverse_manifest['symbol_no'].astype(int)
-    zooniverse_manifest.reindex(columns=['image_of_boxed_word', 'image_of_word_boxed_letter', 'barcode',
+    zooniverse_manifest.reindex(columns=['image_of_boxed_letter', 'barcode',
                                          'block_no', 'paragraph_no', 'word_no', 'symbol_no',
                                          '#GCV_identification']) \
         .to_csv(os.path.join(image_folder_zooniverse, 'zooniverse_manifest.csv'), index=False)
