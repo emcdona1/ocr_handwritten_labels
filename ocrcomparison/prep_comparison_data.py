@@ -94,7 +94,6 @@ def add_ground_truth_text(analysis: pd.DataFrame, filepath=None) -> pd.DataFrame
     return analysis
 
 
-
 def preprocess_text(word_tokens: list):
     stop_words = set(stopwords.words('english'))
     removed_words = []
@@ -146,8 +145,9 @@ def generate_score(service_name: str, match_results: list) -> float:
 
 
 if __name__ == '__main__':
-    assert len(sys.argv) > 4, 'Provide 2 arguments: filepath for 1 occurrence (from the Fern Portal), ' +\
-                                'and filepath for 1 CSV file with the headers "barcode", "aws", and "gcv" to compare.'
+    assert len(sys.argv) > 3, 'Provide 2 arguments: filepath for 1 occurrence' + \
+                              ' (from the Fern Portal, Darwin Core with ISO-8859-1 encoding), ' + \
+                              'and filepath for 1 CSV file with the headers "barcode", "aws", and "gcv" to compare.'
     occur = sys.argv[1]
     ocr = sys.argv[2]
     main(occur, ocr)
