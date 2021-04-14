@@ -5,6 +5,7 @@ import pandas as pd
 from io import BytesIO
 from copy import deepcopy
 from dataloader import save_dataframe_as_csv
+import requests
 
 
 def main(zip_file_path: str):
@@ -28,7 +29,23 @@ def extract_occur_and_images_from_zip(zip_file_path: str) -> (pd.DataFrame, pd.D
 def join_occur_and_images_information(occur: pd.DataFrame, images: pd.DataFrame) -> pd.DataFrame:
     joined_information = deepcopy(occur)
     joined_information = joined_information.assign(image_url = images['identifier'])
+    num_rows = joined_information.shape[0]
+    for idx, row in joined_information.iterrows():
+        valid_image_url = is_valid_url(row['image_url'])
+        if not valid_image_url:
+            web_resolution_image = images.at[idx, 'goodQualityAccessURI']
+            valid_image_url = is_valid_url(web_resolution_image)
+            if valid_image_url:
+                joined_information.at[idx, 'image_url'] = web_resolution_image
+            else:
+                joined_information.at[idx, 'image_url'] = ''
+        print('Image %i / %i validated.' % (idx+1, num_rows))
     return joined_information
+
+
+def is_valid_url(image_url: str) -> bool:
+    result = requests.get(image_url)
+    return result.status_code == 200
 
 
 if __name__ == '__main__':
