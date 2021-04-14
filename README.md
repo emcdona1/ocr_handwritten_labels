@@ -88,32 +88,33 @@ All are saved in the folder `./test_results/cloud_compare-<datestamp/`.
 | ...                                | ...                                |
 
 ---
-### scrape_image_urls_from_fern_portal_occurence_export.py
-This program adds the appropriate image file (web resolution) URL for each row.  When no image is available
-(likely due to a specimen having protected status), the `img_url` column will display `None`.
+### utilities/join_occurrence_file_with_image_urls.py
+Using the downloaded occurrence information (as a ZIP file), this program joins
+the full occurrence record with the URL of the high resolution image for each row.
 
 **Input**:
-- An occurrence file (CSV) exported from the [Fern Portal](https://pteridoportal.org/).
+- A ZIP file exported from the [Fern Portal](https://pteridoportal.org/). See workflows above for detailed information.
 
 **Output**:
-- The results are saved as a new file `[original_filename]-updated.csv` in the working directory. 
-  This file is the same as the input file (columns `id` through `reference`), with one additional 
-  column: `img_url`. 
+- The results are saved as a new file in the same directory, with the file name
+  `occurrence_file_with_images-[timestamp].csv`. 
+  This file is the same as the `occurrences.csv` file, with one additional 
+  column, `image_url`, taken from the `images.csv` file. 
 
 **Example usage**:
 
 
-`python get_image_urls_from_fern_portal.py occur_download.csv`
+`python utilities/join_occurrence_file_with_image_urls resources/occur_download.zip`
 
 
 **Example output**:
 
-Saved as `occur_download-updated.csv` :
+Saved in `resources/` as `occurrence_file_with_images-2021_04_14-10_58_13.csv` :
   
-| id  | ... | reference                                                                       | img_url                                                         |
+| id  | ... | reference                                                                       | image_url                                                         |
 |-----|-----|---------------------------------------------------------------------------------|-----------------------------------------------------------------|
 | 939 | ... | https://www.pteridoportal.org/portal/collections/individual/index.php?occid=939 | http://fm-digital-assets.fieldmuseum.org/1112/912/C0611042F.jpg |
-| 952 | ... | https://www.pteridoportal.org/portal/collections/individual/index.php?occid=952 | None                                                            |
+| 952 | ... | https://www.pteridoportal.org/portal/collections/individual/index.php?occid=952 | http://fm-digital-assets.fieldmuseum.org/1105/971/C0604755F.jpg |
 
 ---
 ### taxon_binomial_name_matching.py
