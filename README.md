@@ -26,21 +26,23 @@ ___
 #### Creating a comparison between OCR platforms
 *Currently available: Google Cloud Vision, Amazon Web Services Textract)*
 
-1. Download an occurrence file from the [Fern Portal](https://pteridoportal.org/) which 
-   already contains human-created transcriptions of the label text.
-   1. As an authenticated user, click the "Crowdsource", and 
-       click the pencil icon next to the desired dataset.
-   1. Click the "Exporter" tab. Create a search query (e.g. 
-       *Collector/Observer CONTAINS Steyermark*). 
-   1. For "Processing Status" select "Reviewed."
-   1. For "Structure," select "Darwin Core."
-   1. For "Data Extensions," deselect "include Determination History"
-      and select "include Image Records."
-   1. (Compression should already be checked, and "CSV" selected for file format.)
-   1. For "Character Set" select "ISO-8859-1 (western)."
-   1. Click "Download Records" button.
-1. Place the downloaded ZIP file in your working directory.
-1. 
+1. Prepare the images and ground truth information.
+    1. Download an occurrence file from the [Fern Portal](https://pteridoportal.org/) which 
+       already contains human-created transcriptions of the label text.
+       1. As an authenticated user, click the "Crowdsource", and 
+           click the pencil icon next to the desired dataset.
+       1. Click the "Exporter" tab. Create a search query (e.g. 
+           *Collector/Observer CONTAINS Steyermark*). 
+       1. For "Processing Status" select "Reviewed."
+       1. For "Structure," select "Darwin Core."
+       1. For "Data Extensions," deselect "include Determination History"
+          and select "include Image Records."
+       1. (Compression should already be checked, and "CSV" selected for file format.)
+       1. For "Character Set" select "ISO-8859-1 (western)."
+       1. Click "Download Records" button.
+    1. Place the downloaded ZIP file in your working directory, and run the script 
+       `utilities\join_occurrence_file_with_image_urls.py`, pointing to the ZIP file.
+    1. 
     
 
 
