@@ -5,6 +5,7 @@ from urllib.request import urlopen
 import cv2
 from datetime import datetime
 import pandas as pd
+import requests
 
 
 def load_list_from_txt(file_path: str) -> list:
@@ -72,3 +73,13 @@ def save_dataframe_as_csv(save_location: str, file_id: str, df: pd.DataFrame, ti
                                  (('-' + get_timestamp_for_file_saving()) if timestamp else '') + '.csv')
     df.to_csv(file_location, index=False)
     return file_location
+
+
+def download_image(image_url: str, save_directory: str, image_id: str) -> str:
+    result = requests.get(image_url)
+    image_save_path = ''
+    if result.status_code == 200:
+        image_save_path = os.path.join(save_directory, image_id)
+        with open(image_save_path + '.jpg', 'wb') as f:
+            f.write(result.content)
+    return image_save_path
