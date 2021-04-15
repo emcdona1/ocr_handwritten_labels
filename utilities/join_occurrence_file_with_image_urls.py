@@ -32,14 +32,17 @@ def join_occur_and_images_information(occur: pd.DataFrame, images: pd.DataFrame)
     num_rows = joined_information.shape[0]
     for idx, row in joined_information.iterrows():
         valid_image_url = is_valid_url(row['image_url'])
-        if not valid_image_url:
+        if valid_image_url:
+            print('Image %i / %i validated.' % (idx + 1, num_rows))
+        else:
             web_resolution_image = images.at[idx, 'goodQualityAccessURI']
             valid_image_url = is_valid_url(web_resolution_image)
             if valid_image_url:
                 joined_information.at[idx, 'image_url'] = web_resolution_image
+                print('Image %i / %i successfully replaced.' % (idx + 1, num_rows))
             else:
                 joined_information.at[idx, 'image_url'] = ''
-        print('Image %i / %i validated.' % (idx+1, num_rows))
+                print('No image url for %i, barcode: %s.' % (idx + 1, row['catalogNumber']))
     return joined_information
 
 
