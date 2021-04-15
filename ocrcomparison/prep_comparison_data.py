@@ -146,7 +146,7 @@ def generate_score(service_name: str, match_results: list) -> float:
 
 if __name__ == '__main__':
     assert len(sys.argv) > 3, 'Provide 2 arguments: filepath for 1 occurrence' + \
-                              ' (from the Fern Portal, Darwin Core with ISO-8859-1 encoding), ' + \
+                              ' (can be occurrence_with_images file), ' + \
                               'and filepath for 1 CSV file with the headers "barcode", "aws", and "gcv" to compare.'
     occur = sys.argv[1]
     ocr = sys.argv[2]
