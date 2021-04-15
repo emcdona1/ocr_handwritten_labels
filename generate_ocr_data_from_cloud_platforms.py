@@ -5,8 +5,8 @@ from imageprocessor.image_processor import GCVProcessor, AWSProcessor
 import pandas as pd
 
 
-def main():
-    list_of_images = load_file_list_from_filesystem(folder_or_image_file)
+def main(folder_or_image_path: str, generate_images=True) -> pd.DataFrame:
+    list_of_images = load_file_list_from_filesystem(folder_or_image_path)
     processors = [GCVProcessor(), AWSProcessor()]
     folder_path = os.path.join('test_results', 'cloud_ocr-' + get_timestamp_for_file_saving())
     if not os.path.exists(folder_path):
@@ -20,14 +20,17 @@ def main():
             new_text_comparison[processor.name] = processor.get_full_text()
             new_text_comparison['barcode'] = processor.current_image_barcode
 
-            annotator = processor.get_image_annotator()
-            annotator.set_save_location(os.path.join(folder_path, processor.name))
-            draw_comparison_image(processor, annotator)
-            annotator.save_annotated_image_to_file()
-
+            if generate_images:
+                annotator = processor.get_image_annotator()
+                annotator.set_save_location(os.path.join(folder_path, processor.name))
+                draw_comparison_image(processor, annotator)
+                annotator.save_annotated_image_to_file()
+        print('OCR gathered for %s' % one_image_location)
         text_comparison = text_comparison.append(new_text_comparison, ignore_index=True)
 
-    save_dataframe_as_csv(folder_path, 'ocr_texts', text_comparison, timestamp=False)
+    save_location = save_dataframe_as_csv(folder_path, 'ocr_texts', text_comparison, timestamp=False)
+    print('Saved to %s' % save_location)
+    return text_comparison
 
 
 def draw_comparison_image(processor, annotator) -> None:
@@ -48,5 +51,9 @@ def draw_comparison_image(processor, annotator) -> None:
 if __name__ == '__main__':
     assert len(sys.argv) > 1, 'Include one command line argument (either an image file or a directory of images).'
     folder_or_image_file = sys.argv[1]
-
-    main()
+    generate_images_flag = True
+    if len(sys.argv) == 3:
+        flag_text = sys.argv[2]
+        if flag_text.lower() is 'false' or 'no' or 'n':
+            generate_images_flag = False
+    results = main(folder_or_image_file, generate_images=generate_images_flag)
