@@ -21,10 +21,10 @@ ___
       for full instructions).
 
 ___
-## Suggested Workflows
+## Example Workflows
 
-#### Creating a comparison between OCR platforms
-*Currently available: Google Cloud Vision, Amazon Web Services Textract)*
+#### Comparing OCR platforms on analyzing herbarium sheet labels
+*Currently available: Google Cloud Vision and Amazon Web Services Textract*
 
 1. Prepare the images and ground truth information.
     1. Download an occurrence file from the [Fern Portal](https://pteridoportal.org/) which 
@@ -32,8 +32,9 @@ ___
        1. As an authenticated user, click the "Crowdsource", and 
            click the pencil icon next to the desired dataset.
        1. Click the "Exporter" tab. Create a search query (e.g. 
-           *Collector/Observer CONTAINS Steyermark*). 
-       1. For "Processing Status" select "Reviewed."
+           *Collector/Observer CONTAINS Steyermark*).
+       1. For "Processing Status" select "Reviewed." (This ensures that you have ground truth
+          data, i.e. transcribed by humans and reviewed by staff, to compare to the OCR.)
        1. For "Structure," select "Darwin Core."
        1. For "Data Extensions," deselect "include Determination History"
           and select "include Image Records."
@@ -41,53 +42,87 @@ ___
        1. For "Character Set" select "ISO-8859-1 (western)."
        1. Click "Download Records" button.
     1. Place the downloaded ZIP file in your working directory, and run the script 
-       `utilities\join_occurrence_file_with_image_urls.py`, pointing to the ZIP file.
-    1. 
+       `utilities\join_occurrence_file_with_image_urls.py`, pointing to the ZIP file. 
+       A new CSV file (e.g. "occurrence_file_with_images.csv") is created 
+       in the same directory. 
+    1. Run the script `utilities\download_images_from_csv.py`, pointing to the
+       "occurrence_file_with_images.csv" file and a desired save location (e.g. "images").
+       All images will be downloaded to the save location (which will be created if necessary). 
+1. Retrieve and save OCR data for images.
+    1. Run the script `generate_ocr_data_from_cloud_platforms.py` pointing to the folder of images 
+       you downloaded in the previous step. The OCR objects will be saved in the `ocr_responses`
+       folder (subfolders for each cloud platform), and `ocr_texts.csv` will be saved to the
+       folder `test_results`, with a new subfolder called `cloud_ocr-yyyy_mm_dd-hh_mm_ss`.
+1. Compare OCR data to ground truth data from occurrence file.
+    1. Run the script `ocrcomparison\prep_comparison_data.py` with your occurence or
+       occurrence_file_with_images file and the `ocr_texts.csv` file from the previous step.
+        1. 
     
 
 
 ---
 ## Scripts
 
-### compare_ocr_cloud_platforms.py
-Use this program to process each image file with multiple cloud-based OCR platforms, to directly compare results.
-Currently, this program compares Google Cloud Vision and Amazon Web Services Textract.
+### generate_ocr_data_from_cloud_platforms.py
+Use this program to send each image file to all available cloud-based platforms, 
+for OCR processing.
 
 **Input**:
 - A single image file on the local computer
 - OR
 - A folder of image files on the local computer
 
+
+**N.B. about file naming and cloud server usage**: To reduce cloud computing costs, 
+the program always searches the `ocr_responses` folder for an existing response object before 
+sending a query to the cloud service. Queries are stored in the folder with the base of the 
+image file name as the name. e.g. The OCR response for `cat-and-dog.jpg` is saved as 
+`cat-and-dog.pickle`. If `cat-and-dog.jpg` is run through this script again, it will import the 
+pickle (and print a message to the console, *Using previously pickled response object for 
+cat-and-dog*).
+
+
 **Outputs**:
-- If a response object has not already been generated for this image, the request is sent to the 
-  cloud service and then saved (as a `pickle`) in the `ocr_responses` folder for later use.
-  (One sub-folder is created for each cloud service, with the naming convention `<barcode>.pickle`).
-    - *Note*: For the response search to work properly, the first part of an image filename should be
-      the image barcode (or some other unique, non-overlapping ID).
-      Images downloaded from the Fern Portal (Pteridoportal) already follow this naming convention.
-- The complete text output is saved to a CSV file with one row per image. 
-   Each line/paragraph (AWS/GCV, respectively) is followed by a line break (`\n`) character.
-   (Note that both of these OCR platforms use extended character sets, e.g. latin letters with diacritics.)
-- One copy of each image per cloud platform, with annotations based on the OCR. Currently, the program
-   is configured to draw:
-   - a thin black box around each line/paragraph
-   - a green line at the start of each detected word
-   - a red line at the end of each detected word
+- The response for any new cloud queries are saved in the folder `ocr_responses`, with one
+  sub-folder for each cloud service, e.g. `aws` and `gcv`.
+- The other outputs are all saved to the `test_results` folder, in a new subfolder called
+  `cloud_ocr-[timestamp]`.
+- The complete text output is saved as `ocr_texts.csv`, with one row per image. 
+  For AWS and GCV respectively, a line break (`\n`) character separates each "line"
+  or "paragraph" of OCR data. (Both AWS and GCV will generate extended character sets and 
+  non-latin characters, such as latin letters with diacritics, Korean, Arabic, etc.)
+- Unless flagged false (see example usage), one copy of each image is generated per cloud 
+  platform, with annotations indicating the "words" found by all platforms.
+  The program is configured to draw (1) a thin black box around each line/paragraph, (2) 
+  a green line at the start of each detected word, and (3) a red line at the end of each 
+  detected word.  (This can be adjusted in the `draw_comparison_image` function.)
 
 **Example usage**:
 
-`python compare_ocr_cloud_platforms.py oneimage-label.jpg`
+`python generate_ocr_data_from_cloud_platforms.py oneimage.jpg`
 
-**Example output**:
-All are saved in the folder `./test_results/cloud_compare-<datestamp/`.
+`python generate_ocr_data_from_cloud_platforms.py image_folder`
+
+`python generate_ocr_data_from_cloud_platforms.py image_folder True` (Same functionality as the
+previous example)
+
+`python generate_ocr_data_from_cloud_platforms.py image_folder false` (Optional second argument
+to skip the creation of the annotated images. Case-insensitive, will detect "false", "no", 
+or "n".)
+
+
+
+**Example output** for `python generate_ocr_data_from_cloud_platforms.py oneimage.jpg`:
+
+Saved in the folder `./test_results/cloud_ocr-<yyyy-mm-dd_hh-mm-ss>/`:
 1. Image saved as `oneimage-annotated<datestamp>.jpg` in sub-folder `aws`.
 2. Image saved as `oneimage-annotated<datestamp>.jpg` in sub-folder `gcv`.
-3. CSV file `comparison.csv` :
+3. CSV file `ocr_texts.csv` :
 
-| gcv_response                       | aws_response                       |
-| -----------------------------------|----------------------------------- |
-| 31160 PLANTS OF GUATEMALA ...(etc) | 31160 PLANTS OF GUATEMALA ...(etc) |
-| ...                                | ...                                |
+| barcode    | gcv                                | aws                                |
+| ---------- | -----------------------------------|----------------------------------- |
+| C12345678F | 31160 PLANTS OF GUATEMALA ...(etc) | 31160 PLANTS OF GUATEMALA ...(etc) |
+| ...        | ...                                | ...                                |
 
 ---
 ### utilities/join_occurrence_file_with_image_urls.py
