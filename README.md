@@ -26,7 +26,7 @@ ___
 #### Comparing OCR platforms on analyzing herbarium sheet labels
 *Currently available: Google Cloud Vision and Amazon Web Services Textract*
 
-1. Prepare the images and ground truth information.
+1. **Download your dataset with image URLs and ground truth information**.
     1. Download an occurrence file from the [Fern Portal](https://pteridoportal.org/) which 
        already contains human-created transcriptions of the label text.
        1. As an authenticated user, click the "Crowdsource", and 
@@ -41,21 +41,23 @@ ___
        1. (Compression should already be checked, and "CSV" selected for file format.)
        1. For "Character Set" select "ISO-8859-1 (western)."
        1. Click "Download Records" button.
-    1. Place the downloaded ZIP file in your working directory, and run the script 
-       `utilities\join_occurrence_file_with_image_urls.py`, pointing to the ZIP file. 
-       A new CSV file (e.g. "occurrence_file_with_images.csv") is created 
-       in the same directory. 
+       1. Place the downloaded ZIP file in your working directory.
+1. **Download your image set and prep the ground truth data**.
+    1. Run the script `utilities\join_occurrence_file_with_image_urls.py`, pointing to 
+       the ZIP file you just downloaded.  A new CSV file 
+       (e.g. "occurrence_file_with_images.csv") is created in the same directory. 
     1. Run the script `utilities\download_images_from_csv.py`, pointing to the
        "occurrence_file_with_images.csv" file and a desired save location (e.g. "images").
        All images will be downloaded to the save location (which will be created if necessary). 
-1. Retrieve and save OCR data for images.
+1. **Retrieve and save OCR data for your image set**.
     1. Run the script `generate_ocr_data_from_cloud_platforms.py` pointing to the folder of images 
        you downloaded in the previous step. The OCR objects will be saved in the `ocr_responses`
        folder (subfolders for each cloud platform), and `ocr_texts.csv` will be saved to the
        folder `test_results`, with a new subfolder called `cloud_ocr-yyyy_mm_dd-hh_mm_ss`.
-1. Compare OCR data to ground truth data from occurrence file.
-    1. Run the script `ocrcomparison\prep_comparison_data.py` with your occurence or
-       occurrence_file_with_images file and the `ocr_texts.csv` file from the previous step.
+1. **Compare OCR data to ground truth data from occurrence file**.
+    1. Run the script `prep_comparison_data.py` with your occurrence (or
+       occurrence_file_with_images) file and the `ocr_texts.csv` file 
+       from the previous step.
         1. 
     
 
