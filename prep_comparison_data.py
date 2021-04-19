@@ -9,7 +9,7 @@ from fuzzywuzzy import fuzz
 from utilities.dataloader import save_dataframe_as_csv
 
 
-def main(occurrence_filepath, ocr_filepath):
+def main(occurrence_filepath, ocr_filepath) -> pd.DataFrame:
     """ Load, populate, and return a pd.DataFrame with OCR text and quality analysis. """
     mi = pd.MultiIndex.from_arrays(
         [['ground_truth', 'ground_truth', 'ground_truth', 'aws', 'aws', 'aws', 'gcv', 'gcv', 'gcv'],
@@ -44,6 +44,7 @@ def main(occurrence_filepath, ocr_filepath):
         analysis.at[[idx], ('gcv', 'fuzzy_match_list')] = pd.Series([gcv_match_results], index=[idx])
     filename = save_dataframe_as_csv('test_results', 'compare_ocr', analysis)
     print('%i row(s) processed and saved to %s' % (analysis.shape[0], filename))
+    return analysis
 
 
 def load_ocr_from_file(analysis: pd.DataFrame, filepath: str) -> pd.DataFrame:
