@@ -35,8 +35,11 @@ def main(occurrence_filepath, ocr_filepath):
             aws_match_results.append((aws_best_matches_list, aws_best_ratio))
             gcv_match_results.append((gcv_best_matches_list, gcv_best_ratio))
 
-        analysis.at[idx, ('aws', 'score')] = generate_score('aws', aws_match_results)
-        analysis.at[idx, ('gcv', 'score')] = generate_score('gcv', gcv_match_results)
+        analysis.at[idx, ('aws', 'score')] = generate_score(analysis.at[idx, ('ground_truth', 'barcode')],
+                                                            'aws', aws_match_results)
+        analysis.at[idx, ('gcv', 'score')] = generate_score(analysis.at[idx, ('ground_truth', 'barcode')],
+                                                            'gcv', gcv_match_results)
+        print()
         analysis.at[[idx], ('aws', 'fuzzy_match_list')] = pd.Series([aws_match_results], index=[idx])
         analysis.at[[idx], ('gcv', 'fuzzy_match_list')] = pd.Series([gcv_match_results], index=[idx])
     filename = save_dataframe_as_csv('test_results', 'compare_ocr', analysis)
@@ -136,25 +139,25 @@ def fuzzy_match_with_token_list(search_word: str, token_list: list) -> (list, in
     return best_matches_list, best_ratio
 
 
-def generate_score(service_name: str, match_results: list) -> float:
+def generate_score(barcode: str, service_name: str, match_results: list) -> float:
     perfect_matches = [word[0][0] for word in match_results if word[1] == 100]
     near_matches = [word[0][0] for word in match_results if 60 < word[1] < 100]
     num_of_words = len(match_results)
 
     accuracy_score = (len(perfect_matches) + len(near_matches) / 2) / num_of_words
 
-    print('Score for %s service: perfect = %i, near match = %i, score = %.2f%%' %
-          (service_name, len(perfect_matches), len(near_matches), accuracy_score * 100))
-    if len(perfect_matches) < 10:
-        print('%s perfect matches: %s' % (service_name, str(perfect_matches)))
-    if len(near_matches) < 10:
-        print('%s near matches: %s' % (service_name, str(near_matches)))
-    print()
+    print('Score for %s on service %s: perfect = %i, near match = %i, score = %.2f%%' %
+          (barcode, service_name, len(perfect_matches), len(near_matches), accuracy_score * 100))
+    # if len(perfect_matches) < 5:
+    #     print('%s perfect matches: %s' % (service_name, str(perfect_matches)))
+    # if len(near_matches) < 5:
+    #     print('%s near matches: %s' % (service_name, str(near_matches)))
+    # print()
     return accuracy_score
 
 
 if __name__ == '__main__':
-    assert len(sys.argv) > 3, 'Provide 2 arguments: filepath for 1 occurrence' + \
+    assert len(sys.argv) >= 3, 'Provide 2 arguments: filepath for 1 occurrence' + \
                               ' (can be occurrence_with_images file), ' + \
                               'and filepath for 1 CSV file with the headers "barcode", "aws", and "gcv" to compare.'
     occur = sys.argv[1]
