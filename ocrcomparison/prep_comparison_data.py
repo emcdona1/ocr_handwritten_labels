@@ -1,4 +1,6 @@
-"""Provide a baseline comparison score [0, 100] between OCR systems, using NLTK."""
+"""Compare OCR results to ground truth text, and provide a list of best-match-words (using NLTK fuzzy match ratio) and
+a rough baseline comparison score [0, 100] for each OCR platform on each image."""
+import string
 import sys
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
