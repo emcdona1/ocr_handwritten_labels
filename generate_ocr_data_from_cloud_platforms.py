@@ -16,11 +16,16 @@ def main(folder_or_image_path: str, generate_images=True) -> pd.DataFrame:
     for one_image_location in list_of_images:
         new_text_comparison = dict()
         for processor in processors:
-            processor.load_processed_ocr_response(one_image_location)
-            new_text_comparison[processor.name] = processor.get_full_text()
+            try:
+                processor.load_processed_ocr_response(one_image_location)
+                new_text_comparison[processor.name] = processor.get_full_text()
+                successful_ocr_query = True
+            except Exception as e:
+                new_text_comparison[processor.name] = 'Error during OCR: %s' % str(e)
+                successful_ocr_query = False
             new_text_comparison['barcode'] = processor.current_image_barcode
 
-            if generate_images:
+            if generate_images and successful_ocr_query:
                 annotator = processor.get_image_annotator()
                 annotator.set_save_location(os.path.join(folder_path, processor.name))
                 draw_comparison_image(processor, annotator)
