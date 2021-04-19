@@ -105,22 +105,15 @@ def add_ground_truth_text(analysis: pd.DataFrame, filepath=None) -> pd.DataFrame
 def preprocess_text(text: str):
     word_tokens = word_tokenize(text)
     stop_words = set(stopwords.words('english'))
-    removed_words = []
+    stopped_words = []
     filtered_words = []
     for w in word_tokens:
         if w.lower() in stop_words:
-            removed_words.append(w)
+            stopped_words.append(w)
         else:
             filtered_words.append(w)
-
-    for idx, w in enumerate(filtered_words):
-        if w in string.punctuation:
-            punctuation_mark = filtered_words.pop(idx)
-            removed_words.append(punctuation_mark)
-        if len(w) < 2:
-            short = filtered_words.pop(idx)
-            removed_words.append(short)
-    print('Tokens excluded: %s' % str(removed_words))
+    filtered_words = [word for word in filtered_words if word not in string.punctuation]
+    filtered_words = [word for word in filtered_words if len(word) >= 2]
     return filtered_words
 
 
