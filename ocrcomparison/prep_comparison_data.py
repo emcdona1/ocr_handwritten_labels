@@ -18,7 +18,10 @@ def main(occurrence_filepath, ocr_filepath):
     analysis = add_ground_truth_text(analysis, occurrence_filepath)
 
     for idx, ocr_row in analysis.iterrows():
-        aws_tokens = word_tokenize(ocr_row['aws']['text'])
+        if pd.isna(ocr_row['aws']['text']):
+            aws_tokens = ['']  # aws didn't find anything...
+        else:
+            aws_tokens = word_tokenize(ocr_row['aws']['text'])
         gcv_tokens = word_tokenize(ocr_row['gcv']['text'])
         aws_match_results = list()
         gcv_match_results = list()

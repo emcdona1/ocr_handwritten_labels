@@ -59,6 +59,6 @@ if __name__ == '__main__':
     generate_images_flag = True
     if len(sys.argv) == 3:
         flag_text = sys.argv[2]
-        if flag_text.lower() is 'false' or 'no' or 'n':
+        if flag_text.lower() == 'false' or 'no' or 'n':
             generate_images_flag = False
     results = main(folder_or_image_file, generate_images=generate_images_flag)
