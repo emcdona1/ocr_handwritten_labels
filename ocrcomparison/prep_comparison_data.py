@@ -110,6 +110,9 @@ def preprocess_text(word_tokens: list):
             filtered_words.append(w)
 
     for idx, w in enumerate(filtered_words):
+        if w in string.punctuation:
+            punctuation_mark = filtered_words.pop(idx)
+            removed_words.append(punctuation_mark)
         if len(w) < 2:
             short = filtered_words.pop(idx)
             removed_words.append(short)
