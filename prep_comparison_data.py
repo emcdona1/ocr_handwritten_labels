@@ -21,7 +21,7 @@ def main(occurrence_filepath, ocr_filepath) -> pd.DataFrame:
 
     for idx, ocr_row in analysis.iterrows():
         if pd.isna(ocr_row['aws']['text']):
-            aws_tokens = ['']  # aws didn't find anything...
+            aws_tokens = ['']  # this means that AWS didn't find anything...
         else:
             aws_tokens = word_tokenize(ocr_row['aws']['text'])
         gcv_tokens = word_tokenize(ocr_row['gcv']['text'])
@@ -53,14 +53,7 @@ def load_ocr_from_file(analysis: pd.DataFrame, filepath: str) -> pd.DataFrame:
     for idx, ocr_row in ocr_data.iterrows():
         barcode = ocr_row['barcode']
         aws = ocr_row['aws']
-        # aws = 'FLORA OF MISSOURI\nasplenium pinnatifidum nutt\non north exposure in crevices\n' + \
-        #       'of granite, mear summit of\nstughes mt., 4 miles S.rt. Co. of\nGrandale Kashington\nNo. 1867\n' + \
-        #       'Oct. 26 1930\nJULIAN A. STEYERMARK, COLLECTOR'
         gcv = ocr_row['gcv']
-        # gcv = 'FLORA OF MISSOURI\nAsplenium pinnatifidum\nOn north exposure, in crevices\n' + \
-        #       'Hughes int., 4 miles 8.tt. of\nFrondale, Hashington Co.\nNo. 1867\nOct. 26 1930\n' + \
-        #       'JULIAN A. STEYERMARK, COLLECTOR'
-
         new_row_for_analysis = {('ground_truth', 'barcode'): barcode, ('aws', 'text'): aws, ('gcv', 'text'): gcv}
         analysis = analysis.append(new_row_for_analysis, ignore_index=True)
     return analysis
@@ -70,15 +63,13 @@ def add_ground_truth_text(analysis: pd.DataFrame, filepath=None) -> pd.DataFrame
     # Ground truth from the following extracted fields, \n separated:
     # scientificName + scientificNameAuthorship, recordNumber **ADDED "No." **, verbatimEventDate, habitat,
     # stateProvince, county **ADDED "Co."**, locality, verbatimElevation
-    ground_truth = 'Asplenium pinnatifidum Nutt.\nNo. 1867\nOct. 26 1930\nOn north exposure, in crevices of granite\n' + \
-                   'Missouri\nWashington Co.\nNear summit of Hughes Mountain, 4 miles SW of Irondale\n\n'.strip()
     occur_data = pd.read_csv(filepath)
     bad_query_indices = []
     for idx, one_line in analysis.iterrows():
         current_barcode = one_line['ground_truth']['barcode']
         occur_row = occur_data[occur_data['catalogNumber'] == current_barcode].reset_index()
         if occur_row.shape[0] > 1:
-            occur_row = occur_row.loc[0, :] # select only the first row
+            occur_row = occur_row.loc[0, :]
         if occur_row.shape[0] == 1:
             ground_truth_string = ''
             data_to_add = [occur_row.at[0, 'scientificName'],
