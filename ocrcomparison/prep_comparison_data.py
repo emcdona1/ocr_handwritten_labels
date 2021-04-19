@@ -27,7 +27,7 @@ def main(occurrence_filepath, ocr_filepath):
         gcv_tokens = word_tokenize(ocr_row['gcv']['text'])
         aws_match_results = list()
         gcv_match_results = list()
-        ground_truth_filtered_words = preprocess_text(word_tokenize(ocr_row['ground_truth']['text']))
+        ground_truth_filtered_words = preprocess_text(ocr_row['ground_truth']['text'])
         analysis.at[[idx], ('ground_truth', 'filtered_tokens')] = pd.Series([ground_truth_filtered_words], index=[idx])
         for search_word in analysis.at[idx, ('ground_truth', 'filtered_tokens')]:
             aws_best_matches_list, aws_best_ratio = fuzzy_match_with_token_list(search_word, aws_tokens)
@@ -99,7 +99,8 @@ def add_ground_truth_text(analysis: pd.DataFrame, filepath=None) -> pd.DataFrame
     return analysis
 
 
-def preprocess_text(word_tokens: list):
+def preprocess_text(text: str):
+    word_tokens = word_tokenize(text)
     stop_words = set(stopwords.words('english'))
     removed_words = []
     filtered_words = []
