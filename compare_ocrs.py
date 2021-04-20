@@ -5,7 +5,7 @@ import calculate_changes
 
 def main(occurrence_filepath: str, ocr_text_filepath: str):
     analysis = prep_comparison_data.main(occurrence_filepath, ocr_text_filepath)
-    calculate_changes.main(analysis, 100, 25)
+    calculate_changes.main(analysis, 150)
 
 
 if __name__ == '__main__':
