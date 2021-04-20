@@ -56,10 +56,11 @@ class GCVImageAnnotator(ImageAnnotator):
         (top_left, top_right, bottom_right, bottom_left). """
         vertices = points_object.bounding_box.vertices
         sorted_x_values = sorted([vertex.x for vertex in vertices])
-        left_side = tuple([(vertex.x, vertex.y) for vertex in vertices
-                           if vertex.x == sorted_x_values[0] or vertex.x == sorted_x_values[1]])
-        right_side = tuple([(vertex.x, vertex.y) for vertex in vertices
-                            if vertex.x == sorted_x_values[2] or vertex.x == sorted_x_values[3]])
+        left_side = [(point.x, point.y) for point in vertices if point.x in sorted_x_values[0:2]]
+        left_side = tuple(left_side)
+        right_side = [(point.x, point.y) for point in vertices if point.x in sorted_x_values[2:]]
+        right_side = tuple(right_side)
+
         if left_side[0][1] > left_side[1][1]:
             left_side = (left_side[1], left_side[0])
         if right_side[0][1] > left_side[1][1]:
