@@ -4,9 +4,10 @@ import os
 from google.cloud import vision
 from abc import ABC, abstractmethod
 import boto3
-from utilities.dataloader import load_pickle, pickle_an_object
-from utilities.dataprocessor import extract_barcode_from_image_name
+from utilities.dataloader import load_pickle, pickle_an_object, open_cv2_image
+from utilities.dataprocessor import extract_barcode_from_image_name, convert_relative_to_absolute_coordinates
 from imageprocessor import image_annotator
+from typing import List, Tuple
 
 
 class ImageProcessor(ABC):
