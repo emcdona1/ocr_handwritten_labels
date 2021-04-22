@@ -21,6 +21,8 @@ class ImageProcessor(ABC):
         self.current_image_location = None
         self.current_image_barcode = None
         self.current_ocr_response = None
+        self.current_image_height = None
+        self.current_image_width = None
         self.name = 'imageprocessor'
 
     @abstractmethod
@@ -61,6 +63,15 @@ class ImageProcessor(ABC):
     def get_full_text(self) -> str:
         pass
 
+    def get_found_word_locations(self) -> List[Tuple]:
+        top_left_points = []
+        words = self.get_list_of_words()
+        annotator = self.get_image_annotator()
+        for word in words:
+            one_top_left_point, _, _, _ = annotator.organize_vertices(word)
+            top_left_points.append(one_top_left_point)
+        return top_left_points
+
 
 class GCVProcessor(ImageProcessor):
     def __init__(self):
@@ -90,6 +101,8 @@ class GCVProcessor(ImageProcessor):
             image = vision.types.Image(content=self.image_content)
             self.current_ocr_response = self.client.document_text_detection(image=image)
             pickle_an_object(self.save_directory, base_name_of_image, self.current_ocr_response)
+        self.current_image_height = self.current_ocr_response.full_text_annotation.pages[0].height
+        self.current_image_width = self.current_ocr_response.full_text_annotation.pages[0].width
 
     def get_image_annotator(self):
         return image_annotator.GCVImageAnnotator(self.current_image_location)
@@ -144,7 +157,12 @@ class AWSProcessor(ImageProcessor):
                 Document={
                     'Bytes': self.image_content
                 })
+            current_image = open_cv2_image(self.current_image_location)
+            self.current_ocr_response['height'] = current_image.shape[0]
+            self.current_ocr_response['width'] = current_image.shape[1]
             pickle_an_object(self.save_directory, base_name_of_image, self.current_ocr_response)
+        self.current_image_height = self.current_ocr_response['height']
+        self.current_image_width = self.current_ocr_response['width']
 
     def get_image_annotator(self):
         return image_annotator.AWSImageAnnotator(self.current_image_location)
@@ -165,3 +183,11 @@ class AWSProcessor(ImageProcessor):
     def get_list_of_lines(self) -> list:
         lines = [block for block in self.current_ocr_response['Blocks'] if block['BlockType'] == 'LINE']
         return lines
+
+    def get_found_word_locations(self) -> List[Tuple[int, int]]:
+        relative_word_locations = super(AWSProcessor, self).get_found_word_locations()
+        absolute_word_locations = [convert_relative_to_absolute_coordinates(relative,
+                                                                            self.current_image_height,
+                                                                            self.current_image_width)
+                                   for relative in relative_word_locations]
+        return absolute_word_locations
