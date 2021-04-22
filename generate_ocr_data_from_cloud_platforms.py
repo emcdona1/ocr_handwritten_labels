@@ -1,6 +1,7 @@
 import sys
 import os
 from utilities.dataloader import load_file_list_from_filesystem, get_timestamp_for_file_saving, save_dataframe_as_csv
+from utilities.dataprocessor import convert_relative_to_absolute_coordinates
 from imageprocessor.image_processor import GCVProcessor, AWSProcessor
 import pandas as pd
 
@@ -41,12 +42,16 @@ def main(folder_or_image_path: str, generate_images=True) -> pd.DataFrame:
 def draw_comparison_image(processor, annotator) -> None:
     lines = processor.get_list_of_lines()
     for line in lines:
-        vertices = annotator.organize_vertices(line)
+        sorted_vertices = annotator.organize_vertices(line)
+        height, width, _ = annotator.current_image_to_annotate.shape
+        sorted_vertices = [convert_relative_to_absolute_coordinates(pt, height, width) for pt in sorted_vertices]
         box_color = (0, 0, 0)  # black
-        annotator.draw_polygon(vertices, box_color)
+        annotator.draw_polygon(sorted_vertices, box_color)
     words = processor.get_list_of_words()
     for word in words:
         sorted_vertices = annotator.organize_vertices(word)
+        height, width, _ = annotator.current_image_to_annotate.shape
+        sorted_vertices = [convert_relative_to_absolute_coordinates(pt, height, width) for pt in sorted_vertices]
         start_color = (0, 200, 0)  # green
         end_color = (0, 0, 230)  # red
         annotator.draw_line(sorted_vertices[0], sorted_vertices[3], start_color, 2)
