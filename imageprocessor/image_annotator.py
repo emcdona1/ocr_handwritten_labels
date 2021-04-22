@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 from utilities.dataloader import open_cv2_image, save_cv2_image
 from utilities.dataprocessor import extract_barcode_from_image_name
 import cv2
+from typing import Tuple
 
 
 class ImageAnnotator(ABC):
@@ -30,7 +31,7 @@ class ImageAnnotator(ABC):
         self.current_image_id = extract_barcode_from_image_name(self.current_image_location)
 
     @abstractmethod
-    def organize_vertices(self, points_object) -> ((int, int), (int, int), (int, int), (int, int)):
+    def organize_vertices(self, points_object) -> Tuple[tuple, tuple, tuple, tuple]:
         pass
 
     def draw_line(self, point1, point2, color=(0, 0, 0), width=1):
@@ -51,7 +52,8 @@ class GCVImageAnnotator(ImageAnnotator):
         if not os.path.exists(self.save_location):
             os.makedirs(self.save_location)
 
-    def organize_vertices(self, points_object) -> ((int, int), (int, int), (int, int), (int, int)):
+    def organize_vertices(self, points_object) -> Tuple[Tuple[int, int], Tuple[int, int],
+                                                        Tuple[int, int], Tuple[int, int]]:
         """ Given a response object with a bounding_box, returns a 4-tuple with x-y coordinates organized in the following way:
         (top_left, top_right, bottom_right, bottom_left). """
         vertices = points_object.bounding_box.vertices
@@ -74,11 +76,12 @@ class AWSImageAnnotator(ImageAnnotator):
         if not os.path.exists(self.save_location):
             os.mkdir(self.save_location)
 
-    def organize_vertices(self, points_object) -> ((int, int), (int, int), (int, int), (int, int)):
-        """ Given a block, returns a 4-tuple with x-y coordinates organized in the following way:
+    def organize_vertices(self, points_object) -> Tuple[Tuple[float, float], Tuple[float, float],
+                                                        Tuple[float, float], Tuple[float, float]]:
+        """ Given a block, returns a 4-tuple with RELATIVE x-y coordinates organized in the following way:
         (top_left, top_right, bottom_right, bottom_left). """
-        height, width, _ = self.current_image_to_annotate.shape
-        vertices = []
+        vertices = list()
         for block in points_object['Geometry']['Polygon']:
-            vertices.append((int(width * block['X']), int(height * block['Y'])))
-        return tuple(vertices)
+            vertices.append((block['X'], block['Y']))
+        vertices_as_tuple = tuple(vertices)
+        return vertices_as_tuple
