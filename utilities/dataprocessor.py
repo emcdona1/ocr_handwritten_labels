@@ -53,3 +53,9 @@ def crop_an_image_to_box(image: np.ndarray, x_min, x_max, y_min, y_max) -> np.nd
         y_max = int(width * y_max)
     cropped_image = image[x_min:x_max+1, y_min:y_max+1]
     return cropped_image
+
+
+def convert_relative_to_absolute_coordinates(coord: Tuple[float, float], height: int, width: int) -> Tuple[int, int]:
+    new_x = int(width * coord[0])
+    new_y = int(height * coord[1])
+    return new_x, new_y
