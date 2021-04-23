@@ -4,15 +4,15 @@ import numpy as np
 import prep_comparison_data
 import calculate_changes
 from imageprocessor.image_processor import ImageProcessor, GCVProcessor, AWSProcessor
-from typing import List
+from typing import List, Tuple
 from matplotlib import pyplot
 from sklearn.cluster import Birch, AgglomerativeClustering
 from sklearn.mixture import GaussianMixture, BayesianGaussianMixture
 
 
-def main(occurrence_filepath: str, ocr_text_filepath: str, image_folder: str):
-    analysis = prep_comparison_data.main(occurrence_filepath, ocr_text_filepath)
-    calculate_changes.main(analysis, 150)
+def main(occurrence_filepath: str, ocr_text_filepath: str, image_folder: str, analysis):
+    # analysis = prep_comparison_data.main(occurrence_filepath, ocr_text_filepath)
+    # calculate_changes.main(analysis, 150)
     processors: List[ImageProcessor] = [GCVProcessor(), AWSProcessor()]
     for idx, row in analysis.iterrows():
         barcode = row.at['ground_truth', 'barcode']
@@ -87,4 +87,4 @@ if __name__ == '__main__':
     images_folder = sys.argv[3]
     # if len(sys.argv) == 4:
 
-    main(occur_file, ocr_texts, images_folder)
+    main(occur_file, ocr_texts, images_folder, None)
