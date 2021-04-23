@@ -18,14 +18,51 @@ def main(occurrence_filepath: str, ocr_text_filepath: str, image_folder: str, an
         barcode = row.at['ground_truth', 'barcode']
         image_location = image_folder + os.path.sep + barcode + '.jpg'
 
+        pyplot.clf()
         fig_count = 1
+        pyplot.clf()
         for i, processor in enumerate(processors):
             processor.load_processed_ocr_response(image_location)
-            list_of_upper_left_points = processor.get_found_word_locations()
+            list_of_word_points = processor.get_found_word_locations()
             image_height = processor.current_image_height
             image_width = processor.current_image_width
 
-            word_clustering(fig_count, image_height, image_width, list_of_upper_left_points, processor)
+            word_clustering(fig_count, image_height, image_width, list_of_word_points, processor)
+            label_height = int(image_height * 0.15)
+            label_width = int(image_width * 0.365)
+            label_points = find_most_concentrated_label(list_of_word_points, image_width, image_height,
+                                                        label_width, label_height)
+            for p in range(0, 3):
+                pyplot.plot([label_points[p][0], label_points[p + 1][0]],
+                            [image_height - label_points[p][1], image_height - label_points[p + 1][1]],
+                            color='black')
+            pyplot.plot([label_points[3][0], label_points[0][0]],
+                        [image_height - label_points[3][1], image_height - label_points[0][1]],
+                        color='black')
+            fig_count += 1
+
+
+def find_most_concentrated_label(list_of_word_points: list, image_width: int, image_height: int,
+                                 label_width: int, label_height: int) -> \
+        Tuple[Tuple[int, int], Tuple[int, int], Tuple[int, int], Tuple[int, int]]:
+    """ Due to runtime length, this only searches the bottom quadrant of an image. """
+    density = np.zeros((image_height, image_width))
+    for vertex in list_of_word_points:
+        density[vertex[1], vertex[0]] = 1 + density[vertex[1], vertex[0]]
+    max_count = 0
+    max_loc = (0, 0)
+    for y in range(int(image_height / 2), image_height - label_height + 1):
+        for x in range(int(image_width / 2), image_width - label_width + 1):
+            count = np.sum(density[y:y + label_height, x:x + label_width])
+            if count >= max_count:
+                max_count = count
+                max_loc = (x, y)
+        print(y)
+    upper_left = max_loc
+    upper_right = (max_loc[0] + label_width, max_loc[1])
+    lower_right = (max_loc[0] + label_width, max_loc[1] + label_height)
+    lower_left = (max_loc[0], max_loc[1] + label_height)
+    return upper_left, upper_right, lower_right, lower_left
 
 
 def word_clustering(fig_count: int, image_height: int, image_width: int, list_of_upper_left_points: list,
@@ -33,7 +70,7 @@ def word_clustering(fig_count: int, image_height: int, image_width: int, list_of
     # n_clusters = range(2, 5)
     # for N in n_clusters:
     np_of_points = np.array(list_of_upper_left_points)
-    # todo: remove very isolated points, which seems to impact clustering
+    np_of_points = remove_isolated_points(np_of_points, 300, 10)
     model = Birch(threshold=5)  # this one clustered an isolated pt by itself, that's good
     # model = AgglomerativeClustering(n_clusters=N)  # this seems very similar to Birch so far
     # model = GaussianMixture(n_components=N)  # this one doesn't seem like what we want - it clustered an isolated pt with a far away group
@@ -79,9 +116,9 @@ def distance(pt1, pt2) -> float:
 
 if __name__ == '__main__':
     assert len(sys.argv) == 4, 'Provide 3 arguments: filepath for 1 occurrence' + \
-                              ' (can be occurrence_with_images file), ' + \
-                              'filepath for 1 CSV file with the headers "barcode", "aws", and "gcv" to compare,' +\
-                              'and filepath of the folder of images.'
+                               ' (can be occurrence_with_images file), ' + \
+                               'filepath for 1 CSV file with the headers "barcode", "aws", and "gcv" to compare,' + \
+                               'and filepath of the folder of images.'
     occur_file = sys.argv[1]
     ocr_texts = sys.argv[2]
     images_folder = sys.argv[3]
