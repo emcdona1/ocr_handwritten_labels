@@ -64,13 +64,16 @@ class ImageProcessor(ABC):
         pass
 
     def get_found_word_locations(self) -> List[Tuple]:
-        top_left_points = []
+        """ Returns a list of (x,y) coordinates (top left is origin),
+         where each point is the corner of a word identified by the OCR. """
+        word_points = []
         words = self.get_list_of_words()
         annotator = self.get_image_annotator()
         for word in words:
-            one_top_left_point, _, _, _ = annotator.organize_vertices(word)
-            top_left_points.append(one_top_left_point)
-        return top_left_points
+            corners_of_word = annotator.organize_vertices(word)
+            for vertex in corners_of_word:
+                word_points.append(vertex)
+        return word_points
 
 
 class GCVProcessor(ImageProcessor):
