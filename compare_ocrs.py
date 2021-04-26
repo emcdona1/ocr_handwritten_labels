@@ -124,16 +124,3 @@ def distance(pt1, pt2) -> float:
     dist = (pt1[0] - pt2[0]) ** 2 + (pt1[1] - pt2[1]) ** 2
     dist = dist ** 0.5
     return dist
-
-
-if __name__ == '__main__':
-    assert len(sys.argv) == 4, 'Provide 3 arguments: filepath for 1 occurrence' + \
-                               ' (can be occurrence_with_images file), ' + \
-                               'filepath for 1 CSV file with the headers "barcode", "aws", and "gcv" to compare,' + \
-                               'and filepath of the folder of images.'
-    occur_file = sys.argv[1]
-    ocr_texts = sys.argv[2]
-    images_folder = sys.argv[3]
-    # if len(sys.argv) == 4:
-
-    main(occur_file, ocr_texts, images_folder, None)
