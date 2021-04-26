@@ -99,12 +99,10 @@ def slower_find_most_concentrated_label(list_of_word_points: list, image_width: 
     return upper_left, upper_right, lower_right, lower_left
 
 
-def word_clustering(fig_count: int, image_height: int, image_width: int, list_of_upper_left_points: list,
+def word_clustering(fig_count: int, image_height: int, image_width: int, np_of_points: np.ndarray,
                     processor: ImageProcessor) -> None:
     # n_clusters = range(2, 5)
     # for N in n_clusters:
-    np_of_points = np.array(list_of_upper_left_points)
-    np_of_points = remove_isolated_points(np_of_points, 300, 10)
     model = Birch(threshold=5)  # this one clustered an isolated pt by itself, that's good
     # model = AgglomerativeClustering(n_clusters=N)  # this seems very similar to Birch so far
     # model = GaussianMixture(n_components=N)  # this one doesn't seem like what we want - it clustered an isolated pt with a far away group
@@ -120,26 +118,6 @@ def word_clustering(fig_count: int, image_height: int, image_width: int, list_of
     for cluster in clusters:
         row_idx = np.where(y_hat == cluster)
         pyplot.scatter(np_of_points[row_idx, 0], image_height - np_of_points[row_idx, 1])
-    fig_count += 1
-
-
-def remove_isolated_points(np_of_points: np.ndarray, dist_threshold=300, cluster_size_threshold=3) -> np.ndarray:
-    indices_to_remove = list()
-    for idx, point in enumerate(np_of_points):
-        matches = close_points(np_of_points, point, dist_threshold)
-        if len(matches) < cluster_size_threshold:
-            indices_to_remove.append(idx)
-    cleaned_np_of_points = np.delete(np_of_points, indices_to_remove, axis=0)
-    return cleaned_np_of_points
-
-
-def close_points(np_of_points: np.ndarray, one_point: np.ndarray, closeness_threshold=500) -> list:
-    results = list()
-    for i, point in enumerate(np_of_points):
-        dist = distance(one_point, point)
-        if dist < closeness_threshold:
-            results.append(i)
-    return results
 
 
 def distance(pt1, pt2) -> float:
