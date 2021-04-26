@@ -77,9 +77,11 @@ class ImageProcessor(ABC):
 
 
 class GCVProcessor(ImageProcessor):
-    def __init__(self):
+    def __init__(self, starting_image_path=None):
         super().__init__()
         self.name = 'gcv'
+        if starting_image_path:
+            self.load_processed_ocr_response(starting_image_path)
 
     def initialize_client(self):
         config_parser = ConfigParser()
@@ -135,9 +137,11 @@ class GCVProcessor(ImageProcessor):
 
 
 class AWSProcessor(ImageProcessor):
-    def __init__(self):
+    def __init__(self, starting_image_path=None):
         super().__init__()
         self.name = 'aws'
+        if starting_image_path:
+            self.load_processed_ocr_response(starting_image_path)
 
     def initialize_client(self):
         return boto3.client('textract')
