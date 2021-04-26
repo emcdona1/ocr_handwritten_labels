@@ -27,19 +27,28 @@ def main(occurrence_filepath: str, ocr_text_filepath: str, image_folder: str, an
             image_height = processor.current_image_height
             image_width = processor.current_image_width
 
-            word_clustering(fig_count, image_height, image_width, list_of_word_points, processor)
-            label_height = int(image_height * 0.15)
-            label_width = int(image_width * 0.365)
-            label_points = find_most_concentrated_label(list_of_word_points, image_width, image_height,
-                                                        label_width, label_height)
-            for p in range(0, 3):
-                pyplot.plot([label_points[p][0], label_points[p + 1][0]],
-                            [image_height - label_points[p][1], image_height - label_points[p + 1][1]],
-                            color='black')
-            pyplot.plot([label_points[3][0], label_points[0][0]],
-                        [image_height - label_points[3][1], image_height - label_points[0][1]],
-                        color='black')
-            fig_count += 1
+def plot_words_and_label(fig_num: int, processor, image_height: int, image_width: int, np_of_points: np.ndarray,
+                         label_points: tuple, label_image_save_location: str):
+    fig = pyplot.figure(fig_num)
+    pyplot.clf()
+    pyplot.title('%s using %s' % (processor.current_image_barcode, processor.name.upper()))
+    pyplot.xlim([0, image_width])
+    pyplot.ylim([0, image_height])
+    if image_width > 2000:
+        fig.set_size_inches(image_width / 980, image_height / 980)  # high resolution images
+    else:
+        fig.set_size_inches(image_width / 300, image_height / 300)  # web resolution images
+
+    pyplot.scatter(np_of_points[:, 0], image_height - np_of_points[:, 1], s=4)
+
+    for p in range(0, 3):
+        pyplot.plot([label_points[p][0], label_points[p + 1][0]],
+                    [image_height - label_points[p][1], image_height - label_points[p + 1][1]],
+                    color='black')
+    pyplot.plot([label_points[3][0], label_points[0][0]],
+                [image_height - label_points[3][1], image_height - label_points[0][1]],
+                color='black')
+    pyplot.savefig(label_image_save_location + os.path.sep + processor.current_image_barcode + '-' + processor.name + '.png')
 
 
 def find_most_concentrated_label(list_of_word_points: list, image_width: int, image_height: int,
