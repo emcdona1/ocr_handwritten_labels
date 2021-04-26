@@ -17,7 +17,12 @@ def main(occurrence_filepath: str, ocr_text_filepath: str, image_folder: str, an
     # analysis = prep_comparison_data.main(occurrence_filepath, ocr_text_filepath)
     # calculate_changes.main(analysis, 150)
     processors: List[ImageProcessor] = [GCVProcessor(), AWSProcessor()]
-    for idx, row in analysis.iterrows():
+    # for idx, row in analysis.iterrows():
+    images = [0, 100, 200, 300, 400, 500, 600, 700]
+    label_image_save_location = 'test_results\\label_finder-2021_04_26'
+    fig_count = 1
+    for idx in images:
+        row = analysis.iloc[idx, :]
         barcode = row.at['ground_truth', 'barcode']
         image_location = image_folder + os.path.sep + barcode + '.jpg'
         label_searcher = Timer(barcode)
@@ -111,7 +116,6 @@ def slower_find_most_concentrated_label(list_of_word_points: list, image_width: 
             if count >= max_count:
                 max_count = count
                 max_loc = (x, y)
-        print(y)
     upper_left = max_loc
     upper_right = (max_loc[0] + label_width, max_loc[1])
     lower_right = (max_loc[0] + label_width, max_loc[1] + label_height)
