@@ -101,9 +101,9 @@ class ImageProcessor(ABC):
                 idx_of_valid_x = np.intersect1d(np.where(x_values >= x),
                                                 np.where(x_values < x + self.current_label_width))
                 y_possible = np_of_points[idx_of_valid_x, 1]
-                valid_y = np.intersect1d(np.where(y_possible >= y),
-                                         np.where(y_possible < y + self.current_label_height))
-                count = valid_y.shape[0]
+                valid_y_count = np.intersect1d(np.where(y_possible >= y),
+                                               np.where(y_possible < y + self.current_label_height))
+                count = valid_y_count.shape[0]
                 if count >= max_count:
                     max_count = count
                     max_loc = (x, y)
