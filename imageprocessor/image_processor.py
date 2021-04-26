@@ -39,18 +39,26 @@ class ImageProcessor(ABC):
         pass
 
     @abstractmethod
-    def load_processed_ocr_response(self, image_path: str) -> None:
+    def load_image_from_file(self, image_path: str) -> None:
         pass
 
-    def check_for_existing_pickle_file(self, filename: str) -> bool:
-        self.current_ocr_response = None
+    def search_for_and_load_existing_pickle_file(self) -> bool:
+        """ Returns true if a pickled response is found for this file/OCR platform, and loads the pickled response
+         into current_ocr_response.  If not found, returns false and sets current_ocr_response to None."""
+        base_name_of_image = os.path.basename(self.current_image_location).split('.')[0]
         file_list = os.listdir(self.save_directory)
-        matches = [path for path in file_list if (filename + '.pickle') in path]
+        matches = [path for path in file_list if (base_name_of_image + '.pickle') in path]
         if len(matches) > 0:
-            print('Using previously pickled response object for %s' % filename)
+            print('Using previously pickled %s response object for %s' % (self.name, base_name_of_image))
             self.current_ocr_response = load_pickle(os.path.join(self.save_directory, matches[0]))
             return True
-        return False
+        else:
+            self.current_ocr_response = None
+            return False
+
+    @abstractmethod
+    def download_ocr_and_save_response(self) -> None:
+        pass
 
     @abstractmethod
     def get_image_annotator(self):
@@ -113,7 +121,7 @@ class GCVProcessor(ImageProcessor):
         super().__init__()
         self.name = 'gcv'
         if starting_image_path:
-            self.load_processed_ocr_response(starting_image_path)
+            self.load_image_from_file(starting_image_path)
 
     def initialize_client(self):
         config_parser = ConfigParser()
@@ -127,19 +135,26 @@ class GCVProcessor(ImageProcessor):
         if not os.path.exists(self.save_directory):
             os.mkdir(self.save_directory)
 
-    def load_processed_ocr_response(self, image_path: str) -> None:
+    def load_image_from_file(self, image_path: str) -> None:
+        self.current_ocr_response = None
         self.current_image_location = image_path
         self.current_image_barcode = extract_barcode_from_image_name(self.current_image_location)
-        base_name_of_image = os.path.basename(self.current_image_location).split('.')[0]
-        found: bool = self.check_for_existing_pickle_file(base_name_of_image)
+        found: bool = self.search_for_and_load_existing_pickle_file()
         if not found:
-            with io.open(image_path, 'rb') as image_file:
-                self.image_content = image_file.read()
-            image = vision.types.Image(content=self.image_content)
-            self.current_ocr_response = self.client.document_text_detection(image=image)
-            pickle_an_object(self.save_directory, base_name_of_image, self.current_ocr_response)
+            self.download_ocr_and_save_response()
         self.current_image_height = self.current_ocr_response.full_text_annotation.pages[0].height
         self.current_image_width = self.current_ocr_response.full_text_annotation.pages[0].width
+        self.current_label_height = math.ceil(self.current_image_height * 0.15)
+        self.current_label_width = math.ceil(self.current_image_width * 0.365)
+
+    def download_ocr_and_save_response(self) -> None:
+        with io.open(self.current_image_location, 'rb') as image_file:
+            self.image_content = image_file.read()
+        image = vision.types.Image(content=self.image_content)
+        self.current_ocr_response = self.client.document_text_detection(image=image)
+        pickle_an_object(self.save_directory,
+                         os.path.basename(self.current_image_location).split('.')[0],
+                         self.current_ocr_response)
 
     def get_image_annotator(self):
         return image_annotator.GCVImageAnnotator(self.current_image_location)
@@ -173,7 +188,7 @@ class AWSProcessor(ImageProcessor):
         super().__init__()
         self.name = 'aws'
         if starting_image_path:
-            self.load_processed_ocr_response(starting_image_path)
+            self.load_image_from_file(starting_image_path)
 
     def initialize_client(self):
         return boto3.client('textract')
@@ -183,25 +198,32 @@ class AWSProcessor(ImageProcessor):
         if not os.path.exists(self.save_directory):
             os.mkdir(self.save_directory)
 
-    def load_processed_ocr_response(self, image_path: str) -> None:
+    def load_image_from_file(self, image_path: str) -> None:
+        self.current_ocr_response = None
         self.current_image_location = image_path
         self.current_image_barcode = extract_barcode_from_image_name(self.current_image_location)
-        base_name_of_image = os.path.basename(self.current_image_location).split('.')[0]
-        found: bool = self.check_for_existing_pickle_file(base_name_of_image)
+        found: bool = self.search_for_and_load_existing_pickle_file()
         if not found:
-            with open(self.current_image_location, 'rb') as img:
-                f = img.read()
-                self.image_content = bytes(f)
-            self.current_ocr_response = self.client.detect_document_text(
-                Document={
-                    'Bytes': self.image_content
-                })
-            current_image = open_cv2_image(self.current_image_location)
-            self.current_ocr_response['height'] = current_image.shape[0]
-            self.current_ocr_response['width'] = current_image.shape[1]
-            pickle_an_object(self.save_directory, base_name_of_image, self.current_ocr_response)
+            self.download_ocr_and_save_response()
         self.current_image_height = self.current_ocr_response['height']
         self.current_image_width = self.current_ocr_response['width']
+        self.current_label_height = math.ceil(self.current_image_height * 0.15)
+        self.current_label_width = math.ceil(self.current_image_width * 0.365)
+
+    def download_ocr_and_save_response(self) -> None:
+        with open(self.current_image_location, 'rb') as img:
+            f = img.read()
+            self.image_content = bytes(f)
+        self.current_ocr_response = self.client.detect_document_text(
+            Document={
+                'Bytes': self.image_content
+            })
+        current_image = open_cv2_image(self.current_image_location)
+        self.current_ocr_response['height'] = current_image.shape[0]
+        self.current_ocr_response['width'] = current_image.shape[1]
+        pickle_an_object(self.save_directory,
+                         os.path.basename(self.current_image_location).split('.')[0],
+                         self.current_ocr_response)
 
     def get_image_annotator(self):
         return image_annotator.AWSImageAnnotator(self.current_image_location)
