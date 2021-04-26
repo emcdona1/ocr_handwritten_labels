@@ -8,6 +8,8 @@ from utilities.dataloader import load_pickle, pickle_an_object, open_cv2_image
 from utilities.dataprocessor import extract_barcode_from_image_name, convert_relative_to_absolute_coordinates
 from imageprocessor import image_annotator
 from typing import List, Tuple
+import math
+import numpy as np
 
 
 class ImageProcessor(ABC):
@@ -23,6 +25,9 @@ class ImageProcessor(ABC):
         self.current_ocr_response = None
         self.current_image_height = None
         self.current_image_width = None
+        self.current_label_height = None
+        self.current_label_width = None
+        self.current_label_location = None
         self.name = 'imageprocessor'
 
     @abstractmethod
@@ -74,6 +79,33 @@ class ImageProcessor(ABC):
             for vertex in corners_of_word:
                 word_points.append(vertex)
         return word_points
+
+    def find_label_location(self) -> \
+            Tuple[Tuple[int, int], Tuple[int, int], Tuple[int, int], Tuple[int, int]]:
+        """ Searches bottom quadrant of image for highest concentration of word bounding boxes
+        and returns a set of 4 tuples (top-left, top-right, bottom-right, bottom-left). """
+        np_of_points = np.array(self.get_found_word_locations())
+        max_count = 0
+        max_loc = (0, 0)
+        for y in range(int(self.current_image_height / 2), self.current_image_height - self.current_label_height + 1):
+            for x in range(int(self.current_image_width / 2), self.current_image_width - self.current_label_width + 1):
+                x_values = np_of_points[:, 0]
+                idx_of_valid_x = np.intersect1d(np.where(x_values >= x),
+                                                np.where(x_values < x + self.current_label_width))
+                y_possible = np_of_points[idx_of_valid_x, 1]
+                valid_y = np.intersect1d(np.where(y_possible >= y),
+                                         np.where(y_possible < y + self.current_label_height))
+                count = valid_y.shape[0]
+                if count >= max_count:
+                    max_count = count
+                    max_loc = (x, y)
+        print('Label found at point %s with %.0f words.' % (str(max_loc), max_count / 4))
+        upper_left = max_loc
+        upper_right = (max_loc[0] + self.current_label_width, max_loc[1])
+        lower_right = (max_loc[0] + self.current_label_width, max_loc[1] + self.current_label_height)
+        lower_left = (max_loc[0], max_loc[1] + self.current_label_height)
+        self.current_label_location = upper_left, upper_right, lower_right, lower_left
+        return self.current_label_location
 
 
 class GCVProcessor(ImageProcessor):
