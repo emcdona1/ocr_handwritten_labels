@@ -51,8 +51,33 @@ def plot_words_and_label(fig_num: int, processor, image_height: int, image_width
     pyplot.savefig(label_image_save_location + os.path.sep + processor.current_image_barcode + '-' + processor.name + '.png')
 
 
-def find_most_concentrated_label(list_of_word_points: list, image_width: int, image_height: int,
+def find_most_concentrated_label(np_of_points: np.ndarray, image_width: int, image_height: int,
                                  label_width: int, label_height: int) -> \
+        Tuple[Tuple[int, int], Tuple[int, int], Tuple[int, int], Tuple[int, int]]:
+    """ Searches bottom quadrant of image for highest concentration of word bounding boxes
+    and returns a set of 4 tuples (top-left, top-right, bottom-right, bottom-left). """
+    max_count = 0
+    max_loc = (0, 0)
+    for y in range(int(image_height / 2), image_height - label_height + 1):
+        for x in range(int(image_width / 2), image_width - label_width + 1):
+            x_values = np_of_points[:, 0]
+            idx_of_valid_x = np.intersect1d(np.where(x_values >= x), np.where(x_values < x + label_width))
+            y_possible = np_of_points[idx_of_valid_x, 1]
+            valid_y = np.intersect1d(np.where(y_possible >= y), np.where(y_possible < y + label_height))
+            count = valid_y.shape[0]
+            if count >= max_count:
+                max_count = count
+                max_loc = (x, y)
+    print('Label found at point %s with %.0f words.' % (str(max_loc), max_count/4))
+    upper_left = max_loc
+    upper_right = (max_loc[0] + label_width, max_loc[1])
+    lower_right = (max_loc[0] + label_width, max_loc[1] + label_height)
+    lower_left = (max_loc[0], max_loc[1] + label_height)
+    return upper_left, upper_right, lower_right, lower_left
+
+
+def slower_find_most_concentrated_label(list_of_word_points: list, image_width: int, image_height: int,
+                                        label_width: int, label_height: int) -> \
         Tuple[Tuple[int, int], Tuple[int, int], Tuple[int, int], Tuple[int, int]]:
     """ Due to runtime length, this only searches the bottom quadrant of an image. """
     density = np.zeros((image_height, image_width))
