@@ -18,7 +18,7 @@ def main(folder_or_image_path: str, generate_images=True) -> pd.DataFrame:
         new_text_comparison = dict()
         for processor in processors:
             try:
-                processor.load_processed_ocr_response(one_image_location)
+                processor.load_image_from_file(one_image_location)
                 new_text_comparison[processor.name] = processor.get_full_text()
                 successful_ocr_query = True
             except Exception as e:
