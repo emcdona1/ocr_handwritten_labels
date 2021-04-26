@@ -13,7 +13,7 @@ from sklearn.mixture import GaussianMixture, BayesianGaussianMixture
 from utilities.timer import Timer
 
 
-def main(occurrence_filepath: str, ocr_text_filepath: str, image_folder: str, analysis):
+def main(occurrence_filepath: str, ocr_text_filepath: str, image_folder: str, analysis: pd.DataFrame):
     # analysis = prep_comparison_data.main(occurrence_filepath, ocr_text_filepath)
     # calculate_changes.main(analysis, 150)
     processors: List[ImageProcessor] = [GCVProcessor(), AWSProcessor()]
