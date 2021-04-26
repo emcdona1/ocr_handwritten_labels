@@ -1,6 +1,8 @@
+import math
 import sys
 import os
 import numpy as np
+import pandas as pd
 import prep_comparison_data
 import calculate_changes
 from imageprocessor.image_processor import ImageProcessor, GCVProcessor, AWSProcessor
@@ -8,6 +10,7 @@ from typing import List, Tuple
 from matplotlib import pyplot
 from sklearn.cluster import Birch, AgglomerativeClustering
 from sklearn.mixture import GaussianMixture, BayesianGaussianMixture
+from utilities.timer import Timer
 
 
 def main(occurrence_filepath: str, ocr_text_filepath: str, image_folder: str, analysis):
