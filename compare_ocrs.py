@@ -20,15 +20,32 @@ def main(occurrence_filepath: str, ocr_text_filepath: str, image_folder: str, an
     for idx, row in analysis.iterrows():
         barcode = row.at['ground_truth', 'barcode']
         image_location = image_folder + os.path.sep + barcode + '.jpg'
-
-        pyplot.clf()
-        fig_count = 1
-        pyplot.clf()
+        label_searcher = Timer(barcode)
         for i, processor in enumerate(processors):
             processor.load_processed_ocr_response(image_location)
             list_of_word_points = processor.get_found_word_locations()
+            np_of_points = np.array(list_of_word_points)
+
             image_height = processor.current_image_height
             image_width = processor.current_image_width
+            label_height = math.ceil(image_height * 0.15)
+            label_width = math.ceil(image_width * 0.365)
+
+            label_points = find_most_concentrated_label(np_of_points, image_width, image_height, label_width, label_height)
+            analysis.loc[idx, (processor.name, 'label_upper_left')] = '%s,%s' % (label_points[0][0], label_points[0][1])
+            analysis.loc[idx, (processor.name, 'label_upper_right')] = '%s,%s' % (label_points[1][0], label_points[1][1])
+            analysis.loc[idx, (processor.name, 'label_lower_right')] = '%s,%s' % (label_points[2][0], label_points[2][1])
+            analysis.loc[idx, (processor.name, 'label_lower_left')] = '%s,%s' % (label_points[3][0], label_points[3][1])
+
+            plot_words_and_label(fig_count, processor, image_height, image_width, np_of_points,
+                                 label_points, label_image_save_location)
+            fig_count += 1
+
+        label_searcher.stop()
+        print('Image %i / %i processed by both OCRs in %.2f sec.' %
+              (idx + 1, analysis.shape[0], label_searcher.duration))
+    return analysis
+
 
 def plot_words_and_label(fig_num: int, processor, image_height: int, image_width: int, np_of_points: np.ndarray,
                          label_points: tuple, label_image_save_location: str):
