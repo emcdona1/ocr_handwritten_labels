@@ -13,7 +13,7 @@ import numpy as np
 
 
 class ImageProcessor(ABC):
-    def __init__(self):
+    def __init__(self, starting_image_path=None):
         self.client = self.initialize_client()
         self.save_directory = 'ocr_responses'
         if not os.path.exists(self.save_directory):
@@ -29,6 +29,8 @@ class ImageProcessor(ABC):
         self.current_label_width = None
         self.current_label_location = None
         self.name = 'imageprocessor'
+        if starting_image_path:
+            self.load_image_from_file(starting_image_path)
 
     def search_for_and_load_existing_pickle_file(self) -> bool:
         """ Returns true if a pickled response is found for this file/OCR platform, and loads the pickled response
@@ -122,10 +124,8 @@ class ImageProcessor(ABC):
 
 class GCVProcessor(ImageProcessor):
     def __init__(self, starting_image_path=None):
-        super().__init__()
+        super().__init__(starting_image_path)
         self.name = 'gcv'
-        if starting_image_path:
-            self.load_image_from_file(starting_image_path)
 
     def initialize_client(self):
         config_parser = ConfigParser()
@@ -209,10 +209,8 @@ class GCVProcessor(ImageProcessor):
 
 class AWSProcessor(ImageProcessor):
     def __init__(self, starting_image_path=None):
-        super().__init__()
+        super().__init__(starting_image_path)
         self.name = 'aws'
-        if starting_image_path:
-            self.load_image_from_file(starting_image_path)
 
     def initialize_client(self):
         return boto3.client('textract')
