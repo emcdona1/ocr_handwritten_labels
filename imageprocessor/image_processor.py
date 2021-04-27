@@ -30,18 +30,6 @@ class ImageProcessor(ABC):
         self.current_label_location = None
         self.name = 'imageprocessor'
 
-    @abstractmethod
-    def initialize_client(self):
-        pass
-
-    @abstractmethod
-    def initialize_save_directory(self):
-        pass
-
-    @abstractmethod
-    def load_image_from_file(self, image_path: str) -> None:
-        pass
-
     def search_for_and_load_existing_pickle_file(self) -> bool:
         """ Returns true if a pickled response is found for this file/OCR platform, and loads the pickled response
          into current_ocr_response.  If not found, returns false and sets current_ocr_response to None."""
@@ -55,26 +43,6 @@ class ImageProcessor(ABC):
         else:
             self.current_ocr_response = None
             return False
-
-    @abstractmethod
-    def download_ocr_and_save_response(self) -> None:
-        pass
-
-    @abstractmethod
-    def get_image_annotator(self):
-        pass
-
-    @abstractmethod
-    def get_list_of_words(self) -> list:
-        pass
-
-    @abstractmethod
-    def get_list_of_lines(self) -> list:
-        pass
-
-    @abstractmethod
-    def get_full_text(self) -> str:
-        pass
 
     def get_found_word_locations(self) -> List[Tuple]:
         """ Returns a list of (x,y) coordinates (top left is origin),
@@ -114,6 +82,38 @@ class ImageProcessor(ABC):
         lower_left = (max_loc[0], max_loc[1] + self.current_label_height)
         self.current_label_location = upper_left, upper_right, lower_right, lower_left
         return self.current_label_location
+
+    @abstractmethod
+    def initialize_client(self):
+        pass
+
+    @abstractmethod
+    def initialize_save_directory(self):
+        pass
+
+    @abstractmethod
+    def load_image_from_file(self, image_path: str) -> None:
+        pass
+
+    @abstractmethod
+    def download_ocr_and_save_response(self) -> None:
+        pass
+
+    @abstractmethod
+    def get_image_annotator(self):
+        pass
+
+    @abstractmethod
+    def get_list_of_words(self) -> list:
+        pass
+
+    @abstractmethod
+    def get_list_of_lines(self) -> list:
+        pass
+
+    @abstractmethod
+    def get_full_text(self) -> str:
+        pass
 
     @abstractmethod
     def get_label_text(self) -> str:
@@ -258,7 +258,7 @@ class AWSProcessor(ImageProcessor):
             blocks = self.current_ocr_response['Blocks']
             lines = [block for block in blocks if block['BlockType'] == 'LINE']
             for line in lines:
-                aws_text = aws_text + line['Text'] + '\n'
+                aws_text += line['Text'] + '\n'
         return aws_text.strip()
 
     def get_list_of_words(self) -> list:
