@@ -6,7 +6,7 @@ from imageprocessor.image_processor import GCVProcessor, AWSProcessor
 import pandas as pd
 
 
-def main(folder_or_image_path: str, generate_images=True) -> pd.DataFrame:
+def main(folder_or_image_path: str, generate_images=False) -> pd.DataFrame:
     list_of_images = load_file_list_from_filesystem(folder_or_image_path)
     processors = [GCVProcessor(), AWSProcessor()]
     folder_path = os.path.join('test_results', 'cloud_ocr-' + get_timestamp_for_file_saving())
@@ -59,11 +59,12 @@ def draw_comparison_image(processor, annotator) -> None:
 
 
 if __name__ == '__main__':
-    assert len(sys.argv) > 1, 'Include one command line argument (either an image file or a directory of images).'
+    assert len(sys.argv) > 1, 'Include one command line argument (either an image file or a directory of images).' +\
+                              'To generate annotated images, add a flag "True" or "Yes".'
     folder_or_image_file = sys.argv[1]
-    generate_images_flag = True
+    generate_images_flag = False
     if len(sys.argv) == 3:
         flag_text = sys.argv[2]
-        if flag_text.lower() == 'false' or 'no' or 'n':
-            generate_images_flag = False
+        if not flag_text == 'false' or 'False':
+            generate_images_flag = True
     results = main(folder_or_image_file, generate_images=generate_images_flag)
