@@ -6,35 +6,29 @@ from imageprocessor.image_processor import ImageProcessor, GCVProcessor, AWSProc
 import pandas as pd
 
 
-def main(folder_or_image_path: str, generate_annotated_images=False) -> pd.DataFrame:
+def main(occurrence_file: str, folder_or_image_path: str, generate_annotated_images=False) -> pd.DataFrame:
     list_of_images = load_file_list_from_filesystem(folder_or_image_path)
     processors = [GCVProcessor(), AWSProcessor()]
-    text_comparison = pd.DataFrame(columns=['barcode', 'gcv', 'aws'])
+    occurrence = pd.read_csv(occurrence_file)
 
     save_folder_path = os.path.join('test_results', 'cloud_ocr-' + get_timestamp_for_file_saving())
     if not os.path.exists(save_folder_path):
         os.makedirs(save_folder_path)
 
     for one_image_location in list_of_images:
-        new_row_of_ocr_texts = dict()
+        # new_row_of_ocr_texts = dict()
         for processor in processors:
-            try:
-                processor.load_image_from_file(one_image_location)
-                new_row_of_ocr_texts['barcode'] = processor.current_image_barcode
-                new_row_of_ocr_texts[processor.name] = processor.get_full_text()
-                successful_ocr_query = True
-            except Exception as e:
-                new_row_of_ocr_texts[processor.name] = 'Error during OCR: %s' % str(e)
-                successful_ocr_query = False
-            if generate_annotated_images and successful_ocr_query:
+            processor.load_image_from_file(one_image_location)
+            index = occurrence.index[occurrence['catalogNumber'] == processor.current_image_barcode][0]
+            occurrence.loc[index, processor.name + 'LabelPoints'] = str(processor.find_label_location())
+            occurrence.loc[index, processor.name + 'OcrText'] = processor.get_label_text()
+            if generate_annotated_images:
                 draw_comparison_image(processor, save_folder_path)
-
         print('OCR gathered for %s' % one_image_location)
-        text_comparison = text_comparison.append(new_row_of_ocr_texts, ignore_index=True)
 
-    save_location = save_dataframe_as_csv(save_folder_path, 'ocr_texts', text_comparison, timestamp=False)
-    print('Saved to %s' % save_location)
-    return text_comparison
+    save_location = save_dataframe_as_csv('test_results', 'occurrence_with_ocr', occurrence)
+    print('Saved new occurrence file to %s' % save_location)
+    return occurrence
 
 
 def draw_comparison_image(processor: ImageProcessor, save_folder_path: str) -> None:
@@ -63,12 +57,15 @@ def draw_comparison_image(processor: ImageProcessor, save_folder_path: str) -> N
 
 
 if __name__ == '__main__':
-    assert len(sys.argv) > 1, 'Include one command line argument (either an image file or a directory of images).' +\
-                              'To generate annotated images, add a flag "True" or "Yes".'
+    assert 3 <= len(sys.argv) <= 4, 'Must use 2-3 arguments: 1) either an image file or a directory of images, ' + \
+                                    '2) the location of the occurrence_with_image_urls file, ' + \
+                                    'And 3) optional - to generate annotated images, add a flag "True" or "Yes".'
     folder_or_image_file = sys.argv[1]
+    occur = sys.argv[2]
     generate_images_flag = False
-    if len(sys.argv) == 3:
-        flag_text = sys.argv[2]
-        if not flag_text == 'false' or 'False':
+    if len(sys.argv) == 4:
+        flag_text = sys.argv[3]
+        if not flag_text == ('false' or 'False'):
             generate_images_flag = True
-    results = main(folder_or_image_file, generate_annotated_images=generate_images_flag)
+    # todo: the generate_images_flag isn't working
+    results = main(occur, folder_or_image_file, generate_images_flag)
