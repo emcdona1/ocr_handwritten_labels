@@ -18,6 +18,9 @@ def main(occurrence_filepath, ocr_filepath) -> pd.DataFrame:
     analysis = pd.DataFrame(columns=mi)
     analysis = load_ocr_from_file(analysis, ocr_filepath)
     analysis = add_ground_truth_text(analysis, occurrence_filepath)
+    separate_word_analysis = pd.DataFrame(columns=['barcode', 'word_number', 'ground_truth_token',
+                                                   'aws_best_match_tokens', 'aws_best_match_score',
+                                                   'gcv_best_match_tokens', 'gcv_best_match_score'])
 
     for idx, ocr_row in analysis.iterrows():
         if pd.isna(ocr_row['aws']['text']):
@@ -29,11 +32,19 @@ def main(occurrence_filepath, ocr_filepath) -> pd.DataFrame:
         gcv_match_results = list()
         ground_truth_filtered_words = preprocess_text(ocr_row['ground_truth']['text'])
         analysis.at[[idx], ('ground_truth', 'filtered_tokens')] = pd.Series([ground_truth_filtered_words], index=[idx])
-        for search_word in analysis.at[idx, ('ground_truth', 'filtered_tokens')]:
+        for i, search_word in enumerate(analysis.at[idx, ('ground_truth', 'filtered_tokens')]):
             aws_best_matches_list, aws_best_ratio = fuzzy_match_with_token_list(search_word, aws_tokens)
             gcv_best_matches_list, gcv_best_ratio = fuzzy_match_with_token_list(search_word, gcv_tokens)
             aws_match_results.append((aws_best_matches_list, aws_best_ratio))
             gcv_match_results.append((gcv_best_matches_list, gcv_best_ratio))
+            swa_row = {'barcode': ocr_row['ground_truth', 'barcode'],
+                       'word_number': i,
+                       'ground_truth_token': search_word,
+                       'aws_best_match_tokens': aws_best_matches_list,
+                       'aws_best_match_score': aws_best_ratio,
+                       'gcv_best_match_tokens': gcv_best_matches_list,
+                       'gcv_best_match_score': gcv_best_ratio}
+            separate_word_analysis = separate_word_analysis.append(swa_row, ignore_index=True)
 
         analysis.at[idx, ('aws', 'score')] = generate_score(analysis.at[idx, ('ground_truth', 'barcode')],
                                                             'aws', aws_match_results)
@@ -44,6 +55,8 @@ def main(occurrence_filepath, ocr_filepath) -> pd.DataFrame:
         analysis.at[[idx], ('gcv', 'fuzzy_match_list')] = pd.Series([gcv_match_results], index=[idx])
     filename = save_dataframe_as_csv('test_results', 'compare_ocr', analysis)
     print('%i row(s) processed and saved to %s' % (analysis.shape[0], filename))
+    filename = save_dataframe_as_csv('test_results', 'compare_word_by_word', separate_word_analysis)
+    print('Word-by-word analysis saved to %s' % filename)
     return analysis
 
 
