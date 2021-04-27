@@ -1,6 +1,7 @@
 # Handwriting Transcription for Herbarium Sheet Labels 
 
-This project is designed to research possibilities for automated or semiautomated transcription of herbarium sheet labels (and all text), both handwritten and typed.
+This project is designed to research possibilities for automated or semi-automated 
+transcription of herbarium sheet text, both handwritten and typed.
 ___
 ## Environment Setup
 1. Create a Python 3.8 virtual environment. For example, in Anaconda Terminal:
@@ -26,13 +27,14 @@ ___
 #### Comparing OCR platforms on analyzing herbarium sheet labels
 *Currently available: Google Cloud Vision and Amazon Web Services Textract*
 
-1. **Download your dataset with image URLs and ground truth information**.
-    1. Download an occurrence file from the [Fern Portal](https://pteridoportal.org/) which 
-       already contains human-created transcriptions of the label text.
-       1. As an authenticated user, click the "Crowdsource", and 
-           click the pencil icon next to the desired dataset.
-       1. Click the "Exporter" tab. Create a search query (e.g. 
-           *Collector/Observer CONTAINS Steyermark*).
+1. **Download the ground truth information for your dataset, plus URLs of the images**.
+    1. In a web browser, log into the [Fern Portal](https://pteridoportal.org/) 
+       and download an occurrence file, which should contain human-created transcriptions 
+       of the herbarium sheet text:
+   1. As an authenticated user, click the "Crowdsource", and click the pencil icon 
+      next to the desired dataset.
+   1. Click the "Exporter" tab. Create a search query (e.g. 
+      *Collector/Observer CONTAINS Steyermark*).
        1. For "Processing Status" select "Reviewed." (This ensures that you have ground truth
           data, i.e. transcribed by humans and reviewed by staff, to compare to the OCR.)
        1. For "Structure," select "Darwin Core."
@@ -41,31 +43,36 @@ ___
        1. (Compression should already be checked, and "CSV" selected for file format.)
        1. For "Character Set" select "ISO-8859-1 (western)."
        1. Click "Download Records" button.
-       1. Place the downloaded ZIP file in your working directory.
-1. **Download your image set and prep the ground truth data**.
+   1. Place this downloaded ZIP file in your working directory.
+1. **Download your image set**.
     1. Run the script `utilities\join_occurrence_file_with_image_urls.py`, pointing to 
        the ZIP file you just downloaded.  A new CSV file 
        (e.g. "occurrence_file_with_images.csv") is created in the same directory. 
-    1. Run the script `utilities\download_images_from_csv.py`, pointing to the
-       "occurrence_file_with_images.csv" file and a desired save location (e.g. "images").
-       All images will be downloaded to the save location (which will be created if necessary). 
+    1. Run the script `utilities\download_images_from_csv.py`, pointing to (1) the
+       "occurrence_file_with_images.csv" file, and (2) the desired directory for the 
+       downloaded image set.
 1. **Retrieve and save OCR data for your image set**.
-    1. Run the script `generate_ocr_data_from_cloud_platforms.py` pointing to the folder of images 
-       you downloaded in the previous step. The OCR objects will be saved in the `ocr_responses`
-       folder (subfolders for each cloud platform), and `ocr_texts.csv` will be saved to the
-       folder `test_results`, with a new subfolder called `cloud_ocr-yyyy_mm_dd-hh_mm_ss`.
-1. **Compare OCR data to ground truth data from occurrence file**.
-    1. Run the script `prep_comparison_data.py` with your occurrence (or
-       occurrence_file_with_images) file and the `ocr_texts.csv` file 
-       from the previous step.
-        1. 
+    1. Run the script `gather_ocr_data_from_cloud_platforms.py` pointing to the folder of 
+       images downloaded in the previous step.
+    1. (To cut down on cloud usage, the program attempts to find already existing
+       ocr response objects, and any OCR responses generated will be saved in the 
+       `ocr_responses` folder, with one subfolder for each cloud platform.)
+    1. **editing to be in occurrence file** The file "ocr_texts.csv" will be saved in the folder `test_results`, 
+       within a new subfolder called `cloud_ocr-[yyyy_mm_dd-hh_mm_ss]`.
+    1. To generate annotated images for each image and cloud platform, e.g. if you want
+       to visualize and manually compare, add a flag 'True' to the script.
+       (e.g. `python gather_ocr_data_from_cloud_platforms.py images True`)
+1. **Compare OCR data to ground truth data**.
+    1. Run the script `compare_ocrs.py` with your occurrence file (or
+       occurrence_file_with_images file) and the `ocr_texts.csv` file from the previous step.
+    1. This saves a file `compare_ocr-[datestamp].csv` to the `test results` folder.
     
 
 
 ---
 ## Scripts
 
-### generate_ocr_data_from_cloud_platforms.py
+### gather_ocr_data_from_cloud_platforms.py
 Use this program to send each image file to all available cloud-based platforms, 
 for OCR processing.
 
@@ -101,20 +108,20 @@ cat-and-dog*).
 
 **Example usage**:
 
-`python generate_ocr_data_from_cloud_platforms.py oneimage.jpg`
+`python gather_ocr_data_from_cloud_platforms.py oneimage.jpg`
 
-`python generate_ocr_data_from_cloud_platforms.py image_folder`
+`python gather_ocr_data_from_cloud_platforms.py image_folder`
 
-`python generate_ocr_data_from_cloud_platforms.py image_folder True` (Same functionality as the
+`python gather_ocr_data_from_cloud_platforms.py image_folder True` (Same functionality as the
 previous example)
 
-`python generate_ocr_data_from_cloud_platforms.py image_folder false` (Optional second argument
+`python gather_ocr_data_from_cloud_platforms.py image_folder false` (Optional second argument
 to skip the creation of the annotated images. Case-insensitive, will detect "false", "no", 
 or "n".)
 
 
 
-**Example output** for `python generate_ocr_data_from_cloud_platforms.py oneimage.jpg`:
+**Example output** for `python gather_ocr_data_from_cloud_platforms.py oneimage.jpg`:
 
 Saved in the folder `./test_results/cloud_ocr-<yyyy-mm-dd_hh-mm-ss>/`:
 1. Image saved as `oneimage-annotated<datestamp>.jpg` in sub-folder `aws`.
