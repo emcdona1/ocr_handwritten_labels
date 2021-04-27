@@ -9,98 +9,69 @@ from fuzzywuzzy import fuzz
 from utilities.dataloader import save_dataframe_as_csv
 
 
-def main(occurrence_filepath, ocr_filepath) -> pd.DataFrame:
+def main(occurrence_filepath: str) -> pd.DataFrame:
     """ Load, populate, and return a pd.DataFrame with OCR text and quality analysis. """
     mi = pd.MultiIndex.from_arrays(
         [['ground_truth', 'ground_truth', 'aws', 'aws', 'gcv', 'gcv'],
-         ['barcode', 'text'] + ['text', 'score']*2],
+         ['barcode', 'text'] + ['text', 'score'] * 2],
         names=('dataset', 'item'))
-    analysis = pd.DataFrame(columns=mi)
-    analysis = load_ocr_from_file(analysis, ocr_filepath)
-    analysis = add_ground_truth_text(analysis, occurrence_filepath)
+    occurrences = pd.read_csv(occurrence_filepath)
+    add_ground_truth_text(occurrences)
     separate_word_analysis = pd.DataFrame(columns=['barcode', 'word_number', 'ground_truth_token',
                                                    'aws_best_match_tokens', 'aws_best_match_score',
                                                    'gcv_best_match_tokens', 'gcv_best_match_score'])
 
-    for idx, ocr_row in analysis.iterrows():
-        if pd.isna(ocr_row['aws']['text']):
+    for idx, occur_row in occurrences.iterrows():
+        if pd.isna(occur_row['awsOcrText']):
             aws_tokens = ['']  # this means that AWS didn't find anything...
         else:
-            aws_tokens = word_tokenize(ocr_row['aws']['text'])
-        gcv_tokens = word_tokenize(ocr_row['gcv']['text'])
+            aws_tokens = word_tokenize(occur_row['awsOcrText'])
+        if pd.isna(occur_row['gcvOcrText']):
+            gcv_tokens = ['']  # this means that GCV didn't find anything...
+        else:
+            gcv_tokens = word_tokenize(occur_row['gcvOcrText'])
         aws_match_results = list()
         gcv_match_results = list()
 
-        ground_truth_filtered_words: list = preprocess_text(ocr_row['ground_truth']['text'])
+        ground_truth_filtered_words: list = preprocess_text(occur_row['labelText'])
         for i, search_word in enumerate(ground_truth_filtered_words):
             aws_best_matches_list, aws_best_ratio = fuzzy_match_with_token_list(search_word, aws_tokens)
             gcv_best_matches_list, gcv_best_ratio = fuzzy_match_with_token_list(search_word, gcv_tokens)
             aws_match_results.append((aws_best_matches_list, aws_best_ratio))
             gcv_match_results.append((gcv_best_matches_list, gcv_best_ratio))
-            swa_row = {'barcode': ocr_row['ground_truth', 'barcode'], 'word_number': i,
-                       'ground_truth_token': search_word,
+            swa_row = {'barcode': occur_row['catalogNumber'], 'word_number': i, 'ground_truth_token': search_word,
                        'aws_best_match_tokens': aws_best_matches_list, 'aws_best_match_score': aws_best_ratio,
                        'gcv_best_match_tokens': gcv_best_matches_list, 'gcv_best_match_score': gcv_best_ratio}
             separate_word_analysis = separate_word_analysis.append(swa_row, ignore_index=True)
 
-        analysis.at[idx, ('aws', 'score')] = generate_score(analysis.at[idx, ('ground_truth', 'barcode')],
-                                                            'aws', aws_match_results)
-        analysis.at[idx, ('gcv', 'score')] = generate_score(analysis.at[idx, ('ground_truth', 'barcode')],
-                                                            'gcv', gcv_match_results)
+        occurrences.at[idx, 'awsMatchingScore'] = generate_score(occurrences.at[idx, 'catalogNumber'],
+                                                                 'aws', aws_match_results)
+        occurrences.at[idx, 'gcvMatchingScore'] = generate_score(occurrences.at[idx, 'catalogNumber'],
+                                                                 'gcv', gcv_match_results)
         print()
 
-    filename = save_dataframe_as_csv('test_results', 'compare_ocr', analysis)
-    print('%i row(s) processed and saved to %s' % (analysis.shape[0], filename))
+    filename = save_dataframe_as_csv('test_results', 'occurrence_with_ocr_scores', occurrences)
+    print('%i row(s) processed, added, and saved to %s' % (occurrences.shape[0], filename))
     filename = save_dataframe_as_csv('test_results', 'compare_word_by_word', separate_word_analysis)
     print('Word-by-word analysis saved to %s' % filename)
-    return analysis
+    return occurrences
 
 
-def load_ocr_from_file(analysis: pd.DataFrame, filepath: str) -> pd.DataFrame:
-    """ Loads in OCR transcriptions and ground truth text from a file as a pd.DataFrame."""
-    ocr_data: pd.DataFrame = pd.read_csv(filepath)
-    for idx, ocr_row in ocr_data.iterrows():
-        barcode = ocr_row['barcode']
-        aws = ocr_row['aws']
-        gcv = ocr_row['gcv']
-        new_row_for_analysis = {('ground_truth', 'barcode'): barcode, ('aws', 'text'): aws, ('gcv', 'text'): gcv}
-        analysis = analysis.append(new_row_for_analysis, ignore_index=True)
-    return analysis
-
-
-def add_ground_truth_text(analysis: pd.DataFrame, filepath=None) -> pd.DataFrame:
+def add_ground_truth_text(occur_data: pd.DataFrame) -> None:
     # Ground truth from the following extracted fields, \n separated:
     # scientificName + scientificNameAuthorship, recordNumber **ADDED "No." **, verbatimEventDate, habitat,
     # stateProvince, county **ADDED "Co."**, locality, verbatimElevation
-    occur_data = pd.read_csv(filepath)
-    bad_query_indices = []
-    for idx, one_line in analysis.iterrows():
-        current_barcode = one_line['ground_truth']['barcode']
-        occur_row = occur_data[occur_data['catalogNumber'] == current_barcode].reset_index()
-        if occur_row.shape[0] > 1:
-            occur_row = occur_row.loc[0, :]
-        if occur_row.shape[0] == 1:
-            ground_truth_string = ''
-            data_to_add = [occur_row.at[0, 'scientificName'],
-                           occur_row.at[0, 'scientificNameAuthorship'],
-                           occur_row.at[0, 'recordNumber'],
-                           occur_row.at[0,'verbatimEventDate'],
-                           occur_row.at[0, 'habitat'],
-                           occur_row.at[0, 'stateProvince'],
-                           occur_row.at[0, 'county'],
-                           occur_row.at[0, 'locality'],
-                           occur_row.at[0, 'verbatimElevation']
-                           ]
-            for data in data_to_add:
-                if not pd.isna(data):
-                    ground_truth_string += data + '\n'
-            analysis.at[idx, ('ground_truth', 'text')] = ground_truth_string
-        else:
-            print('Warning! No occurrence record found for barcode %s. Removing from query list.' % current_barcode)
-            bad_query_indices.append(idx)
-    if bad_query_indices:
-        analysis = analysis.drop(index=bad_query_indices)
-    return analysis
+    for idx, one_line in occur_data.iterrows():
+        ground_truth_string = ''
+        data_to_add = [one_line['scientificName'], one_line['scientificNameAuthorship'], one_line['recordNumber'],
+                       one_line['verbatimEventDate'], one_line['habitat'],
+                       one_line['stateProvince'], one_line['county'], one_line['locality'],
+                       one_line['verbatimElevation']
+                       ]
+        for data in data_to_add:
+            if not pd.isna(data):
+                ground_truth_string += data + '\n'
+        occur_data.at[idx, 'labelText'] = ground_truth_string
 
 
 def preprocess_text(text: str) -> list:
@@ -119,6 +90,9 @@ def preprocess_text(text: str) -> list:
 
 
 def fuzzy_match_with_token_list(search_word: str, token_list: list) -> (list, int):
+    if token_list == '':
+        return [], 0
+
     fuzz_ratio = dict()
     for word in token_list:
         ratio = fuzz.ratio(search_word.lower(), word.lower())
@@ -142,18 +116,11 @@ def generate_score(barcode: str, service_name: str, match_results: list) -> floa
 
     print('Score for %s on service %s: perfect = %i, near match = %i, score = %.2f%%' %
           (barcode, service_name, len(perfect_matches), len(near_matches), accuracy_score * 100))
-    # if len(perfect_matches) < 5:
-    #     print('%s perfect matches: %s' % (service_name, str(perfect_matches)))
-    # if len(near_matches) < 5:
-    #     print('%s near matches: %s' % (service_name, str(near_matches)))
-    # print()
     return accuracy_score
 
 
 if __name__ == '__main__':
-    assert len(sys.argv) >= 3, 'Provide 2 arguments: filepath for 1 occurrence' + \
-                              ' (can be occurrence_with_images file), ' + \
-                              'and filepath for 1 CSV file with the headers "barcode", "aws", and "gcv" to compare.'
+    assert len(sys.argv) == 2, 'Provide 1 argument: filepath for the occurrence_with_ocr file.'
+
     occur = sys.argv[1]
-    ocr = sys.argv[2]
-    main(occur, ocr)
+    main(occur)
