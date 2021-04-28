@@ -55,7 +55,16 @@ def crop_an_image_to_box(image: np.ndarray, x_min, x_max, y_min, y_max) -> np.nd
     return cropped_image
 
 
-def convert_relative_to_absolute_coordinates(coord: Tuple[float, float], height: int, width: int) -> Tuple[int, int]:
-    new_x = int(width * coord[0])
-    new_y = int(height * coord[1])
+def convert_relative_to_absolute_coordinates(vertex: Tuple[float, float], height: int, width: int) -> Tuple[int, int]:
+    new_x = int(width * vertex[0])
+    new_y = int(height * vertex[1])
     return new_x, new_y
+
+
+def convert_list_of_relative_coordinates(vertex_list: List[Tuple[float, float]], height: int, width: int) -> \
+        List[Tuple[int, int]]:
+    new_vertex_list = list()
+    for point in vertex_list:
+        new_point = convert_relative_to_absolute_coordinates(point, height, width)
+        new_vertex_list.append(new_point)
+    return new_vertex_list
