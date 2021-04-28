@@ -20,7 +20,6 @@ class ImageProcessor(ABC):
         if not os.path.exists(self.save_directory):
             os.mkdir(self.save_directory)
         self.initialize_save_directory()
-        self.image_content = None
         self.current_image_location = None
         self.current_image_barcode = None
         self.current_ocr_response = None
@@ -203,8 +202,8 @@ class GCVProcessor(ImageProcessor):
 
     def download_ocr_and_save_response(self) -> None:
         with io.open(self.current_image_location, 'rb') as image_file:
-            self.image_content = image_file.read()
-        image = vision.types.Image(content=self.image_content)
+            image_content = image_file.read()
+        image = vision.types.Image(content=image_content)
         self.current_ocr_response = self.client.document_text_detection(image=image)
         pickle_an_object(self.save_directory,
                          os.path.basename(self.current_image_location).split('.')[0],
@@ -297,10 +296,10 @@ class AWSProcessor(ImageProcessor):
     def download_ocr_and_save_response(self) -> None:
         with open(self.current_image_location, 'rb') as img:
             f = img.read()
-            self.image_content = bytes(f)
+            image_content = bytes(f)
         self.current_ocr_response = self.client.detect_document_text(
             Document={
-                'Bytes': self.image_content
+                'Bytes': image_content
             })
         current_image = open_cv2_image(self.current_image_location)
         self.current_ocr_response['height'] = current_image.shape[0]
