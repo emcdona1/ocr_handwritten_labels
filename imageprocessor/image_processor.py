@@ -63,6 +63,15 @@ class ImageProcessor(ABC):
         """ Searches bottom quadrant of image for highest concentration of word bounding boxes
         and returns a set of 4 tuples (top-left, top-right, bottom-right, bottom-left). """
         np_of_points = np.array(self.get_found_word_locations())
+        if np_of_points.shape[0] == 0:  # no OCR data found
+            upper_left = (self.current_image_width - self.current_label_width,
+                          self.current_image_height - self.current_label_height)
+            upper_right = (self.current_image_width - 1, self.current_image_height - self.current_label_height)
+            lower_right = (self.current_image_width - 1, self.current_image_height - 1)
+            lower_left = (self.current_image_width - self.current_label_width, self.current_image_height - 1)
+            self.current_label_location = upper_left, upper_right, lower_right, lower_left
+            return self.current_label_location
+
         max_count = 0
         max_loc = (0, 0)
         for y in range(int(self.current_image_height / 2), self.current_image_height - self.current_label_height + 1):
