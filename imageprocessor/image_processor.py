@@ -32,6 +32,7 @@ class ImageProcessor(ABC):
         self.name = 'imageprocessor'
         if starting_image_path:
             self.load_image_from_file(starting_image_path)
+        self.ocr_blocks = None
 
     def search_for_and_load_existing_pickle_file(self) -> bool:
         """ Returns true if a pickled response is found for this file/OCR platform, and loads the pickled response
@@ -156,10 +157,45 @@ class GCVProcessor(ImageProcessor):
         found: bool = self.search_for_and_load_existing_pickle_file()
         if not found:
             self.download_ocr_and_save_response()
+        self.parse_ocr_blocks()
         self.current_image_height = self.current_ocr_response.full_text_annotation.pages[0].height
         self.current_image_width = self.current_ocr_response.full_text_annotation.pages[0].width
         self.current_label_height = math.ceil(self.current_image_height * 0.15)
         self.current_label_width = math.ceil(self.current_image_width * 0.365)
+
+    def parse_ocr_blocks(self):
+        self.ocr_blocks = list()
+        for block in self.current_ocr_response.full_text_annotation.pages[0].blocks:
+            for paragraph in block.paragraphs:
+                line_text = ''
+                for word in paragraph.words:
+                    word_text = ''
+                    for symbol in word.symbols:
+                        v = symbol.bounding_box.vertices
+                        self.ocr_blocks.append({'type': 'SYMBOL', 'confidence': symbol.confidence,
+                                                # todo: sort these first
+                                                'bounding_box': [(v[0].x, v[0].y), (v[1].x, v[1].y),
+                                                                 (v[2].x, v[2].y), (v[3].x, v[3].y)],
+                                                'text': symbol.text})
+                        word_text += symbol.text
+                        line_text += symbol.text
+                    v = symbol.bounding_box.vertices
+                    self.ocr_blocks.append({'type': 'WORD', 'confidence': word.confidence,
+                                            # todo: sort these first
+                                            'bounding_box': [(v[0].x, v[0].y), (v[1].x, v[1].y),
+                                                             (v[2].x, v[2].y), (v[3].x, v[3].y)],
+                                            'text': word_text})
+                v = paragraph.bounding_box.vertices
+                self.ocr_blocks.append({'type': 'LINE',
+                                        'confidence': paragraph.confidence,
+                                        # todo: sort these first
+                                        'bounding_box': [(v[0].x, v[0].y), (v[1].x, v[1].y),
+                                                         (v[2].x, v[2].y), (v[3].x, v[3].y)],
+                                        'text': line_text})
+        block_order = { 'LINE': 1,
+                        'WORD': 2,
+                        'SYMBOL': 3}
+        self.ocr_blocks = sorted(self.ocr_blocks, key=lambda b: block_order[b['type']])
 
     def download_ocr_and_save_response(self) -> None:
         with io.open(self.current_image_location, 'rb') as image_file:
@@ -237,10 +273,23 @@ class AWSProcessor(ImageProcessor):
         found: bool = self.search_for_and_load_existing_pickle_file()
         if not found:
             self.download_ocr_and_save_response()
+        self.parse_ocr_blocks()
         self.current_image_height = self.current_ocr_response['height']
         self.current_image_width = self.current_ocr_response['width']
         self.current_label_height = math.ceil(self.current_image_height * 0.15)
         self.current_label_width = math.ceil(self.current_image_width * 0.365)
+
+    def parse_ocr_blocks(self):
+        self.ocr_blocks = list()
+        lines = [line for line in self.current_ocr_response['Blocks'] if not line['BlockType'] == 'PAGE']
+        for line in lines:
+            new_line = {'type': line['BlockType'], 'confidence': line['Confidence'], 'text': line['Text']}
+            v = line['Geometry']['Polygon']
+            v_list = [(v[0]['X'], v[0]['Y']), (v[1]['X'], v[1]['Y']), (v[2]['X'], v[2]['Y']), (v[3]['X'], v[3]['Y'])]
+            new_line['bounding_box'] = convert_list_of_relative_coordinates(v_list, self.current_image_height,
+                                                                            self.current_image_width)
+            self.ocr_blocks.append(new_line)
+
 
     def download_ocr_and_save_response(self) -> None:
         with open(self.current_image_location, 'rb') as img:
