@@ -51,7 +51,7 @@ def crop_an_image_to_box(image: np.ndarray, x_min, x_max, y_min, y_max) -> np.nd
         x_max = int(height * x_max)
         y_min = int(width * y_min)
         y_max = int(width * y_max)
-    cropped_image = image[x_min:x_max+1, y_min:y_max+1]
+    cropped_image = image[x_min:x_max + 1, y_min:y_max + 1]
     return cropped_image
 
 
