@@ -66,7 +66,6 @@ class ImageProcessor(ABC):
             self.current_ocr_response = load_pickle(os.path.join(self.save_directory, matches[0]))
             return True
         else:
-            self.current_ocr_response = None
             return False
 
     def pickle_current_image_state(self):
@@ -124,6 +123,18 @@ class ImageProcessor(ABC):
     @abstractmethod
     def initialize_client(self):
         pass
+
+    def clear_current_image(self):
+        self.current_ocr_response = None
+        self.ocr_blocks = None
+        self.current_image_location = None
+        self.current_image_basename = None
+        self.current_image_barcode = None
+        self.current_image_width = None
+        self.current_image_height = None
+        self.current_label_width = None
+        self.current_label_height = None
+        self.current_label_location = None
 
     @abstractmethod
     def initialize_name_and_save_directory(self) -> None:
