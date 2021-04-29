@@ -275,6 +275,9 @@ class GCVProcessor(ImageProcessor):
         return image_annotator.GCVImageAnnotator(self.current_image_location)
 
     def get_full_text(self) -> str:
+        if self.current_ocr_response is None:
+            print('Warning: no image OCR data has been loaded.')
+            return ''
         gcv_text = ' '
         if self.current_ocr_response:
             gcv_text = self.current_ocr_response.full_text_annotation.text
@@ -373,6 +376,9 @@ class AWSProcessor(ImageProcessor):
         return image_annotator.AWSImageAnnotator(self.current_image_location)
 
     def get_full_text(self) -> str:
+        if self.current_ocr_response is None:
+            print('Warning: no image OCR data has been loaded.')
+            return ''
         aws_text = ' '
         if self.current_ocr_response:
             blocks = self.current_ocr_response['Blocks']
