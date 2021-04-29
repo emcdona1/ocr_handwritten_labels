@@ -39,12 +39,14 @@ def load_pickle(pickle_file_path: str):
     return de_pickled
 
 
-def pickle_an_object(save_directory: str, object_id: str, obj_to_pickle) -> None:
+def pickle_an_object(save_directory: str, object_id: str, obj_to_pickle) -> str:
     if not os.path.exists(save_directory):
         os.mkdir(save_directory)
     filename = object_id + '.pickle'
-    with open(os.path.join(save_directory, filename), 'wb') as file:
+    file_path = os.path.join(save_directory, filename)
+    with open(file_path, 'wb') as file:
         pickle.dump(obj_to_pickle, file)
+    return file_path
 
 
 def open_cv2_image(image_location: str) -> np.ndarray:
