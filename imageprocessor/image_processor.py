@@ -62,7 +62,8 @@ class ImageProcessor(ABC):
     def find_label_location(self) -> \
             Tuple[Tuple[int, int], Tuple[int, int], Tuple[int, int], Tuple[int, int]]:
         """ Searches bottom quadrant of image for highest concentration of word bounding boxes
-        and returns a set of 4 tuples (top-left, top-right, bottom-right, bottom-left). """
+        and returns a set of 4 tuples (top-left, top-right, bottom-right, bottom-left).
+        If no OCR data is present, it sets the label location to be the bottom right corner. """
         np_of_points = np.array(self.get_found_word_locations())
         if np_of_points.shape[0] == 0:  # no OCR data found
             upper_left = (self.current_image_width - self.current_label_width,
@@ -70,28 +71,26 @@ class ImageProcessor(ABC):
             upper_right = (self.current_image_width - 1, self.current_image_height - self.current_label_height)
             lower_right = (self.current_image_width - 1, self.current_image_height - 1)
             lower_left = (self.current_image_width - self.current_label_width, self.current_image_height - 1)
-            self.current_label_location = upper_left, upper_right, lower_right, lower_left
-            return self.current_label_location
-
-        max_count = 0
-        max_loc = (0, 0)
-        for y in range(int(self.current_image_height / 2), self.current_image_height - self.current_label_height + 1):
-            for x in range(int(self.current_image_width / 2), self.current_image_width - self.current_label_width + 1):
-                x_values = np_of_points[:, 0]
-                idx_of_valid_x = np.intersect1d(np.where(x_values >= x),
-                                                np.where(x_values < x + self.current_label_width))
-                y_possible = np_of_points[idx_of_valid_x, 1]
-                valid_y_count = np.intersect1d(np.where(y_possible >= y),
-                                               np.where(y_possible < y + self.current_label_height))
-                count = valid_y_count.shape[0]
-                if count >= max_count:
-                    max_count = count
-                    max_loc = (x, y)
-        print('Label found at point %s with %.0f words.' % (str(max_loc), max_count / 4))
-        upper_left = max_loc
-        upper_right = (max_loc[0] + self.current_label_width, max_loc[1])
-        lower_right = (max_loc[0] + self.current_label_width, max_loc[1] + self.current_label_height)
-        lower_left = (max_loc[0], max_loc[1] + self.current_label_height)
+        else:
+            max_count = 0
+            max_loc = (0, 0)
+            for y in range(int(self.current_image_height / 2), self.current_image_height - self.current_label_height + 1):
+                for x in range(int(self.current_image_width / 2), self.current_image_width - self.current_label_width + 1):
+                    x_values = np_of_points[:, 0]
+                    idx_of_valid_x = np.intersect1d(np.where(x_values >= x),
+                                                    np.where(x_values < x + self.current_label_width))
+                    y_possible = np_of_points[idx_of_valid_x, 1]
+                    valid_y_count = np.intersect1d(np.where(y_possible >= y),
+                                                   np.where(y_possible < y + self.current_label_height))
+                    count = valid_y_count.shape[0]
+                    if count >= max_count:
+                        max_count = count
+                        max_loc = (x, y)
+            print('Label found at point %s with %.0f words.' % (str(max_loc), max_count / 4))
+            upper_left = max_loc
+            upper_right = (max_loc[0] + self.current_label_width, max_loc[1])
+            lower_right = (max_loc[0] + self.current_label_width, max_loc[1] + self.current_label_height)
+            lower_left = (max_loc[0], max_loc[1] + self.current_label_height)
         self.current_label_location = upper_left, upper_right, lower_right, lower_left
         return self.current_label_location
 
