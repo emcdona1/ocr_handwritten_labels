@@ -29,7 +29,7 @@ class ImageProcessor(ABC):
         self.current_label_height = None
         self.current_label_width = None
         self.current_label_location = None
-        self.name = 'imageprocessor'
+        # self.name = 'imageprocessor'
         self.ocr_blocks = None
         if starting_image_path:
             self.load_image_from_file(starting_image_path)
@@ -138,8 +138,8 @@ class ImageProcessor(ABC):
 
 class GCVProcessor(ImageProcessor):
     def __init__(self, starting_image_path=None):
-        super().__init__(starting_image_path)
         self.name = 'gcv'
+        super().__init__(starting_image_path)
 
     def initialize_client(self):
         config_parser = ConfigParser()
@@ -258,8 +258,8 @@ class GCVProcessor(ImageProcessor):
 
 class AWSProcessor(ImageProcessor):
     def __init__(self, starting_image_path=None):
-        super().__init__(starting_image_path)
         self.name = 'aws'
+        super().__init__(starting_image_path)
 
     def initialize_client(self):
         return boto3.client('textract')
