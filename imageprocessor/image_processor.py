@@ -34,6 +34,17 @@ class ImageProcessor(ABC):
         if starting_image_path:
             self.load_image_from_file(starting_image_path)
 
+    def __getstate__(self):
+        """ Return a copy of the ImageProcessor, without the client instance attribute, for pickling."""
+        state = self.__dict__.copy()
+        del state['client']
+        return state
+
+    def __setstate__(self, state):
+        """ Restores ImageProcessor from pickle and initialized the client (which is not pickled). """
+        self.__dict__.update(state)
+        self.client = self.initialize_client()
+
     def search_for_and_load_existing_pickle_file(self) -> bool:
         """ Returns true if a pickled response is found for this file/OCR platform, and loads the pickled response
          into current_ocr_response.  If not found, returns false and sets current_ocr_response to None."""
@@ -47,6 +58,10 @@ class ImageProcessor(ABC):
         else:
             self.current_ocr_response = None
             return False
+
+    def pickle_current_image_state(self):
+        path = pickle_an_object(self.object_save_directory, self.current_image_barcode, self)
+        print('%s ImageProcessor saved to %s.' % (self.name, path))
 
     def get_found_word_locations(self) -> List[Tuple]:
         """ Returns a list of (x,y) coordinates (top left is origin),
