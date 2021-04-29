@@ -11,9 +11,10 @@ def main(occurrence_file: str, folder_or_image_path: str, generate_annotated_ima
     processors = [GCVProcessor(), AWSProcessor()]
     occurrence = pd.read_csv(occurrence_file)
 
-    save_folder_path = os.path.join('test_results', 'cloud_ocr-' + get_timestamp_for_file_saving())
-    if not os.path.exists(save_folder_path):
-        os.makedirs(save_folder_path)
+    if generate_annotated_images:
+        save_folder_path = os.path.join('test_results', 'cloud_ocr-' + get_timestamp_for_file_saving())
+        if not os.path.exists(save_folder_path):
+            os.makedirs(save_folder_path)
 
     for one_image_location in list_of_images:
         # new_row_of_ocr_texts = dict()
