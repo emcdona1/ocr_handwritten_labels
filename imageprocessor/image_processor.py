@@ -20,7 +20,8 @@ class ImageProcessor(ABC):
         # todo: phase out old save_directory and replace with object_save_directory
         self.save_directory = 'ocr_responses'
         self.object_save_directory = 'imageprocessor_objects'
-        self.initialize_save_directory()
+        self.name = None
+        self.initialize_name_and_save_directory()
         self.current_image_location = None
         self.current_image_barcode = None
         self.current_ocr_response = None
@@ -125,7 +126,7 @@ class ImageProcessor(ABC):
         pass
 
     @abstractmethod
-    def initialize_save_directory(self):
+    def initialize_name_and_save_directory(self) -> None:
         pass
 
     def load_image_from_file(self, image_path: str) -> None:
@@ -193,7 +194,6 @@ class ImageProcessor(ABC):
 
 class GCVProcessor(ImageProcessor):
     def __init__(self, starting_image_path=None):
-        self.name = 'gcv'
         super().__init__(starting_image_path)
 
     def initialize_client(self):
@@ -203,7 +203,8 @@ class GCVProcessor(ImageProcessor):
         os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = service_account_token_path
         return vision.ImageAnnotatorClient()
 
-    def initialize_save_directory(self):
+    def initialize_name_and_save_directory(self):
+        self.name = 'gcv'
         # todo: phase out old
         self.save_directory = self.save_directory + os.path.sep + 'gcv'
         if not os.path.exists(self.save_directory):
@@ -306,13 +307,13 @@ class GCVProcessor(ImageProcessor):
 
 class AWSProcessor(ImageProcessor):
     def __init__(self, starting_image_path=None):
-        self.name = 'aws'
         super().__init__(starting_image_path)
 
     def initialize_client(self):
         return boto3.client('textract')
 
-    def initialize_save_directory(self):
+    def initialize_name_and_save_directory(self):
+        self.name = 'aws'
         # todo: phase out old save_directory and replace with object_save_directory
         self.save_directory = self.save_directory + os.path.sep + 'aws'
         if not os.path.exists(self.save_directory):
