@@ -226,6 +226,8 @@ class GCVProcessor(ImageProcessor):
             os.makedirs(self.object_save_directory)
 
     def parse_ocr_blocks(self):
+        self.current_image_height = self.current_ocr_response.full_text_annotation.pages[0].height
+        self.current_image_width = self.current_ocr_response.full_text_annotation.pages[0].width
         self.ocr_blocks = list()
         for block in self.current_ocr_response.full_text_annotation.pages[0].blocks:
             for paragraph in block.paragraphs:
@@ -334,6 +336,8 @@ class AWSProcessor(ImageProcessor):
             os.makedirs(self.object_save_directory)
 
     def parse_ocr_blocks(self):
+        self.current_image_height = self.current_ocr_response['height']
+        self.current_image_width = self.current_ocr_response['width']
         self.ocr_blocks = list()
         lines = [line for line in self.current_ocr_response['Blocks'] if not line['BlockType'] == 'PAGE']
         for line in lines:
