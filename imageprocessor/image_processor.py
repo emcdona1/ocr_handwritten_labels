@@ -23,6 +23,7 @@ class ImageProcessor(ABC):
         self.name = None
         self.initialize_name_and_save_directory()
         self.current_image_location = None
+        self.current_image_basename = None
         self.current_image_barcode = None
         self.current_ocr_response = None
         self.current_image_height = None
@@ -58,11 +59,10 @@ class ImageProcessor(ABC):
     def search_for_and_load_existing_pickle_file(self) -> bool:
         """ Returns true if a pickled response is found for this file/OCR platform, and loads the pickled response
          into current_ocr_response.  If not found, returns false and sets current_ocr_response to None."""
-        base_name_of_image = os.path.basename(self.current_image_location).split('.')[0]
         file_list = os.listdir(self.save_directory)
-        matches = [path for path in file_list if (base_name_of_image + '.pickle') in path]
+        matches = [path for path in file_list if (self.current_image_basename + '.pickle') in path]
         if len(matches) > 0:
-            print('Using previously pickled %s response object for %s' % (self.name, base_name_of_image))
+            print('Using previously pickled %s response object for %s' % (self.name, self.current_image_basename))
             self.current_ocr_response = load_pickle(os.path.join(self.save_directory, matches[0]))
             return True
         else:
@@ -255,7 +255,7 @@ class GCVProcessor(ImageProcessor):
         image = vision.types.Image(content=image_content)
         self.current_ocr_response = self.client.document_text_detection(image=image)
         pickle_an_object(self.save_directory,
-                         os.path.basename(self.current_image_location).split('.')[0],
+                         self.current_image_basename,
                          self.current_ocr_response)
 
     def get_image_annotator(self):
@@ -344,7 +344,7 @@ class AWSProcessor(ImageProcessor):
                     'Bytes': image_content
                 })
             pickle_an_object(self.save_directory,
-                             os.path.basename(self.current_image_location).split('.')[0],
+                             self.current_image_basename,
                              self.current_ocr_response)
         except ConnectionClosedError:
             print('Unable to get %s connection for image %s.' % (self.name, self.current_image_barcode))
