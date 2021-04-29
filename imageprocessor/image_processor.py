@@ -17,9 +17,9 @@ import numpy as np
 class ImageProcessor(ABC):
     def __init__(self, starting_image_path=None):
         self.client = self.initialize_client()
+        # todo: phase out old save_directory and replace with object_save_directory
         self.save_directory = 'ocr_responses'
-        if not os.path.exists(self.save_directory):
-            os.mkdir(self.save_directory)
+        self.object_save_directory = 'imageprocessor_objects'
         self.initialize_save_directory()
         self.current_image_location = None
         self.current_image_barcode = None
@@ -149,9 +149,14 @@ class GCVProcessor(ImageProcessor):
         return vision.ImageAnnotatorClient()
 
     def initialize_save_directory(self):
+        # todo: phase out old
         self.save_directory = self.save_directory + os.path.sep + 'gcv'
         if not os.path.exists(self.save_directory):
-            os.mkdir(self.save_directory)
+            os.makedirs(self.save_directory)
+        # todo: phase in new
+        self.object_save_directory = self.object_save_directory + os.path.sep + self.name
+        if not os.path.exists(self.object_save_directory):
+            os.makedirs(self.object_save_directory)
 
     def load_image_from_file(self, image_path: str) -> None:
         self.current_ocr_response = None
@@ -265,9 +270,13 @@ class AWSProcessor(ImageProcessor):
         return boto3.client('textract')
 
     def initialize_save_directory(self):
+        # todo: phase out old save_directory and replace with object_save_directory
         self.save_directory = self.save_directory + os.path.sep + 'aws'
         if not os.path.exists(self.save_directory):
-            os.mkdir(self.save_directory)
+            os.makedirs(self.save_directory)
+        self.object_save_directory = self.object_save_directory + os.path.sep + self.name
+        if not os.path.exists(self.object_save_directory):
+            os.makedirs(self.object_save_directory)
 
     def load_image_from_file(self, image_path: str) -> None:
         self.current_ocr_response = None
