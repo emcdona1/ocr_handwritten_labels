@@ -37,11 +37,20 @@ class ImageProcessor(ABC):
     def __getstate__(self):
         """ Return a copy of the ImageProcessor, without the client instance attribute, for pickling."""
         state = self.__dict__.copy()
-        del state['client']
+        try:
+            del state['client']
+        except TypeError:
+            # 'client' wasn't in state
+            pass
         return state
 
     def __setstate__(self, state):
         """ Restores ImageProcessor from pickle and initialized the client (which is not pickled). """
+        try:
+            del state['client']
+        except KeyError:
+            # 'client' wasn't in state
+            pass
         self.__dict__.update(state)
         self.client = self.initialize_client()
 
