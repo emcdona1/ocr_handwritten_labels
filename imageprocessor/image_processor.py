@@ -4,6 +4,7 @@ import os
 from google.cloud import vision
 from abc import ABC, abstractmethod
 import boto3
+from botocore.exceptions import ConnectionClosedError
 from utilities.dataloader import load_pickle, pickle_an_object, open_cv2_image
 from utilities.dataprocessor import extract_barcode_from_image_name, convert_relative_to_absolute_coordinates, \
     convert_list_of_relative_coordinates, arrange_coordinates
@@ -296,10 +297,18 @@ class AWSProcessor(ImageProcessor):
         with open(self.current_image_location, 'rb') as img:
             f = img.read()
             image_content = bytes(f)
-        self.current_ocr_response = self.client.detect_document_text(
-            Document={
-                'Bytes': image_content
-            })
+        try:
+            self.current_ocr_response = self.client.detect_document_text(
+                Document={
+                    'Bytes': image_content
+                })
+            pickle_an_object(self.save_directory,
+                             os.path.basename(self.current_image_location).split('.')[0],
+                             self.current_ocr_response)
+        except ConnectionClosedError:
+            print('Unable to get %s connection for image %s.' % (self.name, self.current_image_barcode))
+            self.current_ocr_response = dict()
+            self.current_ocr_response['Blocks'] = [{'BlockType': 'PAGE'}]
         current_image = open_cv2_image(self.current_image_location)
         self.current_ocr_response['height'] = current_image.shape[0]
         self.current_ocr_response['width'] = current_image.shape[1]
