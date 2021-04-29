@@ -108,6 +108,7 @@ class ImageProcessor(ABC):
             lower_right = (max_loc[0] + self.current_label_width, max_loc[1] + self.current_label_height)
             lower_left = (max_loc[0], max_loc[1] + self.current_label_height)
         self.current_label_location = upper_left, upper_right, lower_right, lower_left
+        self.pickle_current_image_state()
         return self.current_label_location
 
     @abstractmethod
@@ -185,6 +186,7 @@ class GCVProcessor(ImageProcessor):
         self.current_label_height = math.ceil(self.current_image_height * 0.15)
         self.current_label_width = math.ceil(self.current_image_width * 0.365)
         self.parse_ocr_blocks()
+        self.pickle_current_image_state()
 
     def parse_ocr_blocks(self):
         self.ocr_blocks = list()
@@ -219,6 +221,7 @@ class GCVProcessor(ImageProcessor):
                         'WORD': 2,
                         'SYMBOL': 3}
         self.ocr_blocks = sorted(self.ocr_blocks, key=lambda b: block_order[b['type']])
+        self.pickle_current_image_state()
 
     def download_ocr_and_save_response(self) -> None:
         with io.open(self.current_image_location, 'rb') as image_file:
@@ -305,6 +308,8 @@ class AWSProcessor(ImageProcessor):
         self.current_label_height = math.ceil(self.current_image_height * 0.15)
         self.current_label_width = math.ceil(self.current_image_width * 0.365)
         self.parse_ocr_blocks()
+        # todo: below is a temporary pickler to convert all the saved ocr_responses to saved objects
+        self.pickle_current_image_state()
 
     def parse_ocr_blocks(self):
         self.ocr_blocks = list()
@@ -316,6 +321,7 @@ class AWSProcessor(ImageProcessor):
             v_list = convert_list_of_relative_coordinates(v_list, self.current_image_height, self.current_image_width)
             new_line['bounding_box'], _, _, _, _ = arrange_coordinates(v_list)
             self.ocr_blocks.append(new_line)
+        self.pickle_current_image_state()
 
     def download_ocr_and_save_response(self) -> None:
         with open(self.current_image_location, 'rb') as img:
@@ -336,9 +342,6 @@ class AWSProcessor(ImageProcessor):
         current_image = open_cv2_image(self.current_image_location)
         self.current_ocr_response['height'] = current_image.shape[0]
         self.current_ocr_response['width'] = current_image.shape[1]
-        pickle_an_object(self.save_directory,
-                         os.path.basename(self.current_image_location).split('.')[0],
-                         self.current_ocr_response)
 
     def get_image_annotator(self):
         return image_annotator.AWSImageAnnotator(self.current_image_location)
