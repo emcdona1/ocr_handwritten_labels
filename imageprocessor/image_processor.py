@@ -17,9 +17,9 @@ import numpy as np
 class ImageProcessor(ABC):
     def __init__(self, starting_image_path=None):
         self.client = self.initialize_client()
-        # todo: phase out old save_directory and replace with object_save_directory
-        self.save_directory = 'ocr_responses'
-        self.object_save_directory = 'imageprocessor_objects'
+        # todo: phase out old ocr_save_directory and replace with ip_save_directory
+        self.ocr_save_directory = 'ocr_responses'
+        self.ip_save_directory = 'imageprocessor_objects'
         self.name = None
         self.initialize_name_and_save_directory()
         self.current_image_location = None
@@ -59,17 +59,17 @@ class ImageProcessor(ABC):
     def search_for_and_load_existing_pickle_file(self) -> bool:
         """ Returns true if a pickled response is found for this file/OCR platform, and loads the pickled response
          into current_ocr_response.  If not found, returns false and sets current_ocr_response to None."""
-        file_list = os.listdir(self.save_directory)
+        file_list = os.listdir(self.ocr_save_directory)
         matches = [path for path in file_list if (self.current_image_basename + '.pickle') in path]
         if len(matches) > 0:
             print('Using previously pickled %s response object for %s' % (self.name, self.current_image_basename))
-            self.current_ocr_response = load_pickle(os.path.join(self.save_directory, matches[0]))
+            self.current_ocr_response = load_pickle(os.path.join(self.ocr_save_directory, matches[0]))
             return True
         else:
             return False
 
     def pickle_current_image_state(self):
-        path = pickle_an_object(self.object_save_directory, self.current_image_barcode, self)
+        path = pickle_an_object(self.ip_save_directory, self.current_image_barcode, self)
         print('%s ImageProcessor saved to %s.' % (self.name, path))
 
     def get_found_word_locations(self) -> List[Tuple]:
@@ -168,9 +168,9 @@ class ImageProcessor(ABC):
 
     def search_for_pickled_object(self) -> Union[str, None]:
         pickled_search_name = self.current_image_basename + '.pickle'
-        search_directory = os.listdir(self.object_save_directory)
+        search_directory = os.listdir(self.ip_save_directory)
         if pickled_search_name in search_directory:
-            return os.path.join(self.object_save_directory, pickled_search_name)
+            return os.path.join(self.ip_save_directory, pickled_search_name)
         else:
             return None
 
@@ -330,7 +330,7 @@ class AWSProcessor(ImageProcessor):
 
     def initialize_name_and_save_directory(self):
         self.name = 'aws'
-        # todo: phase out old save_directory and replace with object_save_directory
+        # todo: phase out old ocr_save_directory and replace with ip_save_directory
         self.save_directory = self.save_directory + os.path.sep + 'aws'
         if not os.path.exists(self.save_directory):
             os.makedirs(self.save_directory)

@@ -43,13 +43,13 @@ def test_gcv_client(gcv_processor):
 
 
 def test_gcv_save_directory(gcv_processor):
-    print(gcv_processor.save_directory)
-    assert os.path.exists(gcv_processor.save_directory)
+    print(gcv_processor.ocr_save_directory)
+    assert os.path.exists(gcv_processor.ocr_save_directory)
 
 
 def test_aws_save_directory(aws_processor):
-    print(aws_processor.save_directory)
-    assert os.path.exists(aws_processor.save_directory)
+    print(aws_processor.ocr_save_directory)
+    assert os.path.exists(aws_processor.ocr_save_directory)
 
 
 def test_barcode_parser_underscore(gcv_processor):
