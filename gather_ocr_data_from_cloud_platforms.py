@@ -6,7 +6,7 @@ from imageprocessor.image_processor import ImageProcessor, GCVProcessor, AWSProc
 import pandas as pd
 
 
-def main(occurrence_file: str, folder_or_image_path: str, generate_annotated_images=False) -> pd.DataFrame:
+def main(occurrence_file: str, folder_or_image_path: str, generate_annotated_images: bool) -> pd.DataFrame:
     list_of_images = load_file_list_from_filesystem(folder_or_image_path)
     processors = [GCVProcessor(), AWSProcessor()]
     occurrence = pd.read_csv(occurrence_file)
@@ -20,7 +20,10 @@ def main(occurrence_file: str, folder_or_image_path: str, generate_annotated_ima
         for processor in processors:
             processor.load_image_from_file(one_image_location)
             index = occurrence.index[occurrence['catalogNumber'] == processor.current_image_barcode][0]
-            occurrence.loc[index, processor.name + 'LabelPoints'] = str(processor.find_label_location())
+            if processor.current_label_location:
+                occurrence.loc[index, processor.name + 'LabelPoints'] = str(processor.current_label_location)
+            else:
+                occurrence.loc[index, processor.name + 'LabelPoints'] = str(processor.find_label_location())
             occurrence.loc[index, processor.name + 'OcrText'] = processor.get_label_text()
             if generate_annotated_images:
                 draw_comparison_image(processor, save_folder_path)
@@ -67,5 +70,4 @@ if __name__ == '__main__':
         flag_text = sys.argv[3]
         if not flag_text == ('false' or 'False'):
             generate_images_flag = True
-    # todo: the generate_images_flag isn't working
     results = main(occur, folder_or_image_file, generate_images_flag)
