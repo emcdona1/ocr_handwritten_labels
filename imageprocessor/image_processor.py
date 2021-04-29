@@ -216,13 +216,13 @@ class GCVProcessor(ImageProcessor):
     def _initialize_name_and_save_directory(self):
         self.name = 'gcv'
         # todo: phase out old
-        self.save_directory = self.save_directory + os.path.sep + 'gcv'
-        if not os.path.exists(self.save_directory):
-            os.makedirs(self.save_directory)
+        self.ocr_save_directory = self.ocr_save_directory + os.path.sep + 'gcv'
+        if not os.path.exists(self.ocr_save_directory):
+            os.makedirs(self.ocr_save_directory)
         # todo: phase in new
-        self.object_save_directory = self.object_save_directory + os.path.sep + self.name
-        if not os.path.exists(self.object_save_directory):
-            os.makedirs(self.object_save_directory)
+        self.ip_save_directory = self.ip_save_directory + os.path.sep + self.name
+        if not os.path.exists(self.ip_save_directory):
+            os.makedirs(self.ip_save_directory)
 
     def _parse_ocr_blocks(self):
         self.current_image_height = self.current_ocr_response.full_text_annotation.pages[0].height
@@ -266,7 +266,7 @@ class GCVProcessor(ImageProcessor):
             image_content = image_file.read()
         image = vision.types.Image(content=image_content)
         self.current_ocr_response = self.client.document_text_detection(image=image)
-        pickle_an_object(self.save_directory,
+        pickle_an_object(self.ocr_save_directory,
                          self.current_image_basename,
                          self.current_ocr_response)
 
@@ -330,12 +330,12 @@ class AWSProcessor(ImageProcessor):
     def _initialize_name_and_save_directory(self):
         self.name = 'aws'
         # todo: phase out old ocr_save_directory and replace with ip_save_directory
-        self.save_directory = self.save_directory + os.path.sep + 'aws'
-        if not os.path.exists(self.save_directory):
-            os.makedirs(self.save_directory)
-        self.object_save_directory = self.object_save_directory + os.path.sep + self.name
-        if not os.path.exists(self.object_save_directory):
-            os.makedirs(self.object_save_directory)
+        self.ocr_save_directory = self.ocr_save_directory + os.path.sep + 'aws'
+        if not os.path.exists(self.ocr_save_directory):
+            os.makedirs(self.ocr_save_directory)
+        self.ip_save_directory = self.ip_save_directory + os.path.sep + self.name
+        if not os.path.exists(self.ip_save_directory):
+            os.makedirs(self.ip_save_directory)
 
     def _parse_ocr_blocks(self):
         self.current_image_height = self.current_ocr_response['height']
@@ -360,7 +360,7 @@ class AWSProcessor(ImageProcessor):
                 Document={
                     'Bytes': image_content
                 })
-            pickle_an_object(self.save_directory,
+            pickle_an_object(self.ocr_save_directory,
                              self.current_image_basename,
                              self.current_ocr_response)
         except ConnectionClosedError:
