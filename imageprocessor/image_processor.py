@@ -421,4 +421,4 @@ class AWSProcessor(ImageProcessor):
             if self.current_label_location[0][0] <= location[0] <= self.current_label_location[1][0]:
                 if self.current_label_location[1][1] <= location[1] <= self.current_label_location[2][1]:
                     label_text += word['Text'] + ' '
-        return label_text
+        return label_text.strip()

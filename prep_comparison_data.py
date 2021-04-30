@@ -11,10 +11,6 @@ from utilities.dataloader import save_dataframe_as_csv
 
 def main(occurrence_filepath: str) -> pd.DataFrame:
     """ Load, populate, and return a pd.DataFrame with OCR text and quality analysis. """
-    mi = pd.MultiIndex.from_arrays(
-        [['ground_truth', 'ground_truth', 'aws', 'aws', 'gcv', 'gcv'],
-         ['barcode', 'text'] + ['text', 'score'] * 2],
-        names=('dataset', 'item'))
     occurrences = pd.read_csv(occurrence_filepath)
     add_ground_truth_text(occurrences)
     separate_word_analysis = pd.DataFrame(columns=['barcode', 'word_number', 'ground_truth_token',
@@ -71,7 +67,7 @@ def add_ground_truth_text(occur_data: pd.DataFrame) -> None:
         for data in data_to_add:
             if not pd.isna(data):
                 ground_truth_string += data + '\n'
-        occur_data.at[idx, 'labelText'] = ground_truth_string
+        occur_data.at[idx, 'labelText'] = ground_truth_string.strip()
 
 
 def preprocess_text(text: str) -> list:
