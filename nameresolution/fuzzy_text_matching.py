@@ -74,7 +74,8 @@ class TaxonMatcher(TextMatcherTemplate):
                                       usecols=['taxonID', 'scientificName', 'taxonRank', 'taxonomicStatus',
                                                'genus', 'specificEpithet', 'acceptedNameUsageID'],
                                       dtype={
-                                          'specificEpithet': 'string'})  # unclear why I need to specify, but fixes it
+                                          'specificEpithet': 'string'},
+                                      encoding='ISO-8859-1')  # unclear why I need to specify, but fixes it
         classifications = classifications[classifications.taxonRank == 'SPECIES']
         del classifications['taxonRank']
         self.expert_file = classifications

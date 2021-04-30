@@ -9,7 +9,7 @@ import pandas as pd
 def main(occurrence_file: str, folder_or_image_path: str, generate_annotated_images: bool) -> pd.DataFrame:
     list_of_images = load_file_list_from_filesystem(folder_or_image_path)
     processors = [GCVProcessor(), AWSProcessor()]
-    occurrence = pd.read_csv(occurrence_file)
+    occurrence = pd.read_csv(occurrence_file, encoding='ISO-8859-1')
 
     if generate_annotated_images:
         save_folder_path = os.path.join('test_results', 'cloud_ocr-' + get_timestamp_for_file_saving())

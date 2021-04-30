@@ -206,7 +206,7 @@ def clean_and_save_manifests():
     zooniverse_manifest.reindex(columns=['image_of_boxed_letter', 'barcode',
                                          'block_no', 'paragraph_no', 'word_no', 'symbol_no',
                                          '#GCV_identification']) \
-        .to_csv(os.path.join(image_folder_zooniverse, 'zooniverse_manifest.csv'), index=False)
+        .to_csv(os.path.join(image_folder_zooniverse, 'zooniverse_manifest.csv'), index=False, encoding='ISO-8859-1')
 
     letter_metadata['block_no'] = letter_metadata['block_no'].astype(int)
     letter_metadata['paragraph_no'] = letter_metadata['paragraph_no'].astype(int)
@@ -214,7 +214,7 @@ def clean_and_save_manifests():
     letter_metadata['symbol_no'] = letter_metadata['symbol_no'].astype(int)
     letter_metadata.reindex(columns=['image_of_symbol', 'gcv_symbol_classification', 'barcode',
                                      'block_no', 'paragraph_no', 'word_no', 'symbol_no']) \
-        .to_csv(os.path.join(image_folder_nn, 'symbol_metadata.csv'), index=False)
+        .to_csv(os.path.join(image_folder_nn, 'symbol_metadata.csv'), index=False, encoding='ISO-8859-1')
 
 
 if __name__ == '__main__':
