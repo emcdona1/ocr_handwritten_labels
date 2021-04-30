@@ -300,23 +300,20 @@ class GCVProcessor(ImageProcessor):
         return all_lines
 
     def get_label_text(self) -> str:
-        if self.current_ocr_response is None:
+        if self.ocr_blocks is None:
             print('Warning: no image OCR data has been loaded.')
             return ''
         elif self.current_label_location is None:
             print('No label location set; searching now.')
             self.find_label_location()
         label_text = ''
-        for block in self.current_ocr_response.full_text_annotation.pages[0].blocks:
-            for paragraph in block.paragraphs:
-                for word in paragraph.words:
-                    for symbol in word.symbols:
-                        location = symbol.bounding_box.vertices[0]
-                        if self.current_label_location[0][0] <= location.x <= self.current_label_location[1][0]:
-                            if self.current_label_location[1][1] <= location.y <= self.current_label_location[2][1]:
-                                label_text = label_text + symbol.text
-                    label_text += ' '
-                label_text += '\n'
+        if len(self.ocr_blocks) > 0:
+            words = [block for block in self.ocr_blocks if block['type'] == 'WORD']
+            for word in words:
+                top_left = word['bounding_box'][0]
+                if self.current_label_location[0][0] <= top_left[0] <= self.current_label_location[1][0]:
+                    if self.current_label_location[1][1] <= top_left[1] <= self.current_label_location[2][1]:
+                        label_text += word['text'] + ' '
         return label_text.strip()
 
 
@@ -405,20 +402,18 @@ class AWSProcessor(ImageProcessor):
     def get_label_text(self) -> str:
         """ Returns a string of words found by the OCR, but only words for which the upper left point of that word is
         within the label area. """
-        if self.current_ocr_response is None:
+        if self.ocr_blocks is None:
             print('Warning: no image OCR data has been loaded.')
             return ''
-
         if self.current_label_location is None:
             print('No label location set; searching now.')
             self.find_label_location()
         label_text = ''
-        words = [block for block in self.current_ocr_response['Blocks'] if block['BlockType'] == 'WORD']
-        for word in words:
-            location = word['Geometry']['Polygon'][0]
-            location = convert_relative_to_absolute_coordinates((location['X'], location['Y']),
-                                                                self.current_image_height, self.current_image_width)
-            if self.current_label_location[0][0] <= location[0] <= self.current_label_location[1][0]:
-                if self.current_label_location[1][1] <= location[1] <= self.current_label_location[2][1]:
-                    label_text += word['Text'] + ' '
+        if len(self.ocr_blocks) > 0:
+            words = [block for block in self.ocr_blocks if block['type'] == 'WORD']
+            for word in words:
+                top_left = word['bounding_box'][0]
+                if self.current_label_location[0][0] <= top_left[0] <= self.current_label_location[1][0]:
+                    if self.current_label_location[1][1] <= top_left[1] <= self.current_label_location[2][1]:
+                        label_text += word['text'] + ' '
         return label_text.strip()
