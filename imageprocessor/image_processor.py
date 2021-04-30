@@ -197,9 +197,24 @@ class ImageProcessor(ABC):
     def get_full_text(self) -> str:
         pass
 
-    @abstractmethod
     def get_label_text(self) -> str:
-        pass
+        """ Returns a string of words found by the OCR, but only words for which the upper left point of that word is
+                within the label area. """
+        if self.ocr_blocks is None:
+            print('Warning: no image OCR data has been loaded.')
+            return ''
+        elif self.current_label_location is None:
+            print('No label location set; searching now.')
+            self.find_label_location()
+        label_text = ''
+        if len(self.ocr_blocks) > 0:
+            words = [block for block in self.ocr_blocks if block['type'] == 'WORD']
+            for word in words:
+                top_left = word['bounding_box'][0]
+                if self.current_label_location[0][0] <= top_left[0] <= self.current_label_location[1][0]:
+                    if self.current_label_location[1][1] <= top_left[1] <= self.current_label_location[2][1]:
+                        label_text += word['text'] + ' '
+        return label_text.strip()
 
 
 class GCVProcessor(ImageProcessor):
@@ -299,22 +314,6 @@ class GCVProcessor(ImageProcessor):
                 all_lines.append(paragraph)
         return all_lines
 
-    def get_label_text(self) -> str:
-        if self.ocr_blocks is None:
-            print('Warning: no image OCR data has been loaded.')
-            return ''
-        elif self.current_label_location is None:
-            print('No label location set; searching now.')
-            self.find_label_location()
-        label_text = ''
-        if len(self.ocr_blocks) > 0:
-            words = [block for block in self.ocr_blocks if block['type'] == 'WORD']
-            for word in words:
-                top_left = word['bounding_box'][0]
-                if self.current_label_location[0][0] <= top_left[0] <= self.current_label_location[1][0]:
-                    if self.current_label_location[1][1] <= top_left[1] <= self.current_label_location[2][1]:
-                        label_text += word['text'] + ' '
-        return label_text.strip()
 
 
 class AWSProcessor(ImageProcessor):
@@ -398,22 +397,3 @@ class AWSProcessor(ImageProcessor):
                                                                             self.current_image_width)
                                    for relative in relative_word_locations]
         return absolute_word_locations
-
-    def get_label_text(self) -> str:
-        """ Returns a string of words found by the OCR, but only words for which the upper left point of that word is
-        within the label area. """
-        if self.ocr_blocks is None:
-            print('Warning: no image OCR data has been loaded.')
-            return ''
-        if self.current_label_location is None:
-            print('No label location set; searching now.')
-            self.find_label_location()
-        label_text = ''
-        if len(self.ocr_blocks) > 0:
-            words = [block for block in self.ocr_blocks if block['type'] == 'WORD']
-            for word in words:
-                top_left = word['bounding_box'][0]
-                if self.current_label_location[0][0] <= top_left[0] <= self.current_label_location[1][0]:
-                    if self.current_label_location[1][1] <= top_left[1] <= self.current_label_location[2][1]:
-                        label_text += word['text'] + ' '
-        return label_text.strip()
