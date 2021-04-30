@@ -193,9 +193,16 @@ class ImageProcessor(ABC):
     def get_list_of_lines(self) -> list:
         pass
 
-    @abstractmethod
     def get_full_text(self) -> str:
-        pass
+        if self.ocr_blocks is None:
+            print('Warning: no image OCR data has been loaded.')
+            return ''
+        full_text = ''
+        if len(self.ocr_blocks) > 0:
+            words = [block for block in self.ocr_blocks if block['type'] == 'WORD']
+            for word in words:
+                full_text += word['text'] + ' '
+        return full_text.strip()
 
     def get_label_text(self) -> str:
         """ Returns a string of words found by the OCR, but only words for which the upper left point of that word is
@@ -288,15 +295,6 @@ class GCVProcessor(ImageProcessor):
     def get_image_annotator(self):
         return image_annotator.GCVImageAnnotator(self.current_image_location)
 
-    def get_full_text(self) -> str:
-        if self.current_ocr_response is None:
-            print('Warning: no image OCR data has been loaded.')
-            return ''
-        gcv_text = ' '
-        if self.current_ocr_response:
-            gcv_text = self.current_ocr_response.full_text_annotation.text
-        return gcv_text.strip()
-
     def get_list_of_words(self) -> list:
         all_words = []
         page = self.current_ocr_response.full_text_annotation.pages[0]
@@ -313,7 +311,6 @@ class GCVProcessor(ImageProcessor):
             for paragraph in block.paragraphs:
                 all_lines.append(paragraph)
         return all_lines
-
 
 
 class AWSProcessor(ImageProcessor):
@@ -369,18 +366,6 @@ class AWSProcessor(ImageProcessor):
 
     def get_image_annotator(self):
         return image_annotator.AWSImageAnnotator(self.current_image_location)
-
-    def get_full_text(self) -> str:
-        if self.current_ocr_response is None:
-            print('Warning: no image OCR data has been loaded.')
-            return ''
-        aws_text = ' '
-        if self.current_ocr_response:
-            blocks = self.current_ocr_response['Blocks']
-            lines = [block for block in blocks if block['BlockType'] == 'LINE']
-            for line in lines:
-                aws_text += line['Text'] + '\n'
-        return aws_text.strip()
 
     def get_list_of_words(self) -> list:
         words = [block for block in self.current_ocr_response['Blocks'] if block['BlockType'] == 'WORD']
