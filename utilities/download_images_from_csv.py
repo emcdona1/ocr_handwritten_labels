@@ -15,6 +15,8 @@ def main(occ_filepath: str, save_directory: str):
         saved_image_location = download_image(image_url, save_directory, barcode)
         if saved_image_location == '':
             print('Error saving image for barcode %s.' % barcode)
+        elif saved_image_location == 'EXISTS':
+            print('Image already exists for barcode %s.' % barcode)
         else:
             print('Image %i / %i saved.' % (idx+1, num_rows))
 

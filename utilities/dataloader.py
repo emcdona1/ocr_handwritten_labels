@@ -78,10 +78,14 @@ def save_dataframe_as_csv(save_location: str, file_id: str, df: pd.DataFrame, ti
 
 
 def download_image(image_url: str, save_directory: str, image_id: str) -> str:
-    result = requests.get(image_url)
-    image_save_path = ''
-    if result.status_code == 200:
-        image_save_path = os.path.join(save_directory, image_id)
-        with open(image_save_path + '.jpg', 'wb') as f:
-            f.write(result.content)
+    image_save_path = os.path.join(save_directory, image_id + '.jpg')
+    if os.path.exists(image_save_path):
+        image_save_path = 'EXISTS'
+    else:
+        result = requests.get(image_url)
+        if result.status_code == 200:
+            with open(image_save_path, 'wb') as f:
+                f.write(result.content)
+        else:
+            image_save_path = ''
     return image_save_path
