@@ -7,7 +7,7 @@ import os
 def main(occ_filepath: str, save_directory: str):
     if not os.path.exists(save_directory):
         os.makedirs(save_directory)
-    occurrences = pd.read_csv(occ_filepath, encoding='ISO-8859-1')
+    occurrences = pd.read_csv(occ_filepath, encoding='UTF-8')
     num_rows = occurrences.shape[0]
     for idx, row in occurrences.iterrows():
         image_url = row['image_url']

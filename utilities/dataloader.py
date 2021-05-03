@@ -73,7 +73,7 @@ def get_timestamp_for_file_saving() -> str:
 def save_dataframe_as_csv(save_location: str, file_id: str, df: pd.DataFrame, timestamp=True) -> str:
     file_location = os.path.join(save_location, file_id +
                                  (('-' + get_timestamp_for_file_saving()) if timestamp else '') + '.csv')
-    df.to_csv(file_location, index=False, encoding='ISO-8859-1')
+    df.to_csv(file_location, index=False, encoding='UTF-8')
     return file_location
 
 

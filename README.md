@@ -41,7 +41,7 @@ ___
        1. For "Data Extensions," deselect "include Determination History"
           and select "include Image Records."
        1. (Compression should already be checked, and "CSV" selected for file format.)
-       1. For "Character Set" select "ISO-8859-1 (western)."
+       1. For "Character Set" select "UTF-8 (unicode)."
        1. Click "Download Records" button.
    1. Place this downloaded ZIP file in your working directory.
 1. **Download your image set**.

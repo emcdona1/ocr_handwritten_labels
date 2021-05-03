@@ -11,7 +11,7 @@ from utilities.dataloader import save_dataframe_as_csv
 
 def main(occurrence_filepath: str) -> pd.DataFrame:
     """ Load, populate, and return a pd.DataFrame with OCR text and quality analysis. """
-    occurrences = pd.read_csv(occurrence_filepath, encoding='ISO-8859-1')
+    occurrences = pd.read_csv(occurrence_filepath, encoding='UTF-8')
     add_ground_truth_text(occurrences)
     separate_word_analysis = pd.DataFrame(columns=['barcode', 'word_number', 'ground_truth_token',
                                                    'aws_best_match_tokens', 'aws_best_match_score',
