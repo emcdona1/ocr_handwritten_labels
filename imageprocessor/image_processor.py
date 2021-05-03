@@ -297,10 +297,10 @@ class AWSProcessor(ImageProcessor):
         self.current_image_height = self.current_ocr_response['height']
         self.current_image_width = self.current_ocr_response['width']
         self.ocr_blocks = list()
-        lines = [line for line in self.current_ocr_response['Blocks'] if not line['BlockType'] == 'PAGE']
+        lines: list = [line for line in self.current_ocr_response['Blocks'] if not line['BlockType'] == 'PAGE']
         for line in lines:
-            new_line = {'type': line['BlockType'], 'confidence': line['Confidence'], 'text': line['Text']}
-            v = line['Geometry']['Polygon']
+            new_line: dict = {'type': line['BlockType'], 'confidence': line['Confidence'], 'text': line['Text']}
+            v: list = line['Geometry']['Polygon']
             v_list = [(v[0]['X'], v[0]['Y']), (v[1]['X'], v[1]['Y']), (v[2]['X'], v[2]['Y']), (v[3]['X'], v[3]['Y'])]
             v_list = convert_list_of_relative_coordinates(v_list, self.current_image_height, self.current_image_width)
             new_line['bounding_box'], _, _, _, _ = arrange_coordinates(v_list)
