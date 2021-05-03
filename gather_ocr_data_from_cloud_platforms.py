@@ -39,19 +39,15 @@ def draw_comparison_image(processor: ImageProcessor, save_folder_path: str) -> N
     annotator = processor.get_image_annotator()
     annotator.set_save_location(os.path.join(save_folder_path, processor.name))
 
-    lines = processor.get_list_of_lines()
+    lines: list = processor.get_list_of_lines()
     for line in lines:
-        sorted_vertices = annotator.organize_vertices(line)
-        height, width, _ = annotator.current_image_to_annotate.shape
-        sorted_vertices = [convert_relative_to_absolute_coordinates(pt, height, width) for pt in sorted_vertices]
+        sorted_vertices: list = line['bounding_box']
         box_color = (0, 0, 0)  # black
         annotator.draw_polygon(sorted_vertices, box_color)
 
-    words = processor.get_list_of_words()
+    words: list = processor.get_list_of_words()
     for word in words:
-        sorted_vertices = annotator.organize_vertices(word)
-        height, width, _ = annotator.current_image_to_annotate.shape
-        sorted_vertices = [convert_relative_to_absolute_coordinates(pt, height, width) for pt in sorted_vertices]
+        sorted_vertices: list = word['bounding_box']
         start_color = (0, 200, 0)  # green
         end_color = (0, 0, 230)  # red
         annotator.draw_line(sorted_vertices[0], sorted_vertices[3], start_color, 2)
