@@ -17,9 +17,7 @@ import numpy as np
 class ImageProcessor(ABC):
     def __init__(self, starting_image_path=None):
         self.client = self._initialize_client()
-        # todo: phase out old ocr_save_directory and replace with ip_save_directory
-        self.ocr_save_directory = 'ocr_responses'
-        self.ip_save_directory = 'imageprocessor_objects'
+        self.object_save_directory = 'imageprocessor_objects'
         self.name = None
         self._initialize_name_and_save_directory()
         self._current_ocr_response = None
@@ -55,20 +53,8 @@ class ImageProcessor(ABC):
         self.__dict__.update(state)
         self.client = self._initialize_client()
 
-    def search_for_and_load_existing_pickle_file(self) -> bool:
-        """ Returns true if a pickled response is found for this file/OCR platform, and loads the pickled response
-         into _current_ocr_response.  If not found, returns false and sets _current_ocr_response to None."""
-        file_list = os.listdir(self.ocr_save_directory)
-        matches = [path for path in file_list if (self.current_image_basename + '.pickle') in path]
-        if len(matches) > 0:
-            print('Using previously pickled %s response object for %s' % (self.name, self.current_image_basename))
-            self._current_ocr_response = load_pickle(os.path.join(self.ocr_save_directory, matches[0]))
-            return True
-        else:
-            return False
-
     def pickle_current_image_state(self):
-        path = pickle_an_object(self.ip_save_directory, self.current_image_barcode, self)
+        path = pickle_an_object(self.object_save_directory, self.current_image_barcode, self)
         print('%s ImageProcessor saved to %s.' % (self.name, path))
 
     def get_found_word_locations(self) -> List[Tuple]:
@@ -98,8 +84,10 @@ class ImageProcessor(ABC):
         else:
             max_count = 0
             max_loc = (0, 0)
-            for y in range(int(self.current_image_height / 2), self.current_image_height - self.current_label_height + 1):
-                for x in range(int(self.current_image_width / 2), self.current_image_width - self.current_label_width + 1):
+            for y in range(int(self.current_image_height / 2),
+                           self.current_image_height - self.current_label_height + 1):
+                for x in range(int(self.current_image_width / 2),
+                               self.current_image_width - self.current_label_width + 1):
                     x_values = np_of_points[:, 0]
                     idx_of_valid_x = np.intersect1d(np.where(x_values >= x),
                                                     np.where(x_values < x + self.current_label_width))
@@ -145,31 +133,24 @@ class ImageProcessor(ABC):
         self.current_image_basename = os.path.basename(image_path).split('.')[0]
         self.current_image_barcode = extract_barcode_from_image_name(self.current_image_location)
 
-        # 1. check for imageprocessor_object. If Y, load it and done. GENERIC
+        # 1. check for imageprocessor_object. If Y, load it and done.
         pickled_object_location = self._search_for_pickled_object()
         if pickled_object_location:
             loaded = load_pickle(pickled_object_location)
             self.__setstate__(loaded.__dict__)
         else:
-            # 2. If N, check for pickled response object. If Y, load it, parse it, and then pickle the IP. GENERIC except for parsing.
-            found_response_object = self.search_for_and_load_existing_pickle_file()
-            # todo LATER: refactor above so it returns pickle location (like in step 1) then uncomment below
-            if found_response_object:
-                # load_existing_pickle_file()
-                self._parse_ocr_blocks()
-            else:
-            # 3. If N, send OCR request, pickle the response, and then _parse_ocr_blocks and pickle the IP. GENERIC except for OCR request and parsing.
-                self._download_ocr_and_save_response()
-                self._parse_ocr_blocks()
+            # 2. If N, send OCR request, pickle the response, and then _parse_ocr_blocks and pickle the IP.
+            self._download_ocr_and_save_response()
+            self._parse_ocr_blocks()
             self.current_label_height = math.ceil(self.current_image_height * 0.15)
             self.current_label_width = math.ceil(self.current_image_width * 0.365)
             self.pickle_current_image_state()
 
     def _search_for_pickled_object(self) -> Union[str, None]:
         pickled_search_name = self.current_image_basename + '.pickle'
-        search_directory = os.listdir(self.ip_save_directory)
+        search_directory = os.listdir(self.object_save_directory)
         if pickled_search_name in search_directory:
-            return os.path.join(self.ip_save_directory, pickled_search_name)
+            return os.path.join(self.object_save_directory, pickled_search_name)
         else:
             return None
 
@@ -237,14 +218,9 @@ class GCVProcessor(ImageProcessor):
 
     def _initialize_name_and_save_directory(self):
         self.name = 'gcv'
-        # todo: phase out old
-        self.ocr_save_directory = self.ocr_save_directory + os.path.sep + 'gcv'
-        if not os.path.exists(self.ocr_save_directory):
-            os.makedirs(self.ocr_save_directory)
-        # todo: phase in new
-        self.ip_save_directory = self.ip_save_directory + os.path.sep + self.name
-        if not os.path.exists(self.ip_save_directory):
-            os.makedirs(self.ip_save_directory)
+        self.object_save_directory = self.object_save_directory + os.path.sep + self.name
+        if not os.path.exists(self.object_save_directory):
+            os.makedirs(self.object_save_directory)
 
     def _parse_ocr_blocks(self):
         self.current_image_height = self.current_ocr_response.full_text_annotation.pages[0].height
@@ -282,9 +258,6 @@ class GCVProcessor(ImageProcessor):
             image_content = image_file.read()
         image = vision.types.Image(content=image_content)
         self.current_ocr_response = self.client.document_text_detection(image=image)
-        pickle_an_object(self.ocr_save_directory,
-                         self.current_image_basename,
-                         self.current_ocr_response)
 
     def get_image_annotator(self):
         return image_annotator.GCVImageAnnotator(self.current_image_location)
@@ -316,13 +289,9 @@ class AWSProcessor(ImageProcessor):
 
     def _initialize_name_and_save_directory(self):
         self.name = 'aws'
-        # todo: phase out old ocr_save_directory and replace with ip_save_directory
-        self.ocr_save_directory = self.ocr_save_directory + os.path.sep + 'aws'
-        if not os.path.exists(self.ocr_save_directory):
-            os.makedirs(self.ocr_save_directory)
-        self.ip_save_directory = self.ip_save_directory + os.path.sep + self.name
-        if not os.path.exists(self.ip_save_directory):
-            os.makedirs(self.ip_save_directory)
+        self.object_save_directory = self.object_save_directory + os.path.sep + self.name
+        if not os.path.exists(self.object_save_directory):
+            os.makedirs(self.object_save_directory)
 
     def _parse_ocr_blocks(self):
         self.current_image_height = self.current_ocr_response['height']
@@ -338,7 +307,7 @@ class AWSProcessor(ImageProcessor):
             self.ocr_blocks.append(new_line)
         self.pickle_current_image_state()
 
-    def _download_ocr_and_save_response(self) -> None:
+    def _download_ocr_and_save_response(self) -> None:  # todo: update name to _download_ocr_response(
         with open(self.current_image_location, 'rb') as img:
             f = img.read()
             image_content = bytes(f)
@@ -347,9 +316,6 @@ class AWSProcessor(ImageProcessor):
                 Document={
                     'Bytes': image_content
                 })
-            pickle_an_object(self.ocr_save_directory,
-                             self.current_image_basename,
-                             self.current_ocr_response)
         except ConnectionClosedError:
             print('Unable to get %s connection for image %s.' % (self.name, self.current_image_barcode))
             self.current_ocr_response = dict()
