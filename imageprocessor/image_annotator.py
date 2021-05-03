@@ -16,6 +16,7 @@ class ImageAnnotator():
             self.load_image_from_file(starting_image_location)
 
     def load_image_from_file(self, image_path: str):
+        self.clear_current_image()
         self.current_image_location = image_path
         self.current_image_to_annotate = open_cv2_image(self.current_image_location)
         self.current_image_barcode = extract_barcode_from_image_name(self.current_image_location)
@@ -30,3 +31,8 @@ class ImageAnnotator():
 
     def save_annotated_image_to_file(self):
         save_cv2_image(self.save_location, self.current_image_barcode, self.current_image_to_annotate)
+
+    def clear_current_image(self):
+        self.current_image_location = None
+        self.current_image_barcode = None
+        self.current_image_to_annotate = None
