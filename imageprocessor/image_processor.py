@@ -140,7 +140,7 @@ class ImageProcessor(ABC):
             self.__setstate__(loaded.__dict__)
         else:
             # 2. If N, send OCR request, pickle the response, and then _parse_ocr_blocks and pickle the IP.
-            self._download_ocr_and_save_response()
+            self._download_ocr()
             self._parse_ocr_blocks()
             self.current_label_height = math.ceil(self.current_image_height * 0.15)
             self.current_label_width = math.ceil(self.current_image_width * 0.365)
@@ -159,7 +159,7 @@ class ImageProcessor(ABC):
         pass
 
     @abstractmethod
-    def _download_ocr_and_save_response(self) -> None:
+    def _download_ocr(self) -> None:
         pass
 
     @abstractmethod
@@ -253,7 +253,7 @@ class GCVProcessor(ImageProcessor):
         self.ocr_blocks = sorted(self.ocr_blocks, key=lambda b: block_order[b['type']])
         self.pickle_current_image_state()
 
-    def _download_ocr_and_save_response(self) -> None:
+    def _download_ocr(self) -> None:
         with io.open(self.current_image_location, 'rb') as image_file:
             image_content = image_file.read()
         image = vision.types.Image(content=image_content)
@@ -290,7 +290,7 @@ class AWSProcessor(ImageProcessor):
             self.ocr_blocks.append(new_line)
         self.pickle_current_image_state()
 
-    def _download_ocr_and_save_response(self) -> None:  # todo: update name to _download_ocr_response(
+    def _download_ocr(self) -> None:
         with open(self.current_image_location, 'rb') as img:
             f = img.read()
             image_content = bytes(f)
