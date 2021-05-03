@@ -16,7 +16,7 @@ def main(occurrence_filepath: str) -> pd.DataFrame:
     separate_word_analysis = pd.DataFrame(columns=['barcode', 'word_number', 'ground_truth_token',
                                                    'aws_best_match_tokens', 'aws_best_match_score',
                                                    'gcv_best_match_tokens', 'gcv_best_match_score'])
-
+    print('Gathering OCR accuracy details for %i rows.' % occurrences.shape[0])
     for idx, occur_row in occurrences.iterrows():
         if pd.isna(occur_row['awsOcrText']):
             aws_tokens = ['']  # this means that AWS didn't find anything...
@@ -44,7 +44,6 @@ def main(occurrence_filepath: str) -> pd.DataFrame:
                                                                  'aws', aws_match_results)
         occurrences.at[idx, 'gcvMatchingScore'] = generate_score(occurrences.at[idx, 'catalogNumber'],
                                                                  'gcv', gcv_match_results)
-        print()
 
     filename = save_dataframe_as_csv('test_results', 'occurrence_with_ocr_scores', occurrences)
     print('%i row(s) processed, added, and saved to %s' % (occurrences.shape[0], filename))
@@ -110,8 +109,8 @@ def generate_score(barcode: str, service_name: str, match_results: list) -> floa
 
     accuracy_score = (len(perfect_matches) + len(near_matches) / 2) / num_of_words
 
-    print('Score for %s on service %s: perfect = %i, near match = %i, score = %.2f%%' %
-          (barcode, service_name, len(perfect_matches), len(near_matches), accuracy_score * 100))
+    # print('Score for %s on service %s: perfect = %i, near match = %i, score = %.2f%%' %
+    #       (barcode, service_name, len(perfect_matches), len(near_matches), accuracy_score * 100))
     return accuracy_score
 
 
