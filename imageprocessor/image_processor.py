@@ -119,6 +119,7 @@ class ImageProcessor(ABC):
         self.current_label_width = None
         self.current_label_height = None
         self.current_label_location = None
+        self.annotator.clear_current_image()
 
     @abstractmethod
     def _initialize_name_and_save_directory(self) -> str:
@@ -129,6 +130,7 @@ class ImageProcessor(ABC):
         self.current_image_location = image_path
         self.current_image_basename = os.path.basename(image_path).split('.')[0]
         self.current_image_barcode = extract_barcode_from_image_name(self.current_image_location)
+        self.annotator.load_image_from_file(image_path)
 
         # 1. check for imageprocessor_object. If Y, load it and done.
         pickled_object_location = self._search_for_pickled_object()
