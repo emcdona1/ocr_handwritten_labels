@@ -105,6 +105,6 @@ class TaxonMatcher(TextMatcherTemplate):
             copy.deepcopy(self.top_match_results[['search_query', 'best_matches']])
         synonym_matches['accepted_name'] = None
         for idx, row in synonym_matches.iterrows():
-            # todo : only looking at the first one for now
+            # only looking at the first one for now
             name_to_match = row['best_matches'][0]
         return pd.Series()
