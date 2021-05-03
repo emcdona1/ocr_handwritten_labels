@@ -36,7 +36,7 @@ def main(occurrence_file: str, folder_or_image_path: str, generate_annotated_ima
 
 
 def draw_comparison_image(processor: ImageProcessor, save_folder_path: str) -> None:
-    annotator = processor.get_image_annotator()
+    annotator = processor.annotator
     annotator.set_save_location(os.path.join(save_folder_path, processor.name))
 
     lines: list = processor.get_list_of_lines()

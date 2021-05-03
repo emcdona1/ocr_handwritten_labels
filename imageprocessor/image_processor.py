@@ -8,7 +8,7 @@ from botocore.exceptions import ConnectionClosedError
 from utilities.dataloader import load_pickle, pickle_an_object, open_cv2_image
 from utilities.dataprocessor import extract_barcode_from_image_name, convert_relative_to_absolute_coordinates, \
     convert_list_of_relative_coordinates, arrange_coordinates
-from imageprocessor import image_annotator
+from imageprocessor.image_annotator import ImageAnnotator
 from typing import List, Tuple, Union
 import math
 import numpy as np
@@ -18,8 +18,7 @@ class ImageProcessor(ABC):
     def __init__(self, starting_image_path=None):
         self.client = self._initialize_client()
         self.object_save_directory = 'imageprocessor_objects'
-        self.name = None
-        self._initialize_name_and_save_directory()
+        self.name = self._initialize_name_and_save_directory()
         self._current_ocr_response = None
         self.ocr_blocks = None
         self.current_image_location = None
@@ -30,6 +29,7 @@ class ImageProcessor(ABC):
         self.current_label_height = None
         self.current_label_width = None
         self.current_label_location = None
+        self.annotator = ImageAnnotator(self.name)
         if starting_image_path:
             self.load_image_from_file(starting_image_path)
 
@@ -58,14 +58,11 @@ class ImageProcessor(ABC):
         print('%s ImageProcessor saved to %s.' % (self.name, path))
 
     def get_found_word_locations(self) -> List[Tuple]:
-        """ Returns a list of (x,y) coordinates (top left is origin),
-         where each point is the corner of a word identified by the OCR. """
+        """ Returns a list of (x,y) coordinates, where each point is the corner of a word identified by the OCR. """
         word_points = []
         words = self.get_list_of_words()
-        annotator = self.get_image_annotator()
         for word in words:
-            corners_of_word = annotator.organize_vertices(word)
-            for vertex in corners_of_word:
+            for vertex in word.bounding_box:
                 word_points.append(vertex)
         return word_points
 
@@ -124,7 +121,7 @@ class ImageProcessor(ABC):
         self.current_label_location = None
 
     @abstractmethod
-    def _initialize_name_and_save_directory(self) -> None:
+    def _initialize_name_and_save_directory(self) -> str:
         pass
 
     def load_image_from_file(self, image_path: str) -> None:
@@ -160,10 +157,6 @@ class ImageProcessor(ABC):
 
     @abstractmethod
     def _download_ocr(self) -> None:
-        pass
-
-    @abstractmethod
-    def get_image_annotator(self):
         pass
 
     def get_list_of_words(self) -> list:
@@ -216,11 +209,12 @@ class GCVProcessor(ImageProcessor):
         os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = service_account_token_path
         return vision.ImageAnnotatorClient()
 
-    def _initialize_name_and_save_directory(self):
+    def _initialize_name_and_save_directory(self) -> str:
         self.name = 'gcv'
         self.object_save_directory = self.object_save_directory + os.path.sep + self.name
         if not os.path.exists(self.object_save_directory):
             os.makedirs(self.object_save_directory)
+        return self.name
 
     def _parse_ocr_blocks(self):
         self.current_image_height = self.current_ocr_response.full_text_annotation.pages[0].height
@@ -259,9 +253,6 @@ class GCVProcessor(ImageProcessor):
         image = vision.types.Image(content=image_content)
         self.current_ocr_response = self.client.document_text_detection(image=image)
 
-    def get_image_annotator(self):
-        return image_annotator.ImageAnnotator('gcv', self.current_image_location)
-
 
 class AWSProcessor(ImageProcessor):
     def __init__(self, starting_image_path=None):
@@ -270,11 +261,12 @@ class AWSProcessor(ImageProcessor):
     def _initialize_client(self):
         return boto3.client('textract')
 
-    def _initialize_name_and_save_directory(self):
+    def _initialize_name_and_save_directory(self) -> str:
         self.name = 'aws'
         self.object_save_directory = self.object_save_directory + os.path.sep + self.name
         if not os.path.exists(self.object_save_directory):
             os.makedirs(self.object_save_directory)
+        return self.name
 
     def _parse_ocr_blocks(self):
         self.current_image_height = self.current_ocr_response['height']
@@ -306,9 +298,6 @@ class AWSProcessor(ImageProcessor):
         current_image = open_cv2_image(self.current_image_location)
         self.current_ocr_response['height'] = current_image.shape[0]
         self.current_ocr_response['width'] = current_image.shape[1]
-
-    def get_image_annotator(self):
-        return image_annotator.ImageAnnotator('aws', self.current_image_location)
 
     def get_found_word_locations(self) -> List[Tuple[int, int]]:
         relative_word_locations = super(AWSProcessor, self).get_found_word_locations()
