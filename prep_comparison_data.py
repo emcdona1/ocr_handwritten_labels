@@ -45,7 +45,7 @@ def main(occurrence_filepath: str) -> pd.DataFrame:
         occurrences.at[idx, 'gcvMatchingScore'] = generate_score(occurrences.at[idx, 'catalogNumber'],
                                                                  'gcv', gcv_match_results)
 
-    filename = save_dataframe_as_csv('test_results', 'occurrence_with_ocr_scores', occurrences)
+    filename = save_dataframe_as_csv('test_results', 'occurrence_with_ocr_and_scores', occurrences)
     print('%i row(s) processed, added, and saved to %s' % (occurrences.shape[0], filename))
     filename = save_dataframe_as_csv('test_results', 'compare_word_by_word', separate_word_analysis)
     print('Word-by-word analysis saved to %s' % filename)

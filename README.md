@@ -68,7 +68,7 @@ ___
        generated in the previous step. This script saves 2 new files to the
        `test_results` folder:
         1. The occurrence file with 3 added columns,saved as 
-           "occurrence_with_ocr_scores-<yyyy_mm_dd-hh-mm-ss>.csv":
+           "occurrence_with_ocr_and_scores-<yyyy_mm_dd-hh-mm-ss>.csv":
             - `labelText` - ground truth data (compiled from the human-created transcriptions
               in the occurrence file) 
             - `awsMatchingScore` - The total "score" for the AWS Textract platform's OCR text
