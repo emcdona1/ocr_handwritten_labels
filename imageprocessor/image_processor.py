@@ -260,24 +260,7 @@ class GCVProcessor(ImageProcessor):
         self.current_ocr_response = self.client.document_text_detection(image=image)
 
     def get_image_annotator(self):
-        return image_annotator.GCVImageAnnotator(self.current_image_location)
-
-    def get_list_of_words(self) -> list:
-        all_words = []
-        page = self.current_ocr_response.full_text_annotation.pages[0]
-        for block in page.blocks:
-            for paragraph in block.paragraphs:
-                for word in paragraph.words:
-                    all_words.append(word)
-        return all_words
-
-    def get_list_of_lines(self) -> list:
-        all_lines = []
-        page = self.current_ocr_response.full_text_annotation.pages[0]
-        for block in page.blocks:
-            for paragraph in block.paragraphs:
-                all_lines.append(paragraph)
-        return all_lines
+        return image_annotator.ImageAnnotator('gcv', self.current_image_location)
 
 
 class AWSProcessor(ImageProcessor):
@@ -325,15 +308,7 @@ class AWSProcessor(ImageProcessor):
         self.current_ocr_response['width'] = current_image.shape[1]
 
     def get_image_annotator(self):
-        return image_annotator.AWSImageAnnotator(self.current_image_location)
-
-    def get_list_of_words(self) -> list:
-        words = [block for block in self.current_ocr_response['Blocks'] if block['BlockType'] == 'WORD']
-        return words
-
-    def get_list_of_lines(self) -> list:
-        lines = [block for block in self.current_ocr_response['Blocks'] if block['BlockType'] == 'LINE']
-        return lines
+        return image_annotator.ImageAnnotator('aws', self.current_image_location)
 
     def get_found_word_locations(self) -> List[Tuple[int, int]]:
         relative_word_locations = super(AWSProcessor, self).get_found_word_locations()
