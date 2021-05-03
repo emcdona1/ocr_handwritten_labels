@@ -201,9 +201,6 @@ class ImageProcessor(ABC):
 
 
 class GCVProcessor(ImageProcessor):
-    def __init__(self, starting_image_path=None):
-        super().__init__(starting_image_path)
-
     def _initialize_client(self):
         config_parser = ConfigParser()
         config_parser.read(r'Configuration.cfg')
@@ -217,6 +214,12 @@ class GCVProcessor(ImageProcessor):
         if not os.path.exists(self.object_save_directory):
             os.makedirs(self.object_save_directory)
         return self.name
+
+    def _download_ocr(self) -> None:
+        with io.open(self.current_image_location, 'rb') as image_file:
+            image_content = image_file.read()
+        image = vision.types.Image(content=image_content)
+        self.current_ocr_response = self.client.document_text_detection(image=image)
 
     def _parse_ocr_blocks(self):
         self.current_image_height = self.current_ocr_response.full_text_annotation.pages[0].height
@@ -249,17 +252,8 @@ class GCVProcessor(ImageProcessor):
         self.ocr_blocks = sorted(self.ocr_blocks, key=lambda b: block_order[b['type']])
         self.pickle_current_image_state()
 
-    def _download_ocr(self) -> None:
-        with io.open(self.current_image_location, 'rb') as image_file:
-            image_content = image_file.read()
-        image = vision.types.Image(content=image_content)
-        self.current_ocr_response = self.client.document_text_detection(image=image)
-
 
 class AWSProcessor(ImageProcessor):
-    def __init__(self, starting_image_path=None):
-        super().__init__(starting_image_path)
-
     def _initialize_client(self):
         return boto3.client('textract')
 
@@ -269,20 +263,6 @@ class AWSProcessor(ImageProcessor):
         if not os.path.exists(self.object_save_directory):
             os.makedirs(self.object_save_directory)
         return self.name
-
-    def _parse_ocr_blocks(self):
-        self.current_image_height = self.current_ocr_response['height']
-        self.current_image_width = self.current_ocr_response['width']
-        self.ocr_blocks = list()
-        lines: list = [line for line in self.current_ocr_response['Blocks'] if not line['BlockType'] == 'PAGE']
-        for line in lines:
-            new_line: dict = {'type': line['BlockType'], 'confidence': line['Confidence'], 'text': line['Text']}
-            v: list = line['Geometry']['Polygon']
-            v_list = [(v[0]['X'], v[0]['Y']), (v[1]['X'], v[1]['Y']), (v[2]['X'], v[2]['Y']), (v[3]['X'], v[3]['Y'])]
-            v_list = convert_list_of_relative_coordinates(v_list, self.current_image_height, self.current_image_width)
-            new_line['bounding_box'], _, _, _, _ = arrange_coordinates(v_list)
-            self.ocr_blocks.append(new_line)
-        self.pickle_current_image_state()
 
     def _download_ocr(self) -> None:
         with open(self.current_image_location, 'rb') as img:
@@ -301,10 +281,16 @@ class AWSProcessor(ImageProcessor):
         self.current_ocr_response['height'] = current_image.shape[0]
         self.current_ocr_response['width'] = current_image.shape[1]
 
-    def get_found_word_locations(self) -> List[Tuple[int, int]]:
-        relative_word_locations = super(AWSProcessor, self).get_found_word_locations()
-        absolute_word_locations = [convert_relative_to_absolute_coordinates(relative,
-                                                                            self.current_image_height,
-                                                                            self.current_image_width)
-                                   for relative in relative_word_locations]
-        return absolute_word_locations
+    def _parse_ocr_blocks(self):
+        self.current_image_height = self.current_ocr_response['height']
+        self.current_image_width = self.current_ocr_response['width']
+        self.ocr_blocks = list()
+        lines: list = [line for line in self.current_ocr_response['Blocks'] if not line['BlockType'] == 'PAGE']
+        for line in lines:
+            new_line: dict = {'type': line['BlockType'], 'confidence': line['Confidence'], 'text': line['Text']}
+            v: list = line['Geometry']['Polygon']
+            v_list = [(v[0]['X'], v[0]['Y']), (v[1]['X'], v[1]['Y']), (v[2]['X'], v[2]['Y']), (v[3]['X'], v[3]['Y'])]
+            v_list = convert_list_of_relative_coordinates(v_list, self.current_image_height, self.current_image_width)
+            new_line['bounding_box'], _, _, _, _ = arrange_coordinates(v_list)
+            self.ocr_blocks.append(new_line)
+        self.pickle_current_image_state()
