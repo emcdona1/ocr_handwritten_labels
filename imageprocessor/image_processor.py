@@ -166,13 +166,13 @@ class ImageProcessor(ABC):
     def get_image_annotator(self):
         pass
 
-    @abstractmethod
     def get_list_of_words(self) -> list:
-        pass
+        words = [block for block in self.ocr_blocks if block['type'] == 'WORD']
+        return words
 
-    @abstractmethod
     def get_list_of_lines(self) -> list:
-        pass
+        lines = [block for block in self.ocr_blocks if block['type'] == 'LINE']
+        return lines
 
     def get_full_text(self) -> str:
         if self.ocr_blocks is None:
