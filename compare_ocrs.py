@@ -51,7 +51,7 @@ def main(occurrence_filepath: str, ocr_text_filepath: str, image_folder: str, an
 
 def plot_words_and_label(fig_num: int, processor, image_height: int, image_width: int, list_of_points: list,
                          label_points: tuple, label_image_save_location: str):
-    np_of_points = np.ndarray(list_of_points)
+    np_of_points = np.array(list_of_points)
     fig = pyplot.figure(fig_num)
     pyplot.clf()
     pyplot.title('%s using %s' % (processor.current_image_barcode, processor.name.upper()))
