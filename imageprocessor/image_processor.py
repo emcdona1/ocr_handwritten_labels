@@ -5,7 +5,7 @@ from google.cloud import vision
 from abc import ABC, abstractmethod
 import boto3
 from botocore.exceptions import ConnectionClosedError
-from utilities.dataloader import load_pickle, pickle_an_object, open_cv2_image
+from utilities.dataloader import load_pickle, pickle_an_object, open_cv2_image, save_cv2_image
 from utilities.dataprocessor import extract_barcode_from_image_name, convert_relative_to_absolute_coordinates, \
     convert_list_of_relative_coordinates, arrange_coordinates
 from imageprocessor.image_annotator import ImageAnnotator
@@ -21,6 +21,7 @@ class ImageProcessor(ABC):
         self.name = self._initialize_name_and_save_directory()
         self._current_ocr_response = None
         self.ocr_blocks = None
+        self.current_image_used_cropped_image_ocr = False
         self.current_image_location = None
         self.current_image_basename = None
         self.current_image_barcode = None
@@ -119,6 +120,7 @@ class ImageProcessor(ABC):
         self.current_label_width = None
         self.current_label_height = None
         self.current_label_location = None
+        self.current_image_used_cropped_image_ocr = False
         self.annotator.clear_current_image()
 
     @abstractmethod
@@ -264,10 +266,19 @@ class AWSProcessor(ImageProcessor):
             os.makedirs(self.object_save_directory)
         return self.name
 
-    def _download_ocr(self) -> None:
-        with open(self.current_image_location, 'rb') as img:
-            f = img.read()
-            image_content = bytes(f)
+    def _download_ocr(self, special_image_location=None) -> None:
+        """ Use the optional parameter special_image_location to run the OCR on a temporary image (e.g. when running
+        a cropped image through, if the original image didn't generate much OCR text).  Otherwise,
+        self.current_image_location is used for the OCR. """
+        if special_image_location:
+            with open(special_image_location, 'rb') as img:
+                f = img.read()
+                image_content = bytes(f)
+        else:
+            with open(self.current_image_location, 'rb') as img:
+                f = img.read()
+                image_content = bytes(f)
+
         try:
             self.current_ocr_response = self.client.detect_document_text(
                 Document={
@@ -277,14 +288,19 @@ class AWSProcessor(ImageProcessor):
             print('Unable to get %s connection for image %s.' % (self.name, self.current_image_barcode))
             self.current_ocr_response = dict()
             self.current_ocr_response['Blocks'] = [{'BlockType': 'PAGE'}]
-        current_image = open_cv2_image(self.current_image_location)
-        self.current_ocr_response['height'] = current_image.shape[0]
-        self.current_ocr_response['width'] = current_image.shape[1]
 
     def _parse_ocr_blocks(self):
-        self.current_image_height = self.current_ocr_response['height']
-        self.current_image_width = self.current_ocr_response['width']
         self.ocr_blocks = list()
+        current_image = open_cv2_image(self.current_image_location)
+        self.current_image_height = current_image.shape[0]
+        self.current_image_width = current_image.shape[1]
+
+        found_text = [block['Text'] for block in self.current_ocr_response['Blocks'] if block['BlockType'] == 'WORD']
+        if len(' '.join(found_text)) < 200:
+            self._rerun_ocr_with_cropping()
+            self.current_image_used_cropped_image_ocr = True
+            print('Bad image %s, reran OCR.' % self.current_image_barcode)
+
         lines: list = [line for line in self.current_ocr_response['Blocks'] if not line['BlockType'] == 'PAGE']
         for line in lines:
             new_line: dict = {'type': line['BlockType'], 'confidence': line['Confidence'], 'text': line['Text']}
@@ -293,4 +309,23 @@ class AWSProcessor(ImageProcessor):
             v_list = convert_list_of_relative_coordinates(v_list, self.current_image_height, self.current_image_width)
             new_line['bounding_box'], _, _, _, _ = arrange_coordinates(v_list)
             self.ocr_blocks.append(new_line)
+
         self.pickle_current_image_state()
+
+    def _rerun_ocr_with_cropping(self):
+        temp_folder = 'tmp'
+        if not os.path.exists(temp_folder):
+            os.makedirs(temp_folder)
+        # create cropped image of lower right quadrant
+        cropped_image = self.annotator.cropped_image_to_ratio(0.5, 1.0, 0.5, 1.0)
+        cropped_filepath = save_cv2_image(temp_folder, self.current_image_barcode, cropped_image)
+        cropped_filepath = os.path.join(temp_folder, cropped_filepath)
+        print(cropped_filepath)
+        # rerun OCR with the temp image
+        self._download_ocr(cropped_filepath)
+        # correct the vertex values = 0.5x + 0.5
+        for block in self.current_ocr_response['Blocks']:
+            block['Geometry']['Polygon'] = [{'X': 0.5*p['X'] + 0.5, 'Y': 0.5*p['Y'] + 0.5} for p
+                                            in block['Geometry']['Polygon']]
+        # delete temp image
+        os.remove(cropped_filepath)
