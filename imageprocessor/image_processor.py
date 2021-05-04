@@ -62,7 +62,7 @@ class ImageProcessor(ABC):
         word_points = []
         words = self.get_list_of_words()
         for word in words:
-            for vertex in word.bounding_box:
+            for vertex in word['bounding_box']:
                 word_points.append(vertex)
         return word_points
 
