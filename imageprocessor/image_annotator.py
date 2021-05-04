@@ -37,3 +37,13 @@ class ImageAnnotator():
         self.current_image_location = None
         self.current_image_barcode = None
         self.current_image_to_annotate = None
+
+    def cropped_image_to_ratio(self, x_min: float, x_max: float, y_min: float, y_max: float) -> np.ndarray:
+        """ Returns a subset of the current image, cropped to the desired ratio. """
+        height = self.current_image_to_annotate.shape[0]
+        width = self.current_image_to_annotate.shape[1]
+        x_min = int(height * x_min)
+        x_max = int(height * x_max)
+        y_min = int(width * y_min)
+        y_max = int(width * y_max)
+        return self.current_image_to_annotate[x_min:x_max + 1, y_min:y_max + 1]
