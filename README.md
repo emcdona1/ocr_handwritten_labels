@@ -53,10 +53,11 @@ ___
        downloaded image set.
 1. **Retrieve and save OCR data for your image set**.
     1. Run the script `gather_ocr_data_from_cloud_platforms.py` pointing to the folder of 
-       images downloaded in the previous step.
+       images downloaded in the previous step, and the "occurrence_with_image_urls" file.
     1. (To cut down on cloud usage, the program attempts to find already existing
        ocr response objects, and any OCR responses generated will be saved in the 
-       `ocr_responses` folder, with one subfolder for each cloud platform.)
+       `ocr_responses` folder, with one subfolder for each cloud platform.)  For a brand-new
+       set of images, this script will take 23-30 seconds per image.
     1. The file "occurrence_with_ocr-<yyyy_mm_dd-hh_mm_ss>.csv" will be saved in the folder
        `test_results`.
     1. To generate annotated images for each image and cloud platform, e.g. if you want
