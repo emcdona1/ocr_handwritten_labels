@@ -8,7 +8,7 @@ import numpy as np
 from urllib.request import urlopen
 import cv2
 from google.cloud import vision
-from imageprocessor.image_processor import GCVProcessor
+from imageprocessor import GCVProcessor
 
 zooniverse_manifest = pd.DataFrame()
 letter_metadata = pd.DataFrame()
