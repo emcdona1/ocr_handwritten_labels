@@ -15,7 +15,14 @@ letter_metadata = pd.DataFrame()
 
 
 def main():
-    image_processor = setup()
+    if not os.path.exists(pickle_folder):
+        os.mkdir(pickle_folder)
+    if not os.path.exists(image_folder_zooniverse):
+        os.mkdir(image_folder_zooniverse)
+    if not os.path.exists(image_folder_nn):
+        os.mkdir(image_folder_nn)
+
+    gcv_processor = GCVProcessor()
     list_of_images: list = load_list_of_images()
 
     for one_image in list_of_images:
@@ -39,18 +46,6 @@ def main():
                                                                    '' if s_idx == 0 else word_filename)
         print('Processing complete for %s.' % one_image)
     clean_and_save_manifests()
-
-
-def setup() -> GCVProcessor:
-    if not os.path.exists(pickle_folder):
-        os.mkdir(pickle_folder)
-    if not os.path.exists(image_folder_zooniverse):
-        os.mkdir(image_folder_zooniverse)
-    if not os.path.exists(image_folder_nn):
-        os.mkdir(image_folder_nn)
-
-    image_processor = GCVProcessor()
-    return image_processor
 
 
 def load_list_of_images() -> list:
