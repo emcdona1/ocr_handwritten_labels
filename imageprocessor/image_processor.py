@@ -230,29 +230,32 @@ class GCVProcessor(ImageProcessor):
         self.current_image_height = self.current_ocr_response.full_text_annotation.pages[0].height
         self.current_image_width = self.current_ocr_response.full_text_annotation.pages[0].width
         self.ocr_blocks = list()
-        for block in self.current_ocr_response.full_text_annotation.pages[0].blocks:
-            for paragraph in block.paragraphs:
+        for b_idx, block in enumerate(self.current_ocr_response.full_text_annotation.pages[0].blocks):
+            for p_idx, paragraph in enumerate(block.paragraphs):
                 line_text = ''
-                for word in paragraph.words:
+                for w_idx, word in enumerate(paragraph.words):
                     word_text = ''
-                    for symbol in word.symbols:
+                    for s_idx, symbol in enumerate(word.symbols):
                         v = symbol.bounding_box.vertices
                         v = [(v[0].x, v[0].y), (v[1].x, v[1].y), (v[2].x, v[2].y), (v[3].x, v[3].y)]
                         vertices, _, _, _, _ = arrange_coordinates(v)
                         self.ocr_blocks.append({'type': 'SYMBOL', 'confidence': symbol.confidence,
-                                                'bounding_box': vertices, 'text': symbol.text})
+                                                'bounding_box': vertices, 'text': symbol.text,
+                                                'b_idx': b_idx, 'p_idx': p_idx, 'w_idx': w_idx, 's_idx': s_idx})
                         word_text += symbol.text
                         line_text += symbol.text
                     v = word.bounding_box.vertices
                     v = [(v[0].x, v[0].y), (v[1].x, v[1].y), (v[2].x, v[2].y), (v[3].x, v[3].y)]
                     vertices, _, _, _, _ = arrange_coordinates(v)
                     self.ocr_blocks.append({'type': 'WORD', 'confidence': word.confidence,
-                                            'bounding_box': vertices, 'text': word_text})
+                                            'bounding_box': vertices, 'text': word_text,
+                                                'b_idx': b_idx, 'p_idx': p_idx, 'w_idx': w_idx, 's_idx': None})
                 v = paragraph.bounding_box.vertices
                 v = [(v[0].x, v[0].y), (v[1].x, v[1].y), (v[2].x, v[2].y), (v[3].x, v[3].y)]
                 vertices, _, _, _, _ = arrange_coordinates(v)
                 self.ocr_blocks.append({'type': 'LINE', 'confidence': paragraph.confidence,
-                                        'bounding_box': vertices, 'text': line_text})
+                                        'bounding_box': vertices, 'text': line_text,
+                                                'b_idx': b_idx, 'p_idx': p_idx, 'w_idx': None, 's_idx': None})
         block_order = {'LINE': 1, 'WORD': 2, 'SYMBOL': 3}
         self.ocr_blocks = sorted(self.ocr_blocks, key=lambda b: block_order[b['type']])
         self.pickle_current_image_state()
