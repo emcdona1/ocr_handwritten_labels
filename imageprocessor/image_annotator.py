@@ -5,7 +5,7 @@ from utilities.dataprocessor import extract_barcode_from_image_name
 import cv2
 
 
-class ImageAnnotator():
+class ImageAnnotator:
     def __init__(self, name: str, starting_image_location=None):
         self.save_location = os.path.join('annotated_images', name)
         if not os.path.exists(self.save_location):
@@ -37,6 +37,9 @@ class ImageAnnotator():
         self.current_image_location = None
         self.current_image_barcode = None
         self.current_image_to_annotate = None
+
+    def reset_current_image(self):
+        self.current_image_to_annotate = open_cv2_image(self.current_image_location)
 
     def cropped_image_to_ratio(self, x_min: float, x_max: float, y_min: float, y_max: float) -> np.ndarray:
         """ Returns a subset of the current image, cropped to the desired ratio. """
