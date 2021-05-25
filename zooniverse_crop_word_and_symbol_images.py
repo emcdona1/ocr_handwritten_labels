@@ -26,24 +26,27 @@ def main():
     list_of_images: list = load_list_of_images()
 
     for one_image in list_of_images:
-        image_to_draw_on: np.ndarray = open_image_in_cv2(one_image)
         image_barcode: str = extract_barcode_from_image_name(one_image)
         print('%s loaded.' % one_image, sep='\t | \t')
-        gcv_response = analyze_image_in_google_cloud(one_image, image_processor)
-        pickle_an_object(pickle_folder, image_barcode, gcv_response)
-        print('GCV query generated and saved.', sep='\t | \t')
+        gcv_processor.load_image_from_file(one_image)
 
-        page = gcv_response.full_text_annotation.pages[0]  # there's only one page in an image file
-        for b_idx, block in enumerate(page.blocks):
-            for p_idx, paragraph in enumerate(block.paragraphs):
-                for w_idx, word in enumerate(paragraph.words):
-                    word_filename = ''
-                    for s_idx, symbol in enumerate(word.symbols):
-                        generate_neural_net_symbol_images(image_to_draw_on, image_barcode, symbol,
-                                                          b_idx, p_idx, w_idx, s_idx)
-                        word_filename = generate_zooniverse_images(image_to_draw_on, image_barcode, word, symbol,
-                                                                   b_idx, p_idx, w_idx, s_idx,
-                                                                   '' if s_idx == 0 else word_filename)
+        list_of_words = gcv_processor.get_list_of_words()
+        for word in list_of_words:
+            gcv_processor.annotator.draw_polygon(word['bounding_box'], box_drawing_color)
+            save_image_to_file(gcv_processor.annotator.current_image_to_annotate, image_folder_zooniverse,
+                               'wordbox', image_barcode, word['b_idx'], word['p_idx'], word['w_idx'])
+            gcv_processor.annotator.reset_current_image()
+        # page = gcv_response.full_text_annotation.pages[0]  # there's only one page in an image file
+        # for b_idx, block in enumerate(page.blocks):
+        #     for p_idx, paragraph in enumerate(block.paragraphs):
+        #         for w_idx, word in enumerate(paragraph.words):
+        #             word_filename = ''
+        #             for s_idx, symbol in enumerate(word.symbols):
+        #                 generate_neural_net_symbol_images(image_to_draw_on, image_barcode, symbol,
+        #                                                   b_idx, p_idx, w_idx, s_idx)
+        #                 word_filename = generate_symbol_zooniverse_images(image_to_draw_on, image_barcode, symbol,
+        #                                                                   b_idx, p_idx, w_idx, s_idx,
+        #                                                                   '' if s_idx == 0 else word_filename)
         print('Processing complete for %s.' % one_image)
     clean_and_save_manifests()
 
@@ -66,7 +69,8 @@ def extract_barcode_from_image_name(one_image) -> str:
     return image_barcode
 
 
-def analyze_image_in_google_cloud(image_uri, image_processor) -> vision.types.AnnotateImageResponse:
+def analyze_image_in_google_cloud(image_uri: str, image_processor: GCVProcessor) -> \
+        vision.types.AnnotateImageResponse:
     image = vision.types.Image()
     if 'http' in image_uri:
         image.source.image_uri = image_uri
