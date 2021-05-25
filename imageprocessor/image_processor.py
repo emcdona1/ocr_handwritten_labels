@@ -137,8 +137,7 @@ class ImageProcessor(ABC):
         # 1. check for imageprocessor_object. If Y, load it and done.
         pickled_object_location = self._search_for_pickled_object()
         if pickled_object_location:
-            loaded = load_pickle(pickled_object_location)
-            self.__setstate__(loaded.__dict__)
+            self._load_from_pickle(pickled_object_location)
         else:
             # 2. If N, send OCR request, pickle the response, and then _parse_ocr_blocks and pickle the IP.
             self._download_ocr()
@@ -146,6 +145,10 @@ class ImageProcessor(ABC):
             self.current_label_height = math.ceil(self.current_image_height * 0.15)
             self.current_label_width = math.ceil(self.current_image_width * 0.365)
             self.pickle_current_image_state()
+
+    def _load_from_pickle(self, pickle_location: str) -> None:
+        loaded = load_pickle(pickle_location)
+        self.__setstate__(loaded.__dict__)
 
     def _search_for_pickled_object(self) -> Union[str, None]:
         pickled_search_name = self.current_image_basename + '.pickle'
