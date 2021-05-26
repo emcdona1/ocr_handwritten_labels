@@ -11,13 +11,6 @@ letter_metadata = pd.DataFrame()
 
 
 def main():
-    if not os.path.exists(pickle_folder):
-        os.mkdir(pickle_folder)
-    if not os.path.exists(image_folder_zooniverse):
-        os.mkdir(image_folder_zooniverse)
-    if not os.path.exists(image_folder_nn):
-        os.mkdir(image_folder_nn)
-
     gcv_processor = GCVProcessor()
     list_of_images: list = load_list_of_images()
 
@@ -217,7 +210,11 @@ if __name__ == '__main__':
     folder_or_image_file = sys.argv[1]
     pickle_folder = 'gcv_responses'
     image_folder_zooniverse = 'processed_images_zooniverse'
-    image_folder_nn = 'processed_images_nn'
-    box_drawing_color = (240, 17, 17)  # blue
+    # image_folder_nn = 'processed_images_nn'
+    if not os.path.exists(image_folder_zooniverse):
+        os.mkdir(image_folder_zooniverse)
+    # if not os.path.exists(image_folder_nn):
+    #     os.mkdir(image_folder_nn)
 
+    box_drawing_color = (240, 17, 17)  # blue
     main()
