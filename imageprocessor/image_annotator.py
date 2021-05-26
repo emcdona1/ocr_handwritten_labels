@@ -8,8 +8,6 @@ import cv2
 class ImageAnnotator:
     def __init__(self, name: str, starting_image_location=None):
         self.save_location = os.path.join('annotated_images', name)
-        if not os.path.exists(self.save_location):
-            os.makedirs(self.save_location)
         self.current_image_location = None
         self.current_image_barcode = None
         self.current_image_to_annotate = None
@@ -31,6 +29,8 @@ class ImageAnnotator:
         self.draw_line(points[-1], points[0], color)
 
     def save_annotated_image_to_file(self):
+        if not os.path.exists(self.save_location):
+            os.makedirs(self.save_location)
         save_cv2_image(self.save_location, self.current_image_barcode, self.current_image_to_annotate)
 
     def clear_current_image(self):
