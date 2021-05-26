@@ -176,8 +176,20 @@ class ImageProcessor(ABC):
     def _download_ocr(self) -> None:
         pass
 
-    def get_list_of_words(self) -> list:
+    def get_list_of_words(self, label_only=False) -> list:
         words = [block for block in self.ocr_blocks if block['type'] == 'WORD']
+        if label_only:
+            x_min = self.current_label_location[0][0]
+            x_max = self.current_label_location[1][0]
+            y_min = self.current_label_location[1][1]
+            y_max = self.current_label_location[2][1]
+            label_words = list()
+            for word in words:
+                curr_x = (word['bounding_box'][0][0] + word['bounding_box'][1][0]) / 2
+                curr_y = (word['bounding_box'][1][1] + word['bounding_box'][2][1]) / 2
+                if x_min <= curr_x <= x_max and y_min <= curr_y <= y_max:
+                    label_words.append(word)
+            words = label_words
         return words
 
     def get_list_of_lines(self) -> list:
