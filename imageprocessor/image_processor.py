@@ -69,7 +69,7 @@ class ImageProcessor(ABC):
         print('%s ImageProcessor saved to %s.' % (self.name, path))
 
     def get_found_word_locations(self) -> List[Tuple]:
-        """ Returns a list of (x,y) coordinates, where each point is the corner of a word identified by the OCR. """
+        """ Returns a list of (x,y) coordinates, where each point is the corner of a symbol identified by the OCR. """
         word_points = []
         words = self.get_list_of_words()
         for word in words:
@@ -79,7 +79,7 @@ class ImageProcessor(ABC):
 
     def find_label_location(self) -> \
             Tuple[Tuple[int, int], Tuple[int, int], Tuple[int, int], Tuple[int, int]]:
-        """ Searches bottom quadrant of image for highest concentration of word bounding boxes
+        """ Searches bottom quadrant of image for highest concentration of symbol bounding boxes
         and returns a set of 4 tuples (top-left, top-right, bottom-right, bottom-left).
         If no OCR data is present, it sets the label location to be the bottom right corner. """
         np_of_points = np.array(self.get_found_word_locations())
