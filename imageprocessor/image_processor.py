@@ -42,6 +42,11 @@ class ImageProcessor(ABC):
         except TypeError:
             # 'client' wasn't in state
             pass
+        try:
+            del state['annotator']
+        except TypeError:
+            # 'annotator' wasn't in state
+            pass
         return state
 
     def __setstate__(self, state):
@@ -50,6 +55,11 @@ class ImageProcessor(ABC):
             del state['client']
         except KeyError:
             # 'client' wasn't in state
+            pass
+        try:
+            del state['annotator']
+        except KeyError:
+            # 'annotator' wasn't in state
             pass
         self.__dict__.update(state)
         self.client = self._initialize_client()
