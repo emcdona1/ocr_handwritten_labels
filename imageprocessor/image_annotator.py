@@ -49,4 +49,8 @@ class ImageAnnotator:
         x_max = int(height * x_max)
         y_min = int(width * y_min)
         y_max = int(width * y_max)
-        return self.current_image_to_annotate[x_min:x_max + 1, y_min:y_max + 1]
+        return self.cropped_image(x_min, x_max, y_min, y_max)
+
+    def cropped_image(self, x_min: int, x_max: int, y_min: int, y_max: int) -> np.ndarray:
+        """ Returns a subset of the current image, cropped to the desired absolute values. """
+        return self.current_image_to_annotate[y_min:y_max + 1, x_min:x_max + 1]
