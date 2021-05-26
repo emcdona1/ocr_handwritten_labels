@@ -282,6 +282,10 @@ class GCVProcessor(ImageProcessor):
         self.ocr_blocks = sorted(self.ocr_blocks, key=lambda b: block_order[b['type']])
         self.pickle_current_image_state()
 
+    def get_list_of_symbols(self) -> list:
+        symbols = [block for block in self.ocr_blocks if block['type'] == 'SYMBOL']
+        return symbols
+
 
 class AWSProcessor(ImageProcessor):
     def _initialize_client(self):
