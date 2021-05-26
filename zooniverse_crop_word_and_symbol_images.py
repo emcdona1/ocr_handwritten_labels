@@ -1,13 +1,9 @@
 import sys
 import os
-import pickle
 import copy
-import io
 import pandas as pd
 import numpy as np
-from urllib.request import urlopen
 import cv2
-from google.cloud import vision
 from imageprocessor import GCVProcessor
 
 zooniverse_manifest = pd.DataFrame()
