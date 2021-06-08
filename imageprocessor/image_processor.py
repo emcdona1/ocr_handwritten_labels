@@ -282,8 +282,20 @@ class GCVProcessor(ImageProcessor):
         self.ocr_blocks = sorted(self.ocr_blocks, key=lambda b: block_order[b['type']])
         self.pickle_current_image_state()
 
-    def get_list_of_symbols(self) -> list:
+    def get_list_of_symbols(self, label_only=False) -> list:
         symbols = [block for block in self.ocr_blocks if block['type'] == 'SYMBOL']
+        if label_only:
+            x_min = self.current_label_location[0][0]
+            x_max = self.current_label_location[1][0]
+            y_min = self.current_label_location[1][1]
+            y_max = self.current_label_location[2][1]
+            label_words = list()
+            for symbol in symbols:
+                curr_x = (symbol['bounding_box'][0][0] + symbol['bounding_box'][1][0]) / 2
+                curr_y = (symbol['bounding_box'][1][1] + symbol['bounding_box'][2][1]) / 2
+                if x_min <= curr_x <= x_max and y_min <= curr_y <= y_max:
+                    label_words.append(symbol)
+            words = label_words
         return symbols
 
 
