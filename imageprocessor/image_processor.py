@@ -64,9 +64,9 @@ class ImageProcessor(ABC):
         self.__dict__.update(state)
         self.client = self._initialize_client()
 
-    def pickle_current_image_state(self):
-        path = pickle_an_object(self.object_save_directory, self.current_image_barcode, self)
-        print('%s ImageProcessor saved to %s.' % (self.name, path))
+    def pickle_current_image_state(self, name: str):
+        path = pickle_an_object(self.object_save_directory, self.current_image_basename, self)
+        print('%s ImageProcessor saved to %s, called by %s.' % (self.name, path, name))
 
     def get_found_word_locations(self) -> List[Tuple]:
         """ Returns a list of (x,y) coordinates, where each point is the corner of a symbol identified by the OCR. """
@@ -112,7 +112,7 @@ class ImageProcessor(ABC):
             lower_right = (max_loc[0] + self.current_label_width, max_loc[1] + self.current_label_height)
             lower_left = (max_loc[0], max_loc[1] + self.current_label_height)
         self.current_label_location = upper_left, upper_right, lower_right, lower_left
-        self.pickle_current_image_state()
+        self.pickle_current_image_state('find label')
         return self.current_label_location
 
     @abstractmethod
@@ -137,7 +137,7 @@ class ImageProcessor(ABC):
     def _initialize_name_and_save_directory(self) -> str:
         pass
 
-    def load_image_from_file(self, image_path: str) -> None:
+    def load_image_from_file(self, image_path: str, is_label: bool = False) -> None:
         self.clear_current_image()
         self.current_image_location = image_path
         self.current_image_basename = os.path.basename(image_path).split('.')[0]
@@ -152,9 +152,13 @@ class ImageProcessor(ABC):
             # 2. If N, send OCR request, pickle the response, and then _parse_ocr_blocks and pickle the IP.
             self._download_ocr()
             self._parse_ocr_blocks()
-            self.current_label_height = math.ceil(self.current_image_height * 0.15)
-            self.current_label_width = math.ceil(self.current_image_width * 0.365)
-            self.pickle_current_image_state()
+            if not is_label:
+                self.current_label_height = self.current_image_height
+                self.current_label_width = self.current_image_height
+            else:
+                self.current_label_height = math.ceil(self.current_image_height * 0.15)
+                self.current_label_width = math.ceil(self.current_image_width * 0.365)
+            self.pickle_current_image_state('new ocr')
 
     def _load_from_pickle(self, pickle_location: str) -> None:
         loaded = load_pickle(pickle_location)
@@ -271,16 +275,16 @@ class GCVProcessor(ImageProcessor):
                     vertices, _, _, _, _ = arrange_coordinates(v)
                     self.ocr_blocks.append({'type': 'WORD', 'confidence': word.confidence,
                                             'bounding_box': vertices, 'text': word_text,
-                                                'b_idx': b_idx, 'p_idx': p_idx, 'w_idx': w_idx, 's_idx': None})
+                                            'b_idx': b_idx, 'p_idx': p_idx, 'w_idx': w_idx, 's_idx': None})
                 v = paragraph.bounding_box.vertices
                 v = [(v[0].x, v[0].y), (v[1].x, v[1].y), (v[2].x, v[2].y), (v[3].x, v[3].y)]
                 vertices, _, _, _, _ = arrange_coordinates(v)
                 self.ocr_blocks.append({'type': 'LINE', 'confidence': paragraph.confidence,
                                         'bounding_box': vertices, 'text': line_text,
-                                                'b_idx': b_idx, 'p_idx': p_idx, 'w_idx': None, 's_idx': None})
+                                        'b_idx': b_idx, 'p_idx': p_idx, 'w_idx': None, 's_idx': None})
         block_order = {'LINE': 1, 'WORD': 2, 'SYMBOL': 3}
         self.ocr_blocks = sorted(self.ocr_blocks, key=lambda b: block_order[b['type']])
-        self.pickle_current_image_state()
+        self.pickle_current_image_state('parsed GCV ocr')
 
     def get_list_of_symbols(self, label_only=False) -> list:
         symbols = [block for block in self.ocr_blocks if block['type'] == 'SYMBOL']
@@ -354,7 +358,7 @@ class AWSProcessor(ImageProcessor):
             new_line['bounding_box'], _, _, _, _ = arrange_coordinates(v_list)
             self.ocr_blocks.append(new_line)
 
-        self.pickle_current_image_state()
+        self.pickle_current_image_state('parsed AWS ocr')
 
     def _rerun_ocr_with_cropping(self):
         temp_folder = 'tmp'
@@ -369,7 +373,7 @@ class AWSProcessor(ImageProcessor):
         self._download_ocr(cropped_filepath)
         # correct the vertex values = 0.5x + 0.5
         for block in self.current_ocr_response['Blocks']:
-            block['Geometry']['Polygon'] = [{'X': 0.5*p['X'] + 0.5, 'Y': 0.5*p['Y'] + 0.5} for p
+            block['Geometry']['Polygon'] = [{'X': 0.5 * p['X'] + 0.5, 'Y': 0.5 * p['Y'] + 0.5} for p
                                             in block['Geometry']['Polygon']]
         # delete temp image
         os.remove(cropped_filepath)
