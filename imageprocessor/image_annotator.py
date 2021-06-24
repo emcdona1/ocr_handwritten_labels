@@ -10,15 +10,20 @@ class ImageAnnotator:
         self.save_location = os.path.join('annotated_images', name)
         self.current_image_location = None
         self.current_image_barcode = None
+        self.current_image_basename = None
         self.current_image_to_annotate = None
         if starting_image_location:
             self.load_image_from_file(starting_image_location)
+
+    def set_save_location(self, name: str):
+        self.save_location = name
 
     def load_image_from_file(self, image_path: str):
         self.clear_current_image()
         self.current_image_location: str = image_path
         self.current_image_to_annotate: np.ndarray = open_cv2_image(self.current_image_location)
         self.current_image_barcode: str = extract_barcode_from_image_name(self.current_image_location)
+        self.current_image_basename: str = os.path.basename(self.current_image_location)
 
     def draw_line(self, point1, point2, color=(0, 0, 0), width=1):
         cv2.line(self.current_image_to_annotate, point1, point2, color, width)
@@ -28,10 +33,10 @@ class ImageAnnotator:
             self.draw_line(points[idx], points[idx + 1], color)
         self.draw_line(points[-1], points[0], color)
 
-    def save_annotated_image_to_file(self):
+    def save_annotated_image_to_file(self) -> str:
         if not os.path.exists(self.save_location):
             os.makedirs(self.save_location)
-        save_cv2_image(self.save_location, self.current_image_barcode, self.current_image_to_annotate)
+        return save_cv2_image(self.save_location, self.current_image_basename, self.current_image_to_annotate)
 
     def clear_current_image(self):
         self.current_image_location = None
