@@ -6,7 +6,7 @@ from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 import pandas as pd
 from fuzzywuzzy import fuzz
-from utilities.dataloader import save_dataframe_as_csv
+from utilities.data_loader import save_dataframe_as_csv
 
 
 def main(occurrence_filepath: str) -> pd.DataFrame:

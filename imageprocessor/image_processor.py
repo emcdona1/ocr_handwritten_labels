@@ -5,8 +5,8 @@ from google.cloud import vision
 from abc import ABC, abstractmethod
 import boto3
 from botocore.exceptions import ConnectionClosedError
-from utilities.dataloader import load_pickle, pickle_an_object, open_cv2_image, save_cv2_image
-from utilities.dataprocessor import extract_barcode_from_image_name, convert_relative_to_absolute_coordinates, \
+from utilities.data_loader import load_pickle, pickle_an_object, open_cv2_image, save_cv2_image
+from utilities.data_processor import extract_barcode_from_image_name, convert_relative_to_absolute_coordinates, \
     convert_list_of_relative_coordinates, arrange_coordinates
 from imageprocessor.image_annotator import ImageAnnotator
 from typing import List, Tuple, Union

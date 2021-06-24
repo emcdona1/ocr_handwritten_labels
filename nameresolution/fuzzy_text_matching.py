@@ -5,7 +5,7 @@ from zipfile import ZipFile
 from fuzzywuzzy import fuzz
 import copy
 from abc import ABC, abstractmethod
-from utilities.dataloader import save_dataframe_as_csv
+from utilities.data_loader import save_dataframe_as_csv
 
 
 class TextMatcherTemplate(ABC):

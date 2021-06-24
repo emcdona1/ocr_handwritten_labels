@@ -1,7 +1,6 @@
 import sys
 import os
-from utilities.dataloader import load_file_list_from_filesystem, get_timestamp_for_file_saving, save_dataframe_as_csv
-from utilities.dataprocessor import convert_relative_to_absolute_coordinates
+from utilities.data_loader import load_file_list_from_filesystem, get_timestamp_for_file_saving, save_dataframe_as_csv
 from imageprocessor import ImageProcessor, GCVProcessor, AWSProcessor
 import pandas as pd
 

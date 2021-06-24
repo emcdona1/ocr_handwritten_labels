@@ -1,6 +1,6 @@
 import os
-from dataloader import load_list_from_txt, open_cv2_image, save_cv2_image
-from dataprocessor import crop_an_image_to_box
+from data_loader import load_list_from_txt, open_cv2_image, save_cv2_image
+from data_processor import crop_an_image_to_box
 
 
 def main(barcode_filename: str, image_folder: str):

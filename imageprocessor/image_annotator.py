@@ -1,7 +1,7 @@
 import os
 import numpy as np
-from utilities.dataloader import open_cv2_image, save_cv2_image
-from utilities.dataprocessor import extract_barcode_from_image_name
+from utilities.data_loader import open_cv2_image, save_cv2_image
+from utilities.data_processor import extract_barcode_from_image_name
 import cv2
 
 

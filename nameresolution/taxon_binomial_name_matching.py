@@ -1,6 +1,6 @@
 import sys
 from nameresolution.fuzzy_text_matching import TaxonMatcher
-from utilities.dataloader import load_list_from_txt
+from utilities.data_loader import load_list_from_txt
 
 
 def main():

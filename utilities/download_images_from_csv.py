@@ -1,4 +1,4 @@
-from dataloader import download_image
+from data_loader import download_image
 import pandas as pd
 import sys
 import os
