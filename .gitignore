@@ -12,3 +12,5 @@ Configuration.cfg
 .idea
 /images/
 /tmp/
+/processed_images*/*
+/imageprocessor_objects/
