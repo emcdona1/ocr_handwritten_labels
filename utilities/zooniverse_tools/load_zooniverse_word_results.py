@@ -3,7 +3,8 @@ import sys
 import shutil
 import ast
 import pandas as pd
-from statistics import mode, StatisticsError
+from typing import Union
+from statistics import mode, StatisticsError, multimode
 sys.path.append('')  # to run __main__
 from utilities import data_loader
 
@@ -13,8 +14,8 @@ def main(zooniverse_classifications_path: str, source_image_folder_path: str,
     raw_zooniverse_classifications = pd.read_csv(zooniverse_classifications_path)
     zooniverse_classifications = parse_raw_zooniverse_file(raw_zooniverse_classifications)
     zooniverse_classifications = consolidate_classifications(zooniverse_classifications)
-    load_letter_images(source_image_folder_path, zooniverse_classifications)
-    expert_manual_review(zooniverse_classifications)
+    load_letter_images(source_image_folder_path, zooniverse_classifications)  # todo
+    expert_manual_review(zooniverse_classifications)  # todo
     save_location = data_loader.save_dataframe_as_csv('file_resources', 'zooniverse_parsed', zooniverse_classifications)
     print('Saved to %s' % save_location)
     if create_image_folders:
@@ -46,7 +47,7 @@ def parse_raw_zooniverse_file(raw_zooniverse_classifications: pd.DataFrame) -> p
         barcode = s['barcode'].split('-')[0]  # in case the file name includes "-label"
         image_name = s['image_of_boxed_letter'].replace('box', '')
         col_names = ['barcode', 'block', 'paragraph', 'word', 'gcv_identification', 'image_location']
-        result = pd.Series([barcode, s['block_no'], s['paragraph_no'], s['word_no'],
+        result = pd.Series([barcode, int(s['block_no']), int(s['paragraph_no']), int(s['word_no']),
                             s['#GCV_identification'], image_name], index=col_names)
         return result
 
@@ -65,15 +66,14 @@ def parse_raw_zooniverse_file(raw_zooniverse_classifications: pd.DataFrame) -> p
     parsed_zooniverse_classifications['seen_count'] = parsed_zooniverse_classifications.groupby('id')[
         'block'].transform(len)
     parsed_zooniverse_classifications['confidence'] = 1.0
-    parsed_zooniverse_classifications['block'] = pd.to_numeric(parsed_zooniverse_classifications['block'])
-    parsed_zooniverse_classifications['paragraph'] = pd.to_numeric(parsed_zooniverse_classifications['paragraph'])
-    parsed_zooniverse_classifications['word'] = pd.to_numeric(parsed_zooniverse_classifications['word'])
-    parsed_zooniverse_classifications['symbol'] = pd.to_numeric(parsed_zooniverse_classifications['symbol'])
     parsed_zooniverse_classifications['status'] = 'In Progress'
     return parsed_zooniverse_classifications
 
 
 def consolidate_classifications(zooniverse_classifications: pd.DataFrame) -> pd.DataFrame:
+    too_few = zooniverse_classifications[zooniverse_classifications['seen_count'] < 2]
+    zooniverse_classifications = zooniverse_classifications.drop(too_few.index)
+
     duplicates = zooniverse_classifications[zooniverse_classifications['seen_count'] > 1]
     ids = set(duplicates['image_location'])
     for id_name in ids:
@@ -82,43 +82,29 @@ def consolidate_classifications(zooniverse_classifications: pd.DataFrame) -> pd.
         idx = new_row.index[0]
         new_row.loc[idx, 'human_transcription'], count, total = vote(subset, 'human_transcription')
         new_row.loc[idx, 'confidence'] = count / total
-        if total == 3 and count == 0:
-            new_row.loc[idx, 'status'] = 'Expert Required'
-        elif total == 3:
-            new_row.loc[idx, 'status'] = 'Complete'
+        new_row.loc[idx, 'status'] = 'Expert Required' if new_row.loc[idx, 'confidence'] < 0.6 else 'Complete'
         new_row.loc[idx, 'unclear'], _, _ = vote(subset, 'unclear')
         new_row.loc[idx, 'handwritten'], _, _ = vote(subset, 'handwritten')
         # discard any results where the majority voted for unclear & blank
-        if new_row.loc[idx, 'status'] == 'Complete':
-            if new_row.loc[idx, 'human_transcription'] == '':
-                new_row.loc[idx, 'status'] = 'Discard'
-            elif len(new_row.loc[idx, 'human_transcription']) > 1:
-                new_row.loc[idx, 'status'] = 'Expert Required'
+        if new_row.loc[idx, 'status'] == 'Complete' and new_row.loc[idx, 'unclear']:  # if majority says unclear
+            new_row.loc[idx, 'status'] = 'Discard'
+        if len(new_row.loc[idx, 'human_transcription']) > 1:  # if there's a tie
+            new_row.loc[idx, 'status'] = 'Expert Required'
         zooniverse_classifications = zooniverse_classifications.drop(subset.index)
         zooniverse_classifications = zooniverse_classifications.append(new_row)
         # print('Group %s vote is %s with a confidence of %.0f' %
-        #       (id_name, new_row['human_transcription'].values[0], (new_row['confidence'].values[0])*100) + '%.')
-    return zooniverse_classifications.sort_values(by=['block', 'paragraph', 'word', 'symbol'], ascending=True)
+        #       (id_name, new_row['human_transcription'].values[0], (new_row['confidence'].values[0])*100) + '%' +
+        #       ' (%i/%i).' % (count, total))
+    return zooniverse_classifications.sort_values(by=['block', 'paragraph', 'word'], ascending=True)
 
 
-def vote(df: pd.DataFrame, col_name: str) -> (any, int, int):
+def vote(df: pd.DataFrame, col_name: str) -> (Union[list, str], int, int):
     total = df.shape[0]
-    if total > 3:
-        df = df[-3:]
-        total = 3
-    try:
-        voted = mode(list(df.loc[:, col_name]))  # todo: Note if upgrade to Python 3.8, can use "multimode" instead
-        voted_count = df[df[col_name] == voted].shape[0]
-    except StatisticsError:
-        # If there's a tie
-        # Option 1: It's a 1-1 vote on 2 images. Arbitrarily pick the first option.
-        if total == 2:
-            voted = list(df.loc[:, col_name])[0]
-            voted_count = 1
-        # Option 2: It's a 1-1-1 tie on 3 images. Flag for expert review.
-        else:
-            voted = str(list(df.loc[:, col_name]))
-            voted_count = 0
+
+    voted = multimode(list(df.loc[:, col_name]))
+    most_voted = voted[0]
+
+    voted_count = df[df[col_name] == most_voted].shape[0]
 
     return voted, voted_count, total
 
