@@ -14,7 +14,7 @@ def main(zooniverse_classifications_path: str, source_image_folder_path: str,
     raw_zooniverse_classifications = pd.read_csv(zooniverse_classifications_path)
     zooniverse_classifications = parse_raw_zooniverse_file(raw_zooniverse_classifications)
     zooniverse_classifications = consolidate_classifications(zooniverse_classifications)
-    load_letter_images(source_image_folder_path, zooniverse_classifications)  # todo
+    update_full_image_paths(source_image_folder_path, zooniverse_classifications)
     expert_manual_review(zooniverse_classifications)  # todo
     save_location = data_loader.save_dataframe_as_csv('file_resources', 'zooniverse_parsed', zooniverse_classifications)
     print('Saved to %s' % save_location)
@@ -45,7 +45,7 @@ def parse_raw_zooniverse_file(raw_zooniverse_classifications: pd.DataFrame) -> p
 
     def parse_subject(s):
         barcode = s['barcode'].split('-')[0]  # in case the file name includes "-label"
-        image_name = s['image_of_boxed_letter'].replace('box', '')
+        image_name = s['image_of_boxed_letter']
         col_names = ['barcode', 'block', 'paragraph', 'word', 'gcv_identification', 'image_location']
         result = pd.Series([barcode, int(s['block_no']), int(s['paragraph_no']), int(s['word_no']),
                             s['#GCV_identification'], image_name], index=col_names)
@@ -78,23 +78,27 @@ def consolidate_classifications(zooniverse_classifications: pd.DataFrame) -> pd.
     ids = set(duplicates['image_location'])
     for id_name in ids:
         subset = duplicates[duplicates['image_location'] == id_name]
-        new_row = subset.head(1).copy()
-        idx = new_row.index[0]
-        new_row.loc[idx, 'human_transcription'], count, total = vote(subset, 'human_transcription')
-        new_row.loc[idx, 'confidence'] = count / total
-        new_row.loc[idx, 'status'] = 'Expert Required' if new_row.loc[idx, 'confidence'] < 0.6 else 'Complete'
-        new_row.loc[idx, 'unclear'], _, _ = vote(subset, 'unclear')
-        new_row.loc[idx, 'handwritten'], _, _ = vote(subset, 'handwritten')
+        idx = subset.index[0]
+        new_row = subset.loc[idx, :]
+        voted, count, total = vote(subset, 'human_transcription')
+        new_row.at['confidence'] = count / total
+        new_row.at['human_transcription'] = voted
+        new_row.at['status'] = 'Expert Required' if new_row.at['confidence'] <= 0.5 else 'Complete'
+        unclear_vote, _, _ = vote(subset, 'unclear')
+        if len(unclear_vote) > 1:
+            unclear_vote = False
+        else:
+            unclear_vote = unclear_vote[0]
+        type_vote, _, _ = vote(subset, 'handwritten')
+        new_row.at['unclear'] = unclear_vote
+        new_row.at['handwritten'] = type_vote
         # discard any results where the majority voted for unclear & blank
-        if new_row.loc[idx, 'status'] == 'Complete' and new_row.loc[idx, 'unclear']:  # if majority says unclear
-            new_row.loc[idx, 'status'] = 'Discard'
-        if len(new_row.loc[idx, 'human_transcription']) > 1:  # if there's a tie
-            new_row.loc[idx, 'status'] = 'Expert Required'
+        if new_row.at['status'] == 'Complete' and new_row.at['unclear']:  # if majority says unclear
+            new_row.at['status'] = 'Discard'
+        if len(new_row.at['human_transcription']) > 1:  # if there's a tie
+            new_row.at['status'] = 'Expert Required'
         zooniverse_classifications = zooniverse_classifications.drop(subset.index)
         zooniverse_classifications = zooniverse_classifications.append(new_row)
-        # print('Group %s vote is %s with a confidence of %.0f' %
-        #       (id_name, new_row['human_transcription'].values[0], (new_row['confidence'].values[0])*100) + '%' +
-        #       ' (%i/%i).' % (count, total))
     return zooniverse_classifications.sort_values(by=['block', 'paragraph', 'word'], ascending=True)
 
 
@@ -109,12 +113,12 @@ def vote(df: pd.DataFrame, col_name: str) -> (Union[list, str], int, int):
     return voted, voted_count, total
 
 
-def load_letter_images(image_folder_path: str, zooniverse_classifications: pd.DataFrame) -> None:
+def update_full_image_paths(source_image_folder_path: str, zooniverse_classifications: pd.DataFrame) -> None:
     for idx, row in zooniverse_classifications.iterrows():
         image_name = row['image_location']
-        if not os.path.isfile(os.path.join(image_folder_path, image_name)):
+        if not os.path.isfile(os.path.join(source_image_folder_path, image_name)):
             print("Warning: %s doesn't exist in this location." % image_name)
-        zooniverse_classifications.at[idx, 'image_location'] = os.path.join(image_folder_path, image_name)
+        zooniverse_classifications.at[idx, 'image_location'] = os.path.join(source_image_folder_path, image_name)
 
 
 def expert_manual_review(df: pd.DataFrame) -> None:
