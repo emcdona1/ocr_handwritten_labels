@@ -44,7 +44,7 @@ def parse_raw_zooniverse_file(raw_zooniverse_classifications: pd.DataFrame) -> p
         barcode = s['barcode'].split('-')[0]
         image_name = s['image_of_boxed_letter'].replace('symbox', 'symbol')
         col_names = ['barcode', 'block', 'paragraph', 'word', 'symbol', 'gcv_identification', 'image_location']
-        result = pd.Series([barcode, s['block_no'], s['paragraph_no'], s['word_no'], s['symbol_no'],
+        result = pd.Series([barcode, int(s['block_no']), int(s['paragraph_no']), int(s['word_no']), int(s['symbol_no']),
                             s['#GCV_identification'], image_name], index=col_names)
         return result
 
@@ -55,7 +55,7 @@ def parse_raw_zooniverse_file(raw_zooniverse_classifications: pd.DataFrame) -> p
     parsed_zooniverse_classifications['human_transcription'] = filtered_raw_zooniverse['annotations'].apply(
         lambda annotation: annotation[1]['value'])
     parsed_zooniverse_classifications['unclear'] = parsed_zooniverse_classifications['human_transcription'].apply(
-        lambda transcription: '[unclear][/unclear]' in transcription)
+        lambda transcription: '[unclear]' in transcription and '[/unclear]' in transcription)
     parsed_zooniverse_classifications['human_transcription'] = \
         parsed_zooniverse_classifications['human_transcription'] \
         .apply(lambda transcription: transcription.replace('[unclear][/unclear]', ''))
@@ -63,10 +63,6 @@ def parse_raw_zooniverse_file(raw_zooniverse_classifications: pd.DataFrame) -> p
     parsed_zooniverse_classifications['seen_count'] = parsed_zooniverse_classifications.groupby('id')[
         'block'].transform(len)
     parsed_zooniverse_classifications['confidence'] = 1.0
-    parsed_zooniverse_classifications['block'] = pd.to_numeric(parsed_zooniverse_classifications['block'])
-    parsed_zooniverse_classifications['paragraph'] = pd.to_numeric(parsed_zooniverse_classifications['paragraph'])
-    parsed_zooniverse_classifications['word'] = pd.to_numeric(parsed_zooniverse_classifications['word'])
-    parsed_zooniverse_classifications['symbol'] = pd.to_numeric(parsed_zooniverse_classifications['symbol'])
     parsed_zooniverse_classifications['status'] = 'In Progress'
     return parsed_zooniverse_classifications
 
