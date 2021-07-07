@@ -268,7 +268,7 @@ if __name__ == '__main__':
     assert os.path.isfile(zooniverse_results), 'Invalid 1st argument: `%s` must be a file on the local computer.' \
                                                % zooniverse_results
 
-    existing_image_folder = 'C:\\Users\\betht\\Documents\\Field Museum\\ocr_handwritten_labels\\images\\full_size_label_images'
+    existing_image_folder = 'processed_images_zooniverse_30_words'
     # image_folder = sys.argv[2]
     assert os.path.isdir(existing_image_folder), 'Invalid 2nd argument: `%s` must be a folder on the local computer.' \
                                         % existing_image_folder
