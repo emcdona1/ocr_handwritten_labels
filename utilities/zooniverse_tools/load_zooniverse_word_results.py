@@ -5,6 +5,7 @@ import ast
 import pandas as pd
 from typing import Union
 from statistics import multimode
+
 sys.path.append('')  # to run __main__
 from utilities import data_loader
 
@@ -17,7 +18,8 @@ def main(zooniverse_classifications_path: str, source_image_folder_path: str,
     update_full_image_paths(source_image_folder_path, zooniverse_classifications)
     expert_manual_review(zooniverse_classifications)
     save_location = data_loader.save_dataframe_as_csv('file_resources', 'zooniverse_parsed', zooniverse_classifications)
-    print('Saved to %s' % save_location)
+    print('Saved to %s.' % save_location)
+    compare_gcv_to_human(zooniverse_classifications)
     if create_image_folders:
         destination_folder = image_save_folder
         save_images_to_folders(zooniverse_classifications, destination_folder)
@@ -61,7 +63,7 @@ def parse_raw_zooniverse_file(raw_zooniverse_classifications: pd.DataFrame) -> p
         lambda transcription: '[unclear]' in transcription and '[/unclear]' in transcription)
     parsed_zooniverse_classifications['human_transcription'] = \
         parsed_zooniverse_classifications['human_transcription'] \
-        .apply(lambda transcription: transcription.replace('[unclear][/unclear]', ''))
+            .apply(lambda transcription: transcription.replace('[unclear][/unclear]', ''))
 
     parsed_zooniverse_classifications['seen_count'] = parsed_zooniverse_classifications.groupby('id')[
         'block'].transform(len)
@@ -233,8 +235,17 @@ def expert_manual_review(df: pd.DataFrame) -> None:
     df.loc[df['id'] == 'C0601164F-b11p0w1', 'status'] = 'Discard - Reviewed'
 
 
+def compare_gcv_to_human(zooniverse_classifications: pd.DataFrame) -> None:
+    subset = zooniverse_classifications.query("status == 'Complete' or 'status' == 'Expert Reviewed'")
+    zooniverse_classifications['matches'] = subset['gcv_identification'] == subset['human_transcription']
+    summary = zooniverse_classifications['matches'].value_counts()
+    ratio = summary.at[False] / (summary.at[False] + summary.at[True])
+    print('Zooniverse users corrected %i values and confirmed %i values (%.2f%%)' %
+          (summary.at[False], summary.at[True], ratio * 100))
+
+
 def save_images_to_folders(zooniverse_classifications: pd.DataFrame, dest_folder: str):
-    filtered_zooniverse: pd.DataFrame = zooniverse_classifications\
+    filtered_zooniverse: pd.DataFrame = zooniverse_classifications \
         .query("handwritten == True and (status == 'Complete' or status == 'Expert Reviewed')").copy()
     if not os.path.exists(dest_folder):
         os.makedirs(dest_folder)
@@ -260,8 +271,9 @@ def save_images_to_folders(zooniverse_classifications: pd.DataFrame, dest_folder
 
 
 if __name__ == '__main__':
-    # assert len(sys.argv) == 4, 'Include 2 or 3 arguments: (1) the location of the classification results ' +\
-    #         'from Zooniverse, (2) the folder of herbarium sheet images, and (3) word image save folder.'
+    assert 3 <= len(sys.argv) <= 4, 'Include 2 or 3 arguments: (1) the location of the Zooniverse CSV results, ' + \
+                                    '(2) the folder of label images used in Zooniverse, and ' +\
+                                    '(3) (optional) the folder in which to save word images.'
     zooniverse_results = os.path.join('file_resources',
                                       '2021_06_14-herbarium_handwriting_transcription_classifications-words.csv')
     # zooniverse_results = sys.argv[1]
@@ -271,10 +283,12 @@ if __name__ == '__main__':
     existing_image_folder = 'processed_images_zooniverse_30_words'
     # image_folder = sys.argv[2]
     assert os.path.isdir(existing_image_folder), 'Invalid 2nd argument: `%s` must be a folder on the local computer.' \
-                                        % existing_image_folder
+                                                 % existing_image_folder
 
-    words_save_folder = 'labeled_word_images'
-    # words_save_folder = sys.argv[3]
-    assert os.path.isdir(words_save_folder), 'Invalid 3rd argument: `%s` must be a folder on the local computer.' \
-                                             % words_save_folder
-    main(zooniverse_results, existing_image_folder, words_save_folder)
+    if len(sys.argv) == 3:
+        main(zooniverse_results, existing_image_folder)
+    else:
+        words_save_folder = sys.argv[3]
+        assert os.path.isdir(words_save_folder), 'Invalid 3rd argument: `%s` must be a folder on the local computer.' \
+                                                 % words_save_folder
+        main(zooniverse_results, existing_image_folder, words_save_folder)
