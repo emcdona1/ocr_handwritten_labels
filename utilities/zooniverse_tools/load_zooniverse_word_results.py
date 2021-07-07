@@ -4,7 +4,7 @@ import shutil
 import ast
 import pandas as pd
 from typing import Union
-from statistics import mode, StatisticsError, multimode
+from statistics import multimode
 sys.path.append('')  # to run __main__
 from utilities import data_loader
 
@@ -84,19 +84,22 @@ def consolidate_classifications(zooniverse_classifications: pd.DataFrame) -> pd.
         new_row.at['confidence'] = count / total
         new_row.at['human_transcription'] = voted
         new_row.at['status'] = 'Expert Required' if new_row.at['confidence'] <= 0.5 else 'Complete'
+
         unclear_vote, _, _ = vote(subset, 'unclear')
-        if len(unclear_vote) > 1:
+        if type(unclear_vote) is list and len(unclear_vote) > 1:  # if it's evenly split, mark as NOT unclear
             unclear_vote = False
-        else:
-            unclear_vote = unclear_vote[0]
-        type_vote, _, _ = vote(subset, 'handwritten')
         new_row.at['unclear'] = unclear_vote
+
+        type_vote, _, _ = vote(subset, 'handwritten')
         new_row.at['handwritten'] = type_vote
+
         # discard any results where the majority voted for unclear & blank
         if new_row.at['status'] == 'Complete' and new_row.at['unclear']:  # if majority says unclear
             new_row.at['status'] = 'Discard'
-        if len(new_row.at['human_transcription']) > 1:  # if there's a tie
+        if type(new_row.at['human_transcription']) is list:  # if there's a tie
             new_row.at['status'] = 'Expert Required'
+        if new_row.at['status'] == 'Expert Required' and not new_row.at['handwritten']:
+            new_row.at['status'] = 'Discard'
         zooniverse_classifications = zooniverse_classifications.drop(subset.index)
         zooniverse_classifications = zooniverse_classifications.append(new_row)
     return zooniverse_classifications.sort_values(by=['block', 'paragraph', 'word'], ascending=True)
@@ -106,9 +109,11 @@ def vote(df: pd.DataFrame, col_name: str) -> (Union[list, str], int, int):
     total = df.shape[0]
 
     voted = multimode(list(df.loc[:, col_name]))
-    most_voted = voted[0]
 
-    voted_count = df[df[col_name] == most_voted].shape[0]
+    voted_count = df[df[col_name] == voted[0]].shape[0]
+
+    if len(voted) == 1:  # single mode value
+        voted = voted[0]
 
     return voted, voted_count, total
 
