@@ -250,30 +250,37 @@ def compare_gcv_to_human(zooniverse_classifications: pd.DataFrame) -> None:
           (summary.at[False], summary.at[True], ratio * 100))
 
 
-def save_images_to_folders(zooniverse_classifications: pd.DataFrame, dest_folder: str):
+def save_images_to_folders(zooniverse_classifications: pd.DataFrame, word_image_folder: str) -> None:
+    # TODO: go back and get rid of single-punctuation "words," and add back removed ones w/ the first letter cut off
+    if not os.path.exists(word_image_folder):
+        os.makedirs(word_image_folder)
+
     filtered_zooniverse: pd.DataFrame = zooniverse_classifications \
-        .query("handwritten == True and (status == 'Complete' or status == 'Expert Reviewed')").copy()
-    if not os.path.exists(dest_folder):
-        os.makedirs(dest_folder)
-    image_class_mappings = {'0': '30', '1': '31', '2': '32', '3': '33', '4': '34', '5': '35', '6': '36', '7': '37',
-                            '8': '38', '9': '39', 'A': '41', 'B': '42', 'C': '43_63', 'D': '44', 'E': '45', 'F': '46',
-                            'G': '47', 'H': '48', 'I': '49_69', 'J': '4a_6a', 'K': '4b_6b', 'L': '4c_6c', 'M': '4d_6d',
-                            'N': '4e', 'O': '4f_6f', 'P': '50_70', 'Q': '51', 'R': '52', 'S': '53_73', 'T': '54',
-                            'U': '55_75', 'V': '56_76', 'W': '57_77', 'X': '58_78', 'Y': '59_79', 'Z': '5a_7a',
-                            'a': '61', 'b': '62', 'c': '43_63', 'd': '64', 'e': '65', 'f': '66', 'g': '67', 'h': '68',
-                            'i': '49_69', 'j': '4a_6a', 'k': '4b_6b', 'l': '4c_6c', 'm': '4d_6d', 'n': '6e',
-                            'o': '4f_6f', 'p': '50_70', 'q': '71', 'r': '72', 's': '53_73', 't': '74', 'u': '55_75',
-                            'v': '56_76', 'w': '57_77', 'x': '58_78', 'y': '59_79', 'z': '5a_7a'}
-    for v in image_class_mappings.values():
-        path = os.path.join(dest_folder, v)
-        if not os.path.exists(path):
-            os.makedirs(path)
+        .query("handwritten == True and (status == 'Complete' or status == 'Expert Reviewed')")
+    word_image_metadata = filtered_zooniverse.copy()
+    word_image_metadata.rename(columns={'image_location': 'zooniverse_image_location'}, inplace=True)
+    image_processor = GCVProcessor()
     for idx, row in filtered_zooniverse.iterrows():
-        image_location = row['image_location']
-        if row['human_transcription'] in image_class_mappings.keys():
-            image_class = image_class_mappings[row['human_transcription']]
-            dest = os.path.join(dest_folder, image_class)
-            shutil.copy(image_location, dest)
+        full_size_image_location = os.path.join('images', 'Steyermark-2021_04_30-891', row['barcode'] + '.jpg')
+        word_filename = row['id'] + '-word.jpg'
+
+        image_processor.load_image_from_file(full_size_image_location)
+        # 1. find bounding box of word
+        word_info = [w for w in image_processor.get_list_of_words()
+                     if w['b_idx'] == row['block'] and w['p_idx'] == row['paragraph'] and w['w_idx'] == row['word']]
+        word_info = word_info[0]
+        # 2. crop image to bounding box
+        x_min, y_min = list(map(min, *word_info['bounding_box']))
+        x_max, y_max = list(map(max, *word_info['bounding_box']))
+        x_min = max(0, x_min - 20)
+        word_image = image_processor.annotator.cropped_image(x_min, x_max, y_min, y_max)
+        # 3. save image to word_image_folder
+        save_location = data_loader.save_cv2_image(word_image_folder, word_filename, word_image, timestamp=False)
+        # 4. add word image location to zooniverse_classifications
+        zooniverse_classifications.at[idx, 'word_image_location'] = save_location
+        word_image_metadata.at[idx, 'full_size_image_location'] = full_size_image_location
+        word_image_metadata.at[idx, 'word_image_location'] = save_location
+    data_loader.save_dataframe_as_csv(word_image_folder, 'words_metadata', word_image_metadata, timestamp=False)
 
 
 if __name__ == '__main__':
