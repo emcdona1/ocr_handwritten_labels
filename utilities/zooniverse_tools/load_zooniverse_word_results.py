@@ -285,7 +285,7 @@ def save_images_to_folders(zooniverse_classifications: pd.DataFrame, word_image_
 
 if __name__ == '__main__':
     assert 3 <= len(sys.argv) <= 4, 'Include 2 or 3 arguments: (1) the location of the Zooniverse CSV results, ' + \
-                                    '(2) the folder of label images used in Zooniverse, and ' +\
+                                    '(2) the folder of label images used in Zooniverse, and ' + \
                                     '(3) (optional) the folder in which to save word images.'
     zooniverse_results = os.path.join('file_resources',
                                       '2021_06_14-herbarium_handwriting_transcription_classifications-words.csv')
@@ -302,6 +302,4 @@ if __name__ == '__main__':
         main(zooniverse_results, existing_image_folder)
     else:
         words_save_folder = sys.argv[3]
-        assert os.path.isdir(words_save_folder), 'Invalid 3rd argument: `%s` must be a folder on the local computer.' \
-                                                 % words_save_folder
         main(zooniverse_results, existing_image_folder, words_save_folder)
