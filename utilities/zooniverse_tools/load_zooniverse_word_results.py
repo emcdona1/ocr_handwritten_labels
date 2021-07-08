@@ -98,12 +98,15 @@ def consolidate_classifications(zooniverse_classifications: pd.DataFrame) -> pd.
         new_row.at['handwritten'] = type_vote
 
         # discard any results where the majority voted for unclear & blank
+        if type(new_row.at['human_transcription']) is str and len(new_row.at['human_transcription']) == 1 and \
+                new_row.at['human_transcription'] in string.punctuation:
+            new_row.at['status'] = 'Discard - Short'
         if new_row.at['status'] == 'Complete' and new_row.at['unclear']:  # if majority says unclear
-            new_row.at['status'] = 'Discard'
+            new_row.at['status'] = 'Discard - Unclear'
         if type(new_row.at['human_transcription']) is list:  # if there's a tie
             new_row.at['status'] = 'Expert Required'
         if new_row.at['status'] == 'Expert Required' and not new_row.at['handwritten']:
-            new_row.at['status'] = 'Discard'
+            new_row.at['status'] = 'Discard - Typewritten'
         zooniverse_classifications = zooniverse_classifications.drop(subset.index)
         zooniverse_classifications = zooniverse_classifications.append(new_row)
     return zooniverse_classifications.sort_values(by=['block', 'paragraph', 'word'], ascending=True)
