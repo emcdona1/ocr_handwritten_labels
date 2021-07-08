@@ -59,8 +59,8 @@ def open_cv2_image(image_location: str) -> np.ndarray:
     return image_to_draw_on
 
 
-def save_cv2_image(save_location: str, image_id: str, image_to_save: np.ndarray) -> str:
-    filename = image_id + '-annotated' + get_timestamp_for_file_saving() + '.jpg'
+def save_cv2_image(save_location: str, image_id: str, image_to_save: np.ndarray, timestamp=True) -> str:
+    filename = image_id + ('-annotated_' + get_timestamp_for_file_saving() + '.jpg' if timestamp else '')
     file_path = os.path.join(save_location, filename)
     cv2.imwrite(file_path, image_to_save)
     return filename
@@ -71,8 +71,8 @@ def get_timestamp_for_file_saving() -> str:
 
 
 def save_dataframe_as_csv(save_location: str, file_id: str, df: pd.DataFrame, timestamp=True) -> str:
-    file_location = os.path.join(save_location, file_id +
-                                 (('-' + get_timestamp_for_file_saving()) if timestamp else '') + '.csv')
+    filename = file_id + (('-' + get_timestamp_for_file_saving()) if timestamp else '') + '.csv'
+    file_location = os.path.join(save_location, filename)
     df.to_csv(file_location, index=False, encoding='UTF-8')
     return file_location
 
