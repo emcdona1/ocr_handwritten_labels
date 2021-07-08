@@ -188,6 +188,35 @@ def expert_manual_review(df: pd.DataFrame) -> None:
     df.loc[df['id'] == 'C0625663F-b16p0w0', 'status'] = 'Expert Reviewed'
     df.loc[df['id'] == 'C0625663F-b16p0w11', 'status'] = 'Expert Reviewed'
     df.loc[df['id'] == 'C0602626F-b11p1w10', 'status'] = 'Expert Reviewed'
+    # todo: keep this section of cut-off-first-letters ?
+    df.loc[df['id'] == 'C0601389F-b11p0w9', 'status'] = 'Expert Reviewed'
+    df.loc[df['id'] == 'C0603620F-b11p1w5', 'status'] = 'Expert Reviewed'
+    df.loc[df['id'] == 'C0603621F-b10p1w14', 'status'] = 'Expert Reviewed'  # cut off on both sides
+    df.loc[df['id'] == 'C0603621F-b10p3w2', 'status'] = 'Expert Reviewed'
+    df.loc[df['id'] == 'C0603621F-b12p0w0', ('human_transcription', 'status')] = ('Aug', 'Expert Reviewed')
+    df.loc[df['id'] == 'C0604053F-b14p2w1', ('human_transcription', 'status')] = ('Ridge', 'Expert Reviewed')
+    df.loc[df['id'] == 'C0604088F-b14p0w0', ('human_transcription', 'status')] = ('Crevices', 'Expert Reviewed')
+    df.loc[df['id'] == 'C0604088F-b14p1w0', ('human_transcription', 'status')] = ('facing', 'Expert Reviewed')
+    df.loc[df['id'] == 'C0604088F-b14p1w1', ('human_transcription', 'status')] = ('T53N', 'Expert Reviewed')  # cut off on end
+    df.loc[df['id'] == 'C0604948F-b15p1w4', 'status'] = 'Expert Reviewed'
+    df.loc[df['id'] == 'C0604948F-b15p2w0', ('human_transcription', 'status')] = ('Fork', 'Expert Reviewed')  # cut off on both sides
+    df.loc[df['id'] == 'C0604948F-b15p2w13', ('human_transcription', 'status')] = ('E.', 'Expert Reviewed')
+    df.loc[df['id'] == 'C0605227F-b9p0w15', ('human_transcription', 'status')] = ('R9W', 'Expert Reviewed')
+    df.loc[df['id'] == 'C0605403F-b10p1w8', ('human_transcription', 'status')] = ('Fork', 'Expert Reviewed')
+    df.loc[df['id'] == 'C0605403F-b10p2w0', 'status'] = 'Expert Reviewed'
+    df.loc[df['id'] == 'C0605417F-b12p0w19', ('human_transcription', 'status')] = ('of', 'Expert Reviewed')
+    df.loc[df['id'] == 'C0605417F-b12p0w2', ('human_transcription', 'status')] = ('var. spec', 'Expert Reviewed')  # cut off on end
+    df.loc[df['id'] == 'C0605417F-b12p0w3', ('human_transcription', 'status')] = ('tabilis', 'Expert Reviewed')
+    df.loc[df['id'] == 'C0606902F-b12p1w14', ('human_transcription', 'status')] = ('Tom', 'Expert Reviewed')  # cut off both sides
+    df.loc[df['id'] == 'C0606902F-b12p1w15', ('human_transcription', 'status')] = ('Sauk', 'Expert Reviewed')  # cut off both sides
+    df.loc[df['id'] == 'C0606902F-b12p2w0', ('human_transcription', 'status')] = ('S.', 'Expert Reviewed')
+    df.loc[df['id'] == 'C0607530F-b12p1w1', ('human_transcription', 'status')] = ('Fork', 'Expert Reviewed')  # cut off on both sides
+    df.loc[df['id'] == 'C0607745F-b15p0w0', ('human_transcription', 'status')] = ('June', 'Expert Reviewed')
+    df.loc[df['id'] == 'C0609229F-b12p1w15', ('human_transcription', 'status')] = ('Hollow,', 'Expert Reviewed')
+    df.loc[df['id'] == 'C0609229F-b12p1w5', ('human_transcription', 'status')] = ('Along', 'Expert Reviewed')
+    df.loc[df['id'] == 'C0609475F-b12p1w2', ('human_transcription', 'status')] = ('6,', 'Expert Reviewed')
+    df.loc[df['id'] == 'C0611047F-b14p0w6', ('human_transcription', 'status')] = ('sect', 'Expert Reviewed')
+    df.loc[df['id'] == 'C0612468F-b11p0w3', ('human_transcription', 'status')] = ('L.', 'Expert Reviewed')
 
     df.loc[df['id'] == 'C0625663F-b20p0w23', 'status'] = 'Discard - Reviewed'
     df.loc[df['id'] == 'C0604088F - b14p1w2', 'status'] = 'Discard - Reviewed'
@@ -197,42 +226,14 @@ def expert_manual_review(df: pd.DataFrame) -> None:
     df.loc[df['id'] == 'C0609229F-b12p1w19', 'status'] = 'Discard - Reviewed'
     df.loc[df['id'] == 'C0603620F-b11p1w16', 'status'] = 'Discard - Reviewed'
     df.loc[df['id'] == 'C0602766F-b13p0w3', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0601389F-b11p0w9', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0603620F-b11p1w5', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0603621F-b10p1w14', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0603621F-b10p3w2', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0604948F-b15p1w4', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0605403F-b10p2w0', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0604948F-b15p2w13', 'status'] = 'Discard - Reviewed'
     df.loc[df['id'] == 'C0607517F-b13p0w2', 'status'] = 'Discard - Reviewed'
     df.loc[df['id'] == 'C0609475F-b12p0w14', 'status'] = 'Discard - Reviewed'
     df.loc[df['id'] == 'C0609475F-b12p0w6', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0609475F-b12p1w2', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0612468F-b11p0w3', 'status'] = 'Discard - Reviewed'
     df.loc[df['id'] == 'C0601164F-b12p0w0', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0603621F-b12p0w0', 'status'] = 'Discard - Reviewed'
     df.loc[df['id'] == 'C0604052F-b11p1w1', 'status'] = 'Discard - Reviewed'
     df.loc[df['id'] == 'C0604053F-b14p0w2', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0604053F-b14p2w1', 'status'] = 'Discard - Reviewed'
     df.loc[df['id'] == 'C0604053F-b18p0w3', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0604088F-b14p0w0', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0604088F-b14p1w0', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0604088F-b14p1w1', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0604948F-b15p2w0', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0605227F-b9p0w15', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0605403F-b10p1w8', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0605417F-b12p0w19', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0605417F-b12p0w2', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0605417F-b12p0w3', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0606902F-b12p1w14', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0606902F-b12p1w15', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0606902F-b12p2w0', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0607530F-b12p1w1', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0607745F-b15p0w0', 'status'] = 'Discard - Reviewed'
     df.loc[df['id'] == 'C0609229F-b12p0w2', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0609229F-b12p1w15', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0609229F-b12p1w5', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0611047F-b14p0w6', 'status'] = 'Discard - Reviewed'
     df.loc[df['id'] == 'C0604088F-b14p1w2', 'status'] = 'Discard - Reviewed'
     df.loc[df['id'] == 'C0601164F-b11p0w1', 'status'] = 'Discard - Reviewed'
 
