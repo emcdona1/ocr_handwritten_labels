@@ -8,7 +8,8 @@ Configuration.cfg
 /test_results/
 /archive/
 /__pycache__/
-/*/__pycache__
+/*/__pycache__/
+/*/*/__pycache__/
 .idea
 /images/
 /tmp/
