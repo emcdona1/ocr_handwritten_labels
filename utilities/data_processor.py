@@ -41,20 +41,6 @@ def arrange_coordinates(coordinates: List[Tuple[int, int]]) -> (List[Tuple[int, 
     return sorted_coordinates, sorted_x_values[0], sorted_x_values[-1], sorted_y_values[0], sorted_y_values[-1]
 
 
-def crop_an_image_to_box(image: np.ndarray, x_min, x_max, y_min, y_max) -> np.ndarray:
-    """ Provide either 4 int values (for absolute cropping) or float values [0,1] (for cropping relative to
-    image size).  Returns the cropped image. """
-    if type(x_min) is float:
-        height = image.shape[0]
-        width = image.shape[1]
-        x_min = int(height * x_min)
-        x_max = int(height * x_max)
-        y_min = int(width * y_min)
-        y_max = int(width * y_max)
-    cropped_image = image[x_min:x_max + 1, y_min:y_max + 1]
-    return cropped_image
-
-
 def convert_relative_to_absolute_coordinates(vertex: Tuple[float, float], height: int, width: int) -> Tuple[int, int]:
     new_x = int(width * vertex[0])
     new_y = int(height * vertex[1])
