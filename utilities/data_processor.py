@@ -1,6 +1,4 @@
 import os
-import cv2
-import numpy as np
 from typing import List, Tuple
 
 
@@ -10,19 +8,6 @@ def extract_barcode_from_image_name(image_name: str) -> str:
     if len(image_barcode_split) == 1:
         image_barcode_split = image_name_without_extension.split('-')
     return image_barcode_split[0]
-
-
-def crop_an_image_to_coordinates(image: np.ndarray, coordinates: List[Tuple[int, int]]) -> np.ndarray:
-    sorted_coordinates, x_min, x_max, y_min, y_max = arrange_coordinates(coordinates)
-    sorted_coordinates = np.array([sorted_coordinates])
-
-    mask = np.zeros(image.shape[0:2], dtype=np.uint8)
-    cv2.fillPoly(mask, sorted_coordinates, 255)
-
-    masked_image = cv2.bitwise_and(image, image, mask=mask)
-    cropped_image = masked_image[y_min:y_max, x_min:x_max]
-
-    return cropped_image
 
 
 def arrange_coordinates(coordinates: List[Tuple[int, int]]) -> (List[Tuple[int, int]], int, int, int, int):
