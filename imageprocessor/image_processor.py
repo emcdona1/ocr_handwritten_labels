@@ -6,8 +6,7 @@ from abc import ABC, abstractmethod
 import boto3
 from botocore.exceptions import ConnectionClosedError
 from utilities.data_loader import load_pickle, pickle_an_object, open_cv2_image, save_cv2_image
-from utilities.data_processor import extract_barcode_from_image_name, convert_relative_to_absolute_coordinates, \
-    convert_list_of_relative_coordinates, arrange_coordinates
+from utilities.data_processor import extract_barcode_from_image_name, arrange_coordinates
 from imageprocessor.image_annotator import ImageAnnotator
 from typing import List, Tuple, Union
 import math
@@ -354,11 +353,19 @@ class AWSProcessor(ImageProcessor):
             new_line: dict = {'type': line['BlockType'], 'confidence': line['Confidence'], 'text': line['Text']}
             v: list = line['Geometry']['Polygon']
             v_list = [(v[0]['X'], v[0]['Y']), (v[1]['X'], v[1]['Y']), (v[2]['X'], v[2]['Y']), (v[3]['X'], v[3]['Y'])]
-            v_list = convert_list_of_relative_coordinates(v_list, self.current_image_height, self.current_image_width)
+            v_list = self.convert_list_of_relative_coordinates(v_list)
             new_line['bounding_box'], _, _, _, _ = arrange_coordinates(v_list)
             self.ocr_blocks.append(new_line)
 
         self.pickle_current_image_state('parsed AWS ocr')
+
+    def convert_list_of_relative_coordinates(self, vertex_list: List[Tuple[float, float]]) -> List[Tuple[int, int]]:
+        new_vertex_list = list()
+        for point in vertex_list:
+            new_x = int(self.current_image_width * point[0])
+            new_y = int(self.current_image_height * point[1])
+            new_vertex_list.append((new_x, new_y))
+        return new_vertex_list
 
     def _rerun_ocr_with_cropping(self):
         temp_folder = 'tmp'

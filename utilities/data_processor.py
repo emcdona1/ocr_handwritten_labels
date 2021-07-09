@@ -39,13 +39,3 @@ def arrange_coordinates(coordinates: List[Tuple[int, int]]) -> (List[Tuple[int, 
         right_side = [right_side[1], right_side[0]]
     sorted_coordinates = [left_side[0], right_side[0], right_side[1], left_side[1]]
     return sorted_coordinates, sorted_x_values[0], sorted_x_values[-1], sorted_y_values[0], sorted_y_values[-1]
-
-
-def convert_list_of_relative_coordinates(vertex_list: List[Tuple[float, float]], height: int, width: int) -> \
-        List[Tuple[int, int]]:
-    new_vertex_list = list()
-    for point in vertex_list:
-        new_x = int(width * point[0])
-        new_y = int(height * point[1])
-        new_vertex_list.append((new_x, new_y))
-    return new_vertex_list
