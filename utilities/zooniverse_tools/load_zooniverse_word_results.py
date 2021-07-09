@@ -1,6 +1,5 @@
 import os
 import sys
-import shutil
 import ast
 import pandas as pd
 from typing import Union
@@ -23,6 +22,7 @@ def main(zooniverse_classifications_path: str, source_image_folder_path: str,
     print('Saved to %s.' % save_location)
     compare_gcv_to_human(zooniverse_classifications)
     if create_image_folders:
+        print('Saving images.')
         destination_folder = image_save_folder
         save_images_to_folders(zooniverse_classifications, destination_folder)
 
@@ -191,7 +191,6 @@ def expert_manual_review(df: pd.DataFrame) -> None:
     df.loc[df['id'] == 'C0625663F-b16p0w0', 'status'] = 'Expert Reviewed'
     df.loc[df['id'] == 'C0625663F-b16p0w11', 'status'] = 'Expert Reviewed'
     df.loc[df['id'] == 'C0602626F-b11p1w10', 'status'] = 'Expert Reviewed'
-    # todo: keep this section of cut-off-first-letters ?
     df.loc[df['id'] == 'C0601389F-b11p0w9', 'status'] = 'Expert Reviewed'
     df.loc[df['id'] == 'C0603620F-b11p1w5', 'status'] = 'Expert Reviewed'
     df.loc[df['id'] == 'C0603621F-b10p1w14', 'status'] = 'Expert Reviewed'  # cut off on both sides
@@ -251,7 +250,6 @@ def compare_gcv_to_human(zooniverse_classifications: pd.DataFrame) -> None:
 
 
 def save_images_to_folders(zooniverse_classifications: pd.DataFrame, word_image_folder: str) -> None:
-    # TODO: go back and get rid of single-punctuation "words," and add back removed ones w/ the first letter cut off
     if not os.path.exists(word_image_folder):
         os.makedirs(word_image_folder)
 
@@ -273,6 +271,7 @@ def save_images_to_folders(zooniverse_classifications: pd.DataFrame, word_image_
         x_min, y_min = list(map(min, *word_info['bounding_box']))
         x_max, y_max = list(map(max, *word_info['bounding_box']))
         x_min = max(0, x_min - 20)
+        x_max = min(x_max + 10, image_processor.current_image_width)
         word_image = image_processor.annotator.cropped_image(x_min, x_max, y_min, y_max)
         # 3. save image to word_image_folder
         save_location = data_loader.save_cv2_image(word_image_folder, word_filename, word_image, timestamp=False)
@@ -301,5 +300,6 @@ if __name__ == '__main__':
     if len(sys.argv) == 3:
         main(zooniverse_results, existing_image_folder)
     else:
-        words_save_folder = sys.argv[3]
-        main(zooniverse_results, existing_image_folder, words_save_folder)
+        words_save_folder = os.path.join('file_resources', 'word_images')
+        # words_save_folder = sys.argv[3]
+        main(zooniverse_results, existing_image_folder, words_save_folder, create_image_folders=True)
