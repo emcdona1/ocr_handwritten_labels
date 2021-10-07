@@ -6,6 +6,8 @@ import cv2
 from datetime import datetime
 import pandas as pd
 import requests
+from pathlib import Path
+from typing import Union
 
 
 def load_list_from_txt(file_path: str) -> list:
@@ -59,10 +61,10 @@ def open_cv2_image(image_location: str) -> np.ndarray:
     return image_to_draw_on
 
 
-def save_cv2_image(save_location: str, image_id: str, image_to_save: np.ndarray, timestamp=True) -> str:
-    filename = image_id + ('-annotated_' + get_timestamp_for_file_saving() + '.jpg' if timestamp else '')
-    file_path = os.path.join(save_location, filename)
-    cv2.imwrite(file_path, image_to_save)
+def save_cv2_image(save_folder: Union[str, Path], image_id: str, image_to_save: np.ndarray, timestamp=True) -> str:
+    filename = image_id + (('-annotated_' + get_timestamp_for_file_saving()) if timestamp else '') + '.jpg'
+    file_path = os.path.join(save_folder, filename)
+    cv2.imwrite(str(file_path), image_to_save)
     return filename
 
 
