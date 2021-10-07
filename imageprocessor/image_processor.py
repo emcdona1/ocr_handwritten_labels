@@ -151,7 +151,7 @@ class ImageProcessor(ABC):
             # 2. If N, send OCR request, pickle the response, and then _parse_ocr_blocks and pickle the IP.
             self._download_ocr()
             self._parse_ocr_blocks()
-            if not is_label:
+            if is_label:
                 self.current_label_height = self.current_image_height
                 self.current_label_width = self.current_image_height
             else:
