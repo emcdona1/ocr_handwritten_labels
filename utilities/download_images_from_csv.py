@@ -1,7 +1,9 @@
-from data_loader import download_image
+from data_loader import download_image, open_cv2_image, save_cv2_image
 import pandas as pd
 import sys
 import os
+import cv2
+from pathlib import Path
 
 
 def main(occ_filepath: str, save_directory: str):
@@ -18,7 +20,13 @@ def main(occ_filepath: str, save_directory: str):
         elif saved_image_location == 'EXISTS':
             print('Image already exists for barcode %s.' % barcode)
         else:
-            print('Image %i / %i saved.' % (idx+1, num_rows))
+            image = cv2.imread(saved_image_location)
+            # print(f'{image.shape[0]} vs. {image.shape[1]}')
+            if image.shape[0] < image.shape[1]:
+                image = cv2.rotate(image, cv2.ROTATE_90_CLOCKWISE)
+                save_cv2_image(Path(saved_image_location).parent, Path(saved_image_location).stem, image, False)
+                print(f'Image {idx + 1} / {num_rows} rotated & saved.')
+            print(f'Image { idx + 1 } / { num_rows } saved.')
 
 
 if __name__ == '__main__':
