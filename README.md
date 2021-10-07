@@ -10,12 +10,13 @@ ___
     - `pip install -r requirements.txt`
     - Install the needed nltk corpora by running the `requirements-nltk.py` script. For example, in the same Anaconda window, execute:
         - `python requirements-nltk.py`
-2. Set up Google Cloud Vision credentials.
-    - Download your Google Cloud Service Account Key. Save the file in this main directory, e.g. `service_account_token.json`. (See [Google Cloud help center](https://cloud.google.com/docs/authentication/production#cloud-console) for more guidance.)
+2. Set up Google Cloud Vision credentials.  (Optional, but required to generate new GCV analyses.) 
+    - Download your Google Cloud Service Account Key. Save the file in this main directory, e.g. `service_account_token.json`. 
+         (See [Google Cloud help center](https://cloud.google.com/docs/authentication/production#manually) for more guidance with creating a key.)
     - Copy the `Configuration-plain.cfg` file as `Configuration.cfg`.
         - Edit the file to add the name of your service account token (in the `GOOGLE_CLOUD_VISION_API` section, under `serviceAccountTokenPath={name-of-your-service-account-token}`.
         - Update any other settings if desired.
-3. Set up Amazon Web Services credentials.
+3. Set up Amazon Web Services credentials.  (Optional, but required to generate new AWS analyses.)
     - Set up your Amazon Web Services account and store your credentials in the proper location
       (this location is OS-dependent, please consult the 
       [AWS documentation](https://docs.aws.amazon.com/textract/latest/dg/setup-awscli-sdk.html))
