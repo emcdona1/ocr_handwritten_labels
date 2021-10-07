@@ -7,7 +7,7 @@ import pandas as pd
 
 def main(occurrence_file: str, folder_or_image_path: str, generate_annotated_images: bool) -> pd.DataFrame:
     list_of_images = load_file_list_from_filesystem(folder_or_image_path)
-    processors = [GCVProcessor(), AWSProcessor()]
+    processors = [GCVProcessor()]  # [GCVProcessor(), AWSProcessor()]
     occurrence = pd.read_csv(occurrence_file, encoding='UTF-8')
 
     if generate_annotated_images:
