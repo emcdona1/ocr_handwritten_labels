@@ -7,7 +7,7 @@ from datetime import datetime
 import pandas as pd
 import requests
 from pathlib import Path
-from typing import Union
+from typing import Union, List
 
 
 def load_list_from_txt(file_path: str) -> list:
@@ -20,28 +20,30 @@ def load_list_from_txt(file_path: str) -> list:
     return results
 
 
-def load_file_list_from_filesystem(directory_or_file: str) -> list:
+def load_file_list_from_filesystem(directory_or_file: Union[Path, str]) -> List[Union[Path, str]]:
     if not os.path.exists(directory_or_file):
         raise FileNotFoundError('Not a valid directory or file: %s' % directory_or_file)
 
     if os.path.isdir(directory_or_file):
         all_directory_contents = os.listdir(directory_or_file)
-        all_directory_contents_with_full_path = [directory_or_file + os.path.sep + filename
+        all_directory_contents_with_full_path = [os.path.join(directory_or_file, filename)
                                                  for filename in all_directory_contents]
         results = [item for item in all_directory_contents_with_full_path if not os.path.isdir(item)]
+        if isinstance(directory_or_file, Path):
+            results = [Path(item) for item in results]
     else:
         results = [directory_or_file]
 
     return results
 
 
-def load_pickle(pickle_file_path: str):
+def load_pickle(pickle_file_path: Union[Path, str]):
     with open(pickle_file_path, 'rb') as file:
         de_pickled = pickle.load(file)
     return de_pickled
 
 
-def pickle_an_object(save_directory: str, object_id: str, obj_to_pickle) -> str:
+def pickle_an_object(save_directory: Union[Path, str], object_id: str, obj_to_pickle) -> str:
     if not os.path.exists(save_directory):
         os.mkdir(save_directory)
     filename = object_id + '.pickle'
@@ -51,13 +53,13 @@ def pickle_an_object(save_directory: str, object_id: str, obj_to_pickle) -> str:
     return file_path
 
 
-def open_cv2_image(image_location: str) -> np.ndarray:
+def open_cv2_image(image_location: Union[Path, str]) -> np.ndarray:
     if 'http' in image_location:
-        resp = urlopen(image_location)
+        resp = urlopen(str(image_location))
         image = np.asarray(bytearray(resp.read()), dtype="uint8")
         image_to_draw_on = cv2.imdecode(image, cv2.IMREAD_COLOR)
     else:
-        image_to_draw_on = cv2.imread(image_location)
+        image_to_draw_on = cv2.imread(str(image_location))
     return image_to_draw_on
 
 
@@ -72,14 +74,14 @@ def get_timestamp_for_file_saving() -> str:
     return datetime.strftime(datetime.now(), '%Y_%m_%d-%H_%M_%S')
 
 
-def save_dataframe_as_csv(save_location: str, file_id: str, df: pd.DataFrame, timestamp=True) -> str:
+def save_dataframe_as_csv(save_location: Union[Path, str], file_id: str, df: pd.DataFrame, timestamp=True) -> str:
     filename = file_id + (('-' + get_timestamp_for_file_saving()) if timestamp else '') + '.csv'
     file_location = os.path.join(save_location, filename)
     df.to_csv(file_location, index=False, encoding='UTF-8')
     return file_location
 
 
-def download_image(image_url: str, save_directory: str, image_id: str) -> str:
+def download_image(image_url: str, save_directory: Union[Path, str], image_id: str) -> str:
     image_save_path = os.path.join(save_directory, image_id + '.jpg')
     if os.path.exists(image_save_path):
         image_save_path = 'EXISTS'
