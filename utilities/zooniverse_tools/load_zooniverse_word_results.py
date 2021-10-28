@@ -5,33 +5,60 @@ import pandas as pd
 from typing import Union
 from statistics import multimode
 import string
-
-sys.path.append('')  # to run __main__
 from utilities import data_loader
 from imageprocessor import GCVProcessor
+import math
+from pathlib import Path
+
+sys.path.append('')  # to run __main__
+WORKFLOW_NAME = 'Transcribe Words'  # from Zooniverse / the classifications CSV file - case-sensitive!
+MINIMUM_WORKFLOW_VERSION = '21.31'  # from Zooniverse - all classifications from versions >= are included
+RETIREMENT_COUNT = 3  # from Zooniverse within the workflow -- TODO note that this is actually 5 as of the beta test EEK
 
 
-def main(zooniverse_classifications_path: str, source_image_folder_path: str,
-         image_save_folder=os.path.join('file_resources', 'zooniverse_word_images'), create_image_folders=False):
-    raw_zooniverse_classifications = pd.read_csv(zooniverse_classifications_path)
-    zooniverse_classifications = parse_raw_zooniverse_file(raw_zooniverse_classifications)
-    zooniverse_classifications = consolidate_classifications(zooniverse_classifications)
-    update_full_image_paths(source_image_folder_path, zooniverse_classifications)
+def main(zooniverse_classifications_file: Path, folder_of_source_images: Path,
+         image_save_folder=None):
+    zooniverse_classifications = pd.read_csv(zooniverse_classifications_file)
+    zooniverse_classifications = clean_raw_zooniverse_file(zooniverse_classifications)
+    zooniverse_classifications = consolidate_classification_rows(zooniverse_classifications)
+    update_full_image_paths(folder_of_source_images, zooniverse_classifications)
     expert_manual_review(zooniverse_classifications)
-    save_location = data_loader.save_dataframe_as_csv('file_resources', 'zooniverse_parsed', zooniverse_classifications)
-    print('Saved to %s.' % save_location)
-    compare_gcv_to_human(zooniverse_classifications)
-    if create_image_folders:
-        print('Saving images.')
-        destination_folder = image_save_folder
-        save_images_to_folders(zooniverse_classifications, destination_folder)
+
+    csv_save_location = data_loader.save_dataframe_as_csv('file_resources', 'zooniverse_parsed',
+                                                          zooniverse_classifications)
+    print('Saved to %s.' % csv_save_location)
+    # compare_gcv_to_human(zooniverse_classifications)
+
+    # if image_save_folder:
+    #     print('Saving images.')
+    #     destination_folder: Path = image_save_folder
+    #     save_images_to_folders(zooniverse_classifications, destination_folder)
 
 
-def parse_raw_zooniverse_file(raw_zooniverse_classifications: pd.DataFrame) -> pd.DataFrame:
+def _parse_zooniverse_subject_text(subject_text):
+    try:
+        image_name = subject_text['Filename']
+    except KeyError:
+        image_name = subject_text['image_of_boxed_letter']
+    id = image_name.replace('wordbox-', '').replace('.jpg', '').replace('label-', '')
+    barcode = id.split('-')[0]  # in case the file name includes "-label"
+    block = int(id.split('b')[1].split('p')[0])
+    paragraph = int(id.split('p')[1].split('w')[0])
+    word = int(id.split('w')[1])
+    try:
+        gcv_identification = subject_text['#GCV_identification']
+    except KeyError:
+        gcv_identification = None
+    result = pd.Series([id, barcode, block, paragraph, word, gcv_identification, image_name],
+                       index=['id', 'barcode', 'block', 'paragraph', 'word', 'gcv_identification', 'image_location'])
+    return result
+
+
+def _text_cleaning(raw_zooniverse_classifications: pd.DataFrame) -> pd.DataFrame:
     filtered_raw_zooniverse = raw_zooniverse_classifications.query(
-        'workflow_name == "Transcribe Words" and workflow_version == 3.7').copy()
+        f'workflow_name == "{WORKFLOW_NAME}" and workflow_version >= {MINIMUM_WORKFLOW_VERSION}').copy()
 
-    def clean_text_values(txt: str):
+    def clean_zooniverse_csv_text_values(txt: str):
         txt = txt.replace('null', 'None')
         txt = ast.literal_eval(txt)
         if type(txt) is dict:  # for subject_data
@@ -39,51 +66,52 @@ def parse_raw_zooniverse_file(raw_zooniverse_classifications: pd.DataFrame) -> p
             txt = txt[0]
         return txt
 
-    filtered_raw_zooniverse.loc[:, 'annotations'] = filtered_raw_zooniverse['annotations'].apply(clean_text_values)
-    filtered_raw_zooniverse.loc[:, 'subject_data'] = filtered_raw_zooniverse['subject_data'].apply(clean_text_values)
+    filtered_raw_zooniverse.loc[:, 'annotations'] = \
+        filtered_raw_zooniverse['annotations'].apply(clean_zooniverse_csv_text_values)
+    filtered_raw_zooniverse.loc[:, 'subject_data'] = \
+        filtered_raw_zooniverse['subject_data'].apply(clean_zooniverse_csv_text_values)
+    return filtered_raw_zooniverse
 
-    parsed_zooniverse_classifications = pd.DataFrame()
-    parsed_zooniverse_classifications['id'] = filtered_raw_zooniverse['subject_data'].apply(
-        lambda annotation: annotation['image_of_boxed_letter'].replace('wordbox-', '').replace('.jpg', '').replace(
-            'label-', ''))
 
-    def parse_subject(s):
-        barcode = s['barcode'].split('-')[0]  # in case the file name includes "-label"
-        image_name = s['image_of_boxed_letter']
-        col_names = ['barcode', 'block', 'paragraph', 'word', 'gcv_identification', 'image_location']
-        result = pd.Series([barcode, int(s['block_no']), int(s['paragraph_no']), int(s['word_no']),
-                            s['#GCV_identification'], image_name], index=col_names)
-        return result
-
-    parsed_subjects = filtered_raw_zooniverse['subject_data'].apply(parse_subject)
-    parsed_zooniverse_classifications = pd.concat([parsed_zooniverse_classifications, parsed_subjects], axis=1)
+def _process_annotations_into_columns(filtered_raw_zooniverse, parsed_zooniverse_classifications) -> None:
     parsed_zooniverse_classifications['handwritten'] = filtered_raw_zooniverse['annotations'].apply(
         lambda annotation: annotation[0]['value'] == 'handwritten')
-    parsed_zooniverse_classifications['human_transcription'] = filtered_raw_zooniverse['annotations'].apply(
-        lambda annotation: annotation[1]['value'])
+    parsed_zooniverse_classifications['human_transcription'] = filtered_raw_zooniverse.apply(
+        lambda row: '' if row['handwritten'] == False else row['annotation'][1]['value'])
     parsed_zooniverse_classifications['unclear'] = parsed_zooniverse_classifications['human_transcription'].apply(
         lambda transcription: '[unclear]' in transcription and '[/unclear]' in transcription)
     parsed_zooniverse_classifications['human_transcription'] = \
-        parsed_zooniverse_classifications['human_transcription'] \
-            .apply(lambda transcription: transcription.replace('[unclear][/unclear]', ''))
-
+        parsed_zooniverse_classifications['human_transcription'].apply(
+            lambda transcription: transcription.replace('[unclear][/unclear]', ''))
     parsed_zooniverse_classifications['seen_count'] = parsed_zooniverse_classifications.groupby('id')[
         'block'].transform(len)
     parsed_zooniverse_classifications['confidence'] = 1.0
     parsed_zooniverse_classifications['status'] = 'In Progress'
+
+
+def clean_raw_zooniverse_file(raw_zooniverse_classifications: pd.DataFrame) -> pd.DataFrame:
+    filtered_raw_zooniverse = _text_cleaning(raw_zooniverse_classifications)
+
+    parsed_zooniverse_classifications = pd.DataFrame()
+
+    # parsed_zooniverse_classifications['id'] = filtered_raw_zooniverse['subject_data'].apply(extract_image_id)
+    # parsed_subjects = filtered_raw_zooniverse['subject_data'].apply(_parse_zooniverse_subject_text)
+    parsed_subjects = filtered_raw_zooniverse['subject_data'].apply(_parse_zooniverse_subject_text)
+
+    parsed_zooniverse_classifications = pd.concat([parsed_zooniverse_classifications, parsed_subjects], axis=1)
+    _process_annotations_into_columns(filtered_raw_zooniverse, parsed_zooniverse_classifications)
     return parsed_zooniverse_classifications
 
 
-def consolidate_classifications(zooniverse_classifications: pd.DataFrame) -> pd.DataFrame:
-    too_few = zooniverse_classifications[zooniverse_classifications['seen_count'] < 2]
+def consolidate_classification_rows(zooniverse_classifications: pd.DataFrame) -> pd.DataFrame:
+    too_few = zooniverse_classifications[zooniverse_classifications['seen_count'] < math.ceil(RETIREMENT_COUNT / 2)]
     zooniverse_classifications = zooniverse_classifications.drop(too_few.index)
 
     duplicates = zooniverse_classifications[zooniverse_classifications['seen_count'] > 1]
-    ids = set(duplicates['image_location'])
-    for id_name in ids:
-        subset = duplicates[duplicates['image_location'] == id_name]
-        idx = subset.index[0]
-        new_row = subset.loc[idx, :]
+    unique_ids = set(duplicates['image_location'])
+    for id_name in unique_ids:
+        subset = duplicates[duplicates['image_location'] == id_name]  # todo: use zooni_class instead of duplicates?
+        new_row = subset.loc[subset.index[0], :]
         voted, count, total = vote(subset, 'human_transcription')
         new_row.at['confidence'] = count / total
         new_row.at['human_transcription'] = voted
@@ -95,6 +123,8 @@ def consolidate_classifications(zooniverse_classifications: pd.DataFrame) -> pd.
         new_row.at['unclear'] = unclear_vote
 
         type_vote, _, _ = vote(subset, 'handwritten')
+        if type(type_vote) is list and len(type_vote) > 1:  # if it's evenly split, mark as handwritten
+            type_vote = 'handwritten'
         new_row.at['handwritten'] = type_vote
 
         # discard any results where the majority voted for unclear & blank
@@ -114,18 +144,14 @@ def consolidate_classifications(zooniverse_classifications: pd.DataFrame) -> pd.
 
 def vote(df: pd.DataFrame, col_name: str) -> (Union[list, str], int, int):
     total = df.shape[0]
-
     voted = multimode(list(df.loc[:, col_name]))
-
     voted_count = df[df[col_name] == voted[0]].shape[0]
-
     if len(voted) == 1:  # single mode value
         voted = voted[0]
-
     return voted, voted_count, total
 
 
-def update_full_image_paths(source_image_folder_path: str, zooniverse_classifications: pd.DataFrame) -> None:
+def update_full_image_paths(source_image_folder_path: Path, zooniverse_classifications: pd.DataFrame) -> None:
     for idx, row in zooniverse_classifications.iterrows():
         image_name = row['image_location']
         if not os.path.isfile(os.path.join(source_image_folder_path, image_name)):
@@ -249,7 +275,7 @@ def compare_gcv_to_human(zooniverse_classifications: pd.DataFrame) -> None:
           (summary.at[False], summary.at[True], ratio * 100))
 
 
-def save_images_to_folders(zooniverse_classifications: pd.DataFrame, word_image_folder: str) -> None:
+def save_images_to_folders(zooniverse_classifications: pd.DataFrame, word_image_folder: Path) -> None:
     if not os.path.exists(word_image_folder):
         os.makedirs(word_image_folder)
 
@@ -259,7 +285,7 @@ def save_images_to_folders(zooniverse_classifications: pd.DataFrame, word_image_
     word_image_metadata.rename(columns={'image_location': 'zooniverse_image_location'}, inplace=True)
     image_processor = GCVProcessor()
     for idx, row in filtered_zooniverse.iterrows():
-        full_size_image_location = os.path.join('images', 'Steyermark-2021_04_30-891', row['barcode'] + '.jpg')
+        full_size_image_location = os.path.join('images', 'Steyermark-2021_04_30-891', row['barcode'] + '.jpg')  # todo: HUH? WHAT'S THIS ABOUT?
         word_filename = row['id'] + '-word.jpg'
 
         image_processor.load_image_from_file(full_size_image_location)
@@ -283,23 +309,24 @@ def save_images_to_folders(zooniverse_classifications: pd.DataFrame, word_image_
 
 
 if __name__ == '__main__':
-    assert 3 <= len(sys.argv) <= 4, 'Include 2 or 3 arguments: (1) the location of the Zooniverse CSV results, ' + \
-                                    '(2) the folder of label images used in Zooniverse, and ' + \
-                                    '(3) (optional) the folder in which to save word images.'
-    zooniverse_results = os.path.join('file_resources',
-                                      '2021_06_14-herbarium_handwriting_transcription_classifications-words.csv')
-    # zooniverse_results = sys.argv[1]
+    # assert 3 <= len(sys.argv) <= 4, 'Include 2-3 arguments: (1) the location of the Zooniverse CSV classifications, ' +\
+    #                                 '(2) the folder of label images which were used in Zooniverse, and ' + \
+    #                                 '(3) (optional) the folder in which to save images for the neural network.'
+    zooniverse_results = Path('C:\\Users\\bmcdonald\\Downloads\\2021_10_27-humans-versus-machines-deciphering-herbarium-handwriting-classifications.csv')
+    # zooniverse_results = Path(sys.argv[1])
     assert os.path.isfile(zooniverse_results), 'Invalid 1st argument: `%s` must be a file on the local computer.' \
                                                % zooniverse_results
 
-    existing_image_folder = 'processed_images_zooniverse_30_words'
-    # image_folder = sys.argv[2]
-    assert os.path.isdir(existing_image_folder), 'Invalid 2nd argument: `%s` must be a folder on the local computer.' \
-                                                 % existing_image_folder
+    # image_folder = 'processed_images_zooniverse_30_words'
+    # image_folder = Path(sys.argv[2])
+    image_folder = Path('images_standley')
+    if not os.path.exists(image_folder):
+        os.makedirs(image_folder)
 
-    if len(sys.argv) == 3:
-        main(zooniverse_results, existing_image_folder)
-    else:
-        words_save_folder = os.path.join('file_resources', 'word_images')
-        # words_save_folder = sys.argv[3]
-        main(zooniverse_results, existing_image_folder, words_save_folder, create_image_folders=True)
+    main(zooniverse_results, image_folder)
+    # if len(sys.argv) == 3:
+    #     main(zooniverse_results, image_folder)
+    # else:
+    #     # words_save_folder = os.path.join('file_resources', 'word_images')
+    #     words_save_folder = Path(sys.argv[3])
+    #     main(zooniverse_results, image_folder, words_save_folder)
