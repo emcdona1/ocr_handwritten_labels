@@ -13,7 +13,7 @@ from pathlib import Path
 sys.path.append('')  # to run __main__
 WORKFLOW_NAME = 'Transcribe Words'  # from Zooniverse / the classifications CSV file - case-sensitive!
 MINIMUM_WORKFLOW_VERSION = '21.31'  # from Zooniverse - all classifications from versions >= are included
-RETIREMENT_COUNT = 3  # from Zooniverse within the workflow -- TODO note that this is actually 5 as of the beta test EEK
+RETIREMENT_COUNT = 5  # from Zooniverse within the workflow
 
 
 def main(zooniverse_classifications_file: Path, folder_of_source_images: Path,
@@ -75,14 +75,14 @@ def _text_cleaning(raw_zooniverse_classifications: pd.DataFrame) -> pd.DataFrame
 
 def _process_annotations_into_columns(filtered_raw_zooniverse, parsed_zooniverse_classifications) -> None:
     parsed_zooniverse_classifications['handwritten'] = filtered_raw_zooniverse['annotations'].apply(
-        lambda annotation: annotation[0]['value'] == 'handwritten')
-    parsed_zooniverse_classifications['human_transcription'] = filtered_raw_zooniverse.apply(
-        lambda row: '' if row['handwritten'] == False else row['annotation'][1]['value'])
+        lambda a: a[0]['value'] == 'handwritten')
+    parsed_zooniverse_classifications['human_transcription'] = filtered_raw_zooniverse['annotations'].apply(
+        lambda a: '' if len(a) == 1 else a[1]['value'])
     parsed_zooniverse_classifications['unclear'] = parsed_zooniverse_classifications['human_transcription'].apply(
         lambda transcription: '[unclear]' in transcription and '[/unclear]' in transcription)
     parsed_zooniverse_classifications['human_transcription'] = \
         parsed_zooniverse_classifications['human_transcription'].apply(
-            lambda transcription: transcription.replace('[unclear][/unclear]', ''))
+            lambda transcription: transcription.replace('[unclear]', '').replace('[/unclear]', ''))
     parsed_zooniverse_classifications['seen_count'] = parsed_zooniverse_classifications.groupby('id')[
         'block'].transform(len)
     parsed_zooniverse_classifications['confidence'] = 1.0
@@ -92,13 +92,13 @@ def _process_annotations_into_columns(filtered_raw_zooniverse, parsed_zooniverse
 def clean_raw_zooniverse_file(raw_zooniverse_classifications: pd.DataFrame) -> pd.DataFrame:
     filtered_raw_zooniverse = _text_cleaning(raw_zooniverse_classifications)
 
-    parsed_zooniverse_classifications = pd.DataFrame()
+    # parsed_zooniverse_classifications = pd.DataFrame()
 
     # parsed_zooniverse_classifications['id'] = filtered_raw_zooniverse['subject_data'].apply(extract_image_id)
     # parsed_subjects = filtered_raw_zooniverse['subject_data'].apply(_parse_zooniverse_subject_text)
-    parsed_subjects = filtered_raw_zooniverse['subject_data'].apply(_parse_zooniverse_subject_text)
+    parsed_zooniverse_classifications = filtered_raw_zooniverse['subject_data'].apply(_parse_zooniverse_subject_text)
 
-    parsed_zooniverse_classifications = pd.concat([parsed_zooniverse_classifications, parsed_subjects], axis=1)
+    # parsed_zooniverse_classifications = pd.concat([parsed_zooniverse_classifications, parsed_subjects], axis=1)
     _process_annotations_into_columns(filtered_raw_zooniverse, parsed_zooniverse_classifications)
     return parsed_zooniverse_classifications
 
@@ -110,33 +110,35 @@ def consolidate_classification_rows(zooniverse_classifications: pd.DataFrame) ->
     duplicates = zooniverse_classifications[zooniverse_classifications['seen_count'] > 1]
     unique_ids = set(duplicates['image_location'])
     for id_name in unique_ids:
-        subset = duplicates[duplicates['image_location'] == id_name]  # todo: use zooni_class instead of duplicates?
+        subset = zooniverse_classifications[zooniverse_classifications['image_location'] == id_name]
         new_row = subset.loc[subset.index[0], :]
-        voted, count, total = vote(subset, 'human_transcription')
-        new_row.at['confidence'] = count / total
-        new_row.at['human_transcription'] = voted
-        new_row.at['status'] = 'Expert Required' if new_row.at['confidence'] <= 0.5 else 'Complete'
-
-        unclear_vote, _, _ = vote(subset, 'unclear')
-        if type(unclear_vote) is list and len(unclear_vote) > 1:  # if it's evenly split, mark as NOT unclear
-            unclear_vote = False
-        new_row.at['unclear'] = unclear_vote
 
         type_vote, _, _ = vote(subset, 'handwritten')
         if type(type_vote) is list and len(type_vote) > 1:  # if it's evenly split, mark as handwritten
             type_vote = 'handwritten'
         new_row.at['handwritten'] = type_vote
-
-        # discard any results where the majority voted for unclear & blank
-        if type(new_row.at['human_transcription']) is str and len(new_row.at['human_transcription']) == 1 and \
-                new_row.at['human_transcription'] in string.punctuation:
-            new_row.at['status'] = 'Discard - Short'
-        if new_row.at['status'] == 'Complete' and new_row.at['unclear']:  # if majority says unclear
-            new_row.at['status'] = 'Discard - Unclear'
-        if type(new_row.at['human_transcription']) is list:  # if there's a tie
-            new_row.at['status'] = 'Expert Required'
-        if new_row.at['status'] == 'Expert Required' and not new_row.at['handwritten']:
+        if not new_row.at['handwritten']:
             new_row.at['status'] = 'Discard - Typewritten'
+        else:
+            voted, count, total = vote(subset, 'human_transcription')
+            new_row.at['confidence'] = count / total
+            new_row.at['human_transcription'] = voted
+            new_row.at['status'] = 'Expert Required' if new_row.at['confidence'] <= 0.5 else 'Complete'
+
+            unclear_vote, _, _ = vote(subset, 'unclear')
+            if type(unclear_vote) is list and len(unclear_vote) > 1:  # if it's evenly split, mark as NOT unclear
+                unclear_vote = False
+            new_row.at['unclear'] = unclear_vote
+
+            # discard any results where the majority voted for unclear & blank
+            # todo: move these if statements outside of the loop and perform them in batch at the end
+            if type(new_row.at['human_transcription']) is str and len(new_row.at['human_transcription']) == 1 and \
+                    new_row.at['human_transcription'] in string.punctuation:  # TODO do I need type?
+                new_row.at['status'] = 'Discard - Short'
+            if new_row.at['status'] == 'Complete' and new_row.at['unclear']:  # if majority says unclear
+                new_row.at['status'] = 'Discard - Unclear'
+            if type(new_row.at['human_transcription']) is list:  # if there's a tie
+                new_row.at['status'] = 'Expert Required'
         zooniverse_classifications = zooniverse_classifications.drop(subset.index)
         zooniverse_classifications = zooniverse_classifications.append(new_row)
     return zooniverse_classifications.sort_values(by=['block', 'paragraph', 'word'], ascending=True)
