@@ -123,7 +123,6 @@ def consolidate_classification_rows(zooniverse_classifications: pd.DataFrame) ->
             voted, count, total = vote(subset, 'human_transcription')
             new_row.at['confidence'] = count / total
             new_row.at['human_transcription'] = voted
-            new_row.at['status'] = 'Expert Required' if new_row.at['confidence'] <= 0.5 else 'Complete'
 
             unclear_vote, _, _ = vote(subset, 'unclear')
             if type(unclear_vote) is list and len(unclear_vote) > 1:  # if it's evenly split, mark as NOT unclear
@@ -131,7 +130,7 @@ def consolidate_classification_rows(zooniverse_classifications: pd.DataFrame) ->
             new_row.at['unclear'] = unclear_vote
 
             # discard any results where the majority voted for unclear & blank
-            # todo: move these if statements outside of the loop and perform them in batch at the end
+            new_row.at['status'] = 'Complete' if new_row.at['confidence'] > 0.5 else 'Expert Required'
             if type(new_row.at['human_transcription']) is str and len(new_row.at['human_transcription']) == 1 and \
                     new_row.at['human_transcription'] in string.punctuation:  # TODO do I need type?
                 new_row.at['status'] = 'Discard - Short'
@@ -154,7 +153,10 @@ def vote(df: pd.DataFrame, col_name: str) -> (Union[list, str], int, int):
 
 
 def update_full_image_paths(source_image_folder_path: Path, zooniverse_classifications: pd.DataFrame) -> None:
+    collector_barcodes = data_loader.load_pickle(Path('file_resources\\barcode_dict.pickle'))
     for idx, row in zooniverse_classifications.iterrows():
+        barcode = row['barcode']
+        collector = collector_barcodes[barcode]
         image_name = row['image_location']
         if not os.path.isfile(os.path.join(source_image_folder_path, image_name)):
             print("Warning: %s doesn't exist in this location." % image_name)
