@@ -16,7 +16,7 @@ MINIMUM_WORKFLOW_VERSION = '21.31'  # from Zooniverse - all classifications from
 RETIREMENT_COUNT = 5  # from Zooniverse within the workflow
 
 
-def main(zooniverse_classifications_file: Path, folder_of_source_images: Path,
+def main(zooniverse_classifications_file: Path, folders_of_source_images: List[Path],
          image_save_folder=None):
     print('Load raw file.')
     zooniverse_classifications = pd.read_csv(zooniverse_classifications_file)
@@ -338,21 +338,26 @@ def save_images_to_folders(zooniverse_classifications: pd.DataFrame, word_image_
 
 
 if __name__ == '__main__':
-    # assert 3 <= len(sys.argv) <= 4, 'Include 2-3 arguments: (1) the location of the Zooniverse CSV classifications, ' +\
-    #                                 '(2) the folder of label images which were used in Zooniverse, and ' + \
-    #                                 '(3) (optional) the folder in which to save images for the neural network.'
-    zooniverse_results = Path('C:\\Users\\bmcdonald\\Downloads\\2021_10_27-humans-versus-machines-deciphering-herbarium-handwriting-classifications.csv')
+    # assert len(sys.argv) >= 3, 'Include 2-3 arguments: (1) the location of the Zooniverse CSV classifications, ' +\
+    #                                 '(2) the folder in which to save images for the neural network, or "None" if' +\
+    #                                   'not generating the images, and' +\
+    #                                 '(3+) the folder(s) of label images which were used in Zooniverse. ' + \
+    zooniverse_results = Path('C:\\Users\\betht\\Downloads\\' + \
+                              '2021_11_03-humans-versus-machines-deciphering-herbarium-handwriting-classifications.csv')
     # zooniverse_results = Path(sys.argv[1])
     assert os.path.isfile(zooniverse_results), 'Invalid 1st argument: `%s` must be a file on the local computer.' \
                                                % zooniverse_results
 
-    # image_folder = 'processed_images_zooniverse_30_words'
-    # image_folder = Path(sys.argv[2])
-    image_folder = Path('images_standley')
-    if not os.path.exists(image_folder):
-        os.makedirs(image_folder)
+    # image_folders = 'processed_images_zooniverse_30_words'
+    # image_folders = Path(sys.argv[3:])
+    image_folders = [Path('C:\\Users\\betht\\Documents\\Field Museum\\ocr_handwritten_labels\\images_standley'),
+                     Path('C:\\Users\\betht\\Documents\\Field Museum\\ocr_handwritten_labels\\images\\' + \
+                          'Steyermark-2021_04_30-891')]
+    for folder in image_folders:
+        if not os.path.exists(folder):
+            os.makedirs(folder)
 
-    main(zooniverse_results, image_folder)
+    main(zooniverse_results, image_folders)
     # if len(sys.argv) == 3:
     #     main(zooniverse_results, image_folder)
     # else:
