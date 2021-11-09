@@ -109,9 +109,64 @@ def clean_raw_zooniverse_file(raw_zooniverse_classifications: pd.DataFrame) -> p
     return parsed_zooniverse_classifications
 
 
+def vote(df: pd.DataFrame, col_name: str) -> (Union[list, str], int, int):
+    total = df.shape[0]
+    voted = multimode(list(df.loc[:, col_name]))
+    voted_count = df[df[col_name] == voted[0]].shape[0]
+    if len(voted) == 1:  # single mode value
+        voted = voted[0]
+    return voted, voted_count, total
+
+
+def _handwritten_vote(new_row, subset):
+    type_vote, _, _ = vote(subset, 'handwritten')
+    if type(type_vote) is list and len(type_vote) > 1:  # if it's evenly split, mark as handwritten
+        type_vote = 'handwritten'
+    new_row.at['handwritten'] = type_vote
+
+
+def _transcription_vote(new_row, subset):
+    voted, count, total = vote(subset, 'human_transcription')
+    new_row.at['confidence'] = count / total
+    if type(voted) is list:
+        voted = [e.strip() for e in voted]
+        try:
+            voted.remove('')
+        except ValueError:
+            pass
+        voted = list(set(voted))  # todo: just flagging to make sure this doesn't cause any problems
+    if len(voted) == 1:
+        voted = voted[0]
+    new_row.at['human_transcription'] = voted
+
+
+def _unclear_vote(new_row, subset):
+    unclear_vote, _, _ = vote(subset, 'unclear')
+    if type(unclear_vote) is list and len(unclear_vote) > 1:  # if it's evenly split, mark as NOT unclear
+        unclear_vote = False
+    new_row.at['unclear'] = unclear_vote
+
+
+def _status_vote(row) -> str:
+    status = 'Complete'
+    if row.at['confidence'] <= 0.5:  # todo: doesn't account for "complete" if you're downloading a incomplete dataset
+        status = 'Expert Required'
+    elif type(row.at['human_transcription']) is str and \
+            len(row.at['human_transcription']) == 1 and \
+            row.at['human_transcription'] in string.punctuation:
+        status = 'Discard - Short'
+    elif row.at['unclear']:
+        status = 'Discard - Unclear'
+    elif type(row.at['human_transcription']) is list:
+        status = 'Expert Required'
+    elif row.at['status'] == 'Discard - Typewritten':
+        status = row.at['status']
+    return status
+
+
 def consolidate_classification_rows(zooniverse_classifications: pd.DataFrame) -> pd.DataFrame:
     too_few = zooniverse_classifications[zooniverse_classifications['seen_count'] < math.ceil(RETIREMENT_COUNT / 2)]
-    zooniverse_classifications = zooniverse_classifications.drop(too_few.index)
+    zooniverse_classifications = zooniverse_classifications.drop(index=too_few.index)
 
     duplicates = zooniverse_classifications[zooniverse_classifications['seen_count'] > 1]
     unique_ids = set(duplicates['image_location'])
@@ -119,33 +174,20 @@ def consolidate_classification_rows(zooniverse_classifications: pd.DataFrame) ->
         subset = zooniverse_classifications[zooniverse_classifications['image_location'] == id_name]
         new_row = subset.loc[subset.index[0], :]
 
-        type_vote, _, _ = vote(subset, 'handwritten')
-        if type(type_vote) is list and len(type_vote) > 1:  # if it's evenly split, mark as handwritten
-            type_vote = 'handwritten'
-        new_row.at['handwritten'] = type_vote
-        if not new_row.at['handwritten']:
-            new_row.at['status'] = 'Discard - Typewritten'
+        _handwritten_vote(new_row, subset)
+        if new_row.at['handwritten']:
+            _transcription_vote(new_row, subset)
+            _unclear_vote(new_row, subset)
+
         else:
-            voted, count, total = vote(subset, 'human_transcription')
-            new_row.at['confidence'] = count / total
-            new_row.at['human_transcription'] = voted
+            new_row.at['status'] = 'Discard - Typewritten'
 
-            unclear_vote, _, _ = vote(subset, 'unclear')
-            if type(unclear_vote) is list and len(unclear_vote) > 1:  # if it's evenly split, mark as NOT unclear
-                unclear_vote = False
-            new_row.at['unclear'] = unclear_vote
-
-            # discard any results where the majority voted for unclear & blank
-            new_row.at['status'] = 'Complete' if new_row.at['confidence'] > 0.5 else 'Expert Required'
-            if type(new_row.at['human_transcription']) is str and len(new_row.at['human_transcription']) == 1 and \
-                    new_row.at['human_transcription'] in string.punctuation:  # TODO do I need type?
-                new_row.at['status'] = 'Discard - Short'
-            if new_row.at['status'] == 'Complete' and new_row.at['unclear']:  # if majority says unclear
-                new_row.at['status'] = 'Discard - Unclear'
-            if type(new_row.at['human_transcription']) is list:  # if there's a tie
-                new_row.at['status'] = 'Expert Required'
-        zooniverse_classifications = zooniverse_classifications.drop(subset.index)
+        zooniverse_classifications = zooniverse_classifications.drop(index=subset.index)
         zooniverse_classifications = zooniverse_classifications.append(new_row)
+
+    zooniverse_classifications['status'] = zooniverse_classifications.apply(_status_vote, axis=1)
+    typed = zooniverse_classifications.query('handwritten == False')
+    zooniverse_classifications = zooniverse_classifications.drop(index=typed.index)
     return zooniverse_classifications.sort_values(by=['block', 'paragraph', 'word'], ascending=True)
 
 
