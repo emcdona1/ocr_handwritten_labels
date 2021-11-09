@@ -229,20 +229,26 @@ def expert_manual_review(df: pd.DataFrame) -> None:
     df.loc[df['id'] == 'C0604053F-b14p2w1', ('human_transcription', 'status')] = ('Ridge', 'Expert Reviewed')
     df.loc[df['id'] == 'C0604088F-b14p0w0', ('human_transcription', 'status')] = ('Crevices', 'Expert Reviewed')
     df.loc[df['id'] == 'C0604088F-b14p1w0', ('human_transcription', 'status')] = ('facing', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0604088F-b14p1w1', ('human_transcription', 'status')] = ('T53N', 'Expert Reviewed')  # cut off on end
+    df.loc[df['id'] == 'C0604088F-b14p1w1', ('human_transcription', 'status')] = (
+        'T53N', 'Expert Reviewed')  # cut off on end
     df.loc[df['id'] == 'C0604948F-b15p1w4', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0604948F-b15p2w0', ('human_transcription', 'status')] = ('Fork', 'Expert Reviewed')  # cut off on both sides
+    df.loc[df['id'] == 'C0604948F-b15p2w0', ('human_transcription', 'status')] = (
+        'Fork', 'Expert Reviewed')  # cut off on both sides
     df.loc[df['id'] == 'C0604948F-b15p2w13', ('human_transcription', 'status')] = ('E.', 'Expert Reviewed')
     df.loc[df['id'] == 'C0605227F-b9p0w15', ('human_transcription', 'status')] = ('R9W', 'Expert Reviewed')
     df.loc[df['id'] == 'C0605403F-b10p1w8', ('human_transcription', 'status')] = ('Fork', 'Expert Reviewed')
     df.loc[df['id'] == 'C0605403F-b10p2w0', 'status'] = 'Expert Reviewed'
     df.loc[df['id'] == 'C0605417F-b12p0w19', ('human_transcription', 'status')] = ('of', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0605417F-b12p0w2', ('human_transcription', 'status')] = ('var. spec', 'Expert Reviewed')  # cut off on end
+    df.loc[df['id'] == 'C0605417F-b12p0w2', ('human_transcription', 'status')] = (
+        'var. spec', 'Expert Reviewed')  # cut off on end
     df.loc[df['id'] == 'C0605417F-b12p0w3', ('human_transcription', 'status')] = ('tabilis', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0606902F-b12p1w14', ('human_transcription', 'status')] = ('Tom', 'Expert Reviewed')  # cut off both sides
-    df.loc[df['id'] == 'C0606902F-b12p1w15', ('human_transcription', 'status')] = ('Sauk', 'Expert Reviewed')  # cut off both sides
+    df.loc[df['id'] == 'C0606902F-b12p1w14', ('human_transcription', 'status')] = (
+        'Tom', 'Expert Reviewed')  # cut off both sides
+    df.loc[df['id'] == 'C0606902F-b12p1w15', ('human_transcription', 'status')] = (
+        'Sauk', 'Expert Reviewed')  # cut off both sides
     df.loc[df['id'] == 'C0606902F-b12p2w0', ('human_transcription', 'status')] = ('S.', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0607530F-b12p1w1', ('human_transcription', 'status')] = ('Fork', 'Expert Reviewed')  # cut off on both sides
+    df.loc[df['id'] == 'C0607530F-b12p1w1', ('human_transcription', 'status')] = (
+        'Fork', 'Expert Reviewed')  # cut off on both sides
     df.loc[df['id'] == 'C0607745F-b15p0w0', ('human_transcription', 'status')] = ('June', 'Expert Reviewed')
     df.loc[df['id'] == 'C0609229F-b12p1w15', ('human_transcription', 'status')] = ('Hollow,', 'Expert Reviewed')
     df.loc[df['id'] == 'C0609229F-b12p1w5', ('human_transcription', 'status')] = ('Along', 'Expert Reviewed')
