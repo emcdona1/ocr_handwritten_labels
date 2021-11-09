@@ -478,7 +478,7 @@ def save_images_to_folders(zooniverse_classifications: pd.DataFrame, word_image_
     filtered_zooniverse: pd.DataFrame = zooniverse_classifications \
         .query("handwritten == True and (status == 'Complete' or status == 'Expert Reviewed')")
     word_image_metadata = filtered_zooniverse.copy()
-    word_image_metadata.rename(columns={'image_location': 'zooniverse_image_location'}, inplace=True)
+    word_image_metadata = word_image_metadata.rename(columns={'image_location': 'zooniverse_image_location'})
     image_processor = GCVProcessor()
     for idx, row in filtered_zooniverse.iterrows():
         full_size_image_location = os.path.join('images', 'Steyermark-2021_04_30-891', row['barcode'] + '.jpg')  # todo: HUH? WHAT'S THIS ABOUT?
