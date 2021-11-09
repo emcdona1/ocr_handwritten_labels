@@ -191,24 +191,27 @@ def consolidate_classification_rows(zooniverse_classifications: pd.DataFrame) ->
     return zooniverse_classifications.sort_values(by=['block', 'paragraph', 'word'], ascending=True)
 
 
-def vote(df: pd.DataFrame, col_name: str) -> (Union[list, str], int, int):
-    total = df.shape[0]
-    voted = multimode(list(df.loc[:, col_name]))
-    voted_count = df[df[col_name] == voted[0]].shape[0]
-    if len(voted) == 1:  # single mode value
-        voted = voted[0]
-    return voted, voted_count, total
-
-
-def update_full_image_paths(source_image_folder_path: Path, zooniverse_classifications: pd.DataFrame) -> None:
-    collector_barcodes = data_loader.load_pickle(Path('file_resources\\barcode_dict.pickle'))
+def update_full_image_paths(folders: List[Path], zooniverse_classifications: pd.DataFrame) -> None:
+    collector_barcodes = data_loader.load_pickle(Path('C:\\Users\\betht\\Documents\\Field Museum\\' + \
+                                                      'ocr_handwritten_labels\\file_resources\\barcode_dict.pickle'))
     for idx, row in zooniverse_classifications.iterrows():
         barcode = row['barcode']
         collector = collector_barcodes[barcode]
+        zooniverse_classifications.at[idx, 'collector'] = collector
         image_name = row['image_location']
-        if not os.path.isfile(os.path.join(source_image_folder_path, image_name)):
-            print("Warning: %s doesn't exist in this location." % image_name)
-        zooniverse_classifications.at[idx, 'image_location'] = os.path.join(source_image_folder_path, image_name)
+        found_image_path = None
+        for one_folder in folders:
+            if os.path.exists(Path(one_folder, image_name)):
+                found_image_path = Path(one_folder, image_name)
+            elif os.path.exists(Path(one_folder, barcode + '.jpg')):
+                found_image_path = Path(one_folder, barcode + '.jpg')
+        if not found_image_path:
+            if os.path.exists(image_name):
+                found_image_path = image_name
+            else:
+                print(f'Warning: {image_name} doesn\'t exist in these folders.')
+                found_image_path = Path(f'foo/{image_name}')
+        zooniverse_classifications.at[idx, 'image_location'] = found_image_path
 
 
 def expert_manual_review_steyermark(df: pd.DataFrame) -> None:
