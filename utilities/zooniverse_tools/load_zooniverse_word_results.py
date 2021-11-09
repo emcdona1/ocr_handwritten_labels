@@ -98,14 +98,14 @@ def _process_annotations_into_columns(filtered_raw_zooniverse, parsed_zooniverse
 def clean_raw_zooniverse_file(raw_zooniverse_classifications: pd.DataFrame) -> pd.DataFrame:
     filtered_raw_zooniverse = _text_cleaning(raw_zooniverse_classifications)
 
-    # parsed_zooniverse_classifications = pd.DataFrame()
-
-    # parsed_zooniverse_classifications['id'] = filtered_raw_zooniverse['subject_data'].apply(extract_image_id)
-    # parsed_subjects = filtered_raw_zooniverse['subject_data'].apply(_parse_zooniverse_subject_text)
     parsed_zooniverse_classifications = filtered_raw_zooniverse['subject_data'].apply(_parse_zooniverse_subject_text)
-
-    # parsed_zooniverse_classifications = pd.concat([parsed_zooniverse_classifications, parsed_subjects], axis=1)
     _process_annotations_into_columns(filtered_raw_zooniverse, parsed_zooniverse_classifications)
+
+    bad_data_to_drop = parsed_zooniverse_classifications.query('handwritten == True and ' +
+                                                               'unclear == False and ' +
+                                                               'human_transcription == ""')
+    parsed_zooniverse_classifications = parsed_zooniverse_classifications.drop(index=bad_data_to_drop.index)
+
     return parsed_zooniverse_classifications
 
 
