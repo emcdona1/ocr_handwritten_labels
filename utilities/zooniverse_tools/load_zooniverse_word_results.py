@@ -18,13 +18,19 @@ RETIREMENT_COUNT = 5  # from Zooniverse within the workflow
 
 def main(zooniverse_classifications_file: Path, folder_of_source_images: Path,
          image_save_folder=None):
+    print('Load raw file.')
     zooniverse_classifications = pd.read_csv(zooniverse_classifications_file)
+    print('Clean file.')
     zooniverse_classifications = clean_raw_zooniverse_file(zooniverse_classifications)
+    print('Consolidate file.')
     zooniverse_classifications = consolidate_classification_rows(zooniverse_classifications)
-    update_full_image_paths(folder_of_source_images, zooniverse_classifications)
-    expert_manual_review(zooniverse_classifications)
-
-    csv_save_location = data_loader.save_dataframe_as_csv('file_resources', 'zooniverse_parsed',
+    print('Update file paths.')
+    update_full_image_paths(folders_of_source_images, zooniverse_classifications)
+    print('Manual edits.')
+    expert_manual_review_steyermark(zooniverse_classifications)
+    expert_manual_review_standley(zooniverse_classifications)
+    csv_save_location = data_loader.save_dataframe_as_csv('C:\\Users\\betht\\Documents\\Field Museum\\' + \
+                                                          'ocr_handwritten_labels\\file_resources', 'zooniverse_parsed',
                                                           zooniverse_classifications)
     print('Saved to %s.' % csv_save_location)
     # compare_gcv_to_human(zooniverse_classifications)
@@ -163,7 +169,7 @@ def update_full_image_paths(source_image_folder_path: Path, zooniverse_classific
         zooniverse_classifications.at[idx, 'image_location'] = os.path.join(source_image_folder_path, image_name)
 
 
-def expert_manual_review(df: pd.DataFrame) -> None:
+def expert_manual_review_steyermark(df: pd.DataFrame) -> None:
     df.loc[df['id'] == 'C0601392F-b11p0w0', ('handwritten', 'human_transcription', 'status')] = \
         (True, 'No. 26403', 'Expert Reviewed')
     df.loc[df['id'] == 'C0603620F-b12p0w0', ('handwritten', 'human_transcription', 'status')] = \
@@ -274,6 +280,19 @@ def expert_manual_review(df: pd.DataFrame) -> None:
     df.loc[df['id'] == 'C0609229F-b12p0w2', 'status'] = 'Discard - Reviewed'
     df.loc[df['id'] == 'C0604088F-b14p1w2', 'status'] = 'Discard - Reviewed'
     df.loc[df['id'] == 'C0601164F-b11p0w1', 'status'] = 'Discard - Reviewed'
+
+
+def expert_manual_review_standley(df: pd.DataFrame) -> None:
+    df.loc[df['id'] == 'C0384964F-b15p0w0', ('human_transcription', 'status')] = ('nderw.', 'Expert Reviewed')
+    df.loc[df['id'] == 'C0615106F-b16p0w0', ('human_transcription', 'status')] = ('hes', 'Expert Reviewed')
+    df.loc[df['id'] == 'C0615742F-b16p1w0', ('human_transcription', 'status')] = ('um serratu', 'Expert Reviewed')
+    df.loc[df['id'] == 'C0384980F-b17p0w16', 'status'] = 'Discard - Reviewed'
+    df.loc[df['id'] == 'C0611079F-b19p0w0', 'status'] = 'Discard - Reviewed'
+    df.loc[df['id'] == 'C0613343F-b21p0w11', 'status'] = 'Discard - Reviewed'
+    df.loc[df['id'] == 'C0605512F-b10p1w2', 'status'] = 'Discard - Reviewed'
+    df.loc[df['id'] == 'C0609490F-b12p0w24', 'status'] = 'Discard - Reviewed'
+    df.loc[df['id'] == 'C0606387F-b15p1w8', 'status'] = 'Discard - Reviewed'
+    df.loc[df['id'] == 'C0605770F-b16p0w0', 'status'] = 'Discard - Reviewed'
 
 
 def compare_gcv_to_human(zooniverse_classifications: pd.DataFrame) -> None:
