@@ -33,12 +33,12 @@ def main(zooniverse_classifications_file: Path, folders_of_source_images: List[P
                                                           'ocr_handwritten_labels\\file_resources', 'zooniverse_parsed',
                                                           zooniverse_classifications)
     print('Saved to %s.' % csv_save_location)
-    # compare_gcv_to_human(zooniverse_classifications)
 
-    # if image_save_folder:
-    #     print('Saving images.')
-    #     destination_folder: Path = image_save_folder
-    #     save_images_to_folders(zooniverse_classifications, destination_folder)
+    # compare_gcv_to_human(zooniverse_classifications)
+    if image_save_folder:
+        print('Saving images.')
+        destination_folder: Path = image_save_folder
+        save_images_to_folders(zooniverse_classifications, destination_folder)
 
 
 def _parse_zooniverse_subject_text(subject_text):
@@ -581,36 +581,35 @@ def compare_gcv_to_human(zooniverse_classifications: pd.DataFrame) -> None:
 
 
 def save_images_to_folders(zooniverse_classifications: pd.DataFrame, word_image_folder: Path) -> None:
-    if not os.path.exists(word_image_folder):
-        os.makedirs(word_image_folder)
-
     filtered_zooniverse: pd.DataFrame = zooniverse_classifications \
         .query("handwritten == True and (status == 'Complete' or status == 'Expert Reviewed')")
     word_image_metadata = filtered_zooniverse.copy()
     word_image_metadata = word_image_metadata.rename(columns={'image_location': 'zooniverse_image_location'})
     image_processor = GCVProcessor()
     for idx, row in filtered_zooniverse.iterrows():
-        full_size_image_location = os.path.join('images', 'Steyermark-2021_04_30-891', row['barcode'] + '.jpg')  # todo: HUH? WHAT'S THIS ABOUT?
-        word_filename = row['id'] + '-word.jpg'
+        word_filename = f"{row['id']}-word.jpg"
+        image_processor.load_image_by_barcode(row['barcode'])
+        full_size_image_location = image_processor.current_image_location
+        word_image = crop_word_image(image_processor, row)
 
-        image_processor.load_image_from_file(full_size_image_location)
-        # 1. find bounding box of word
-        word_info = [w for w in image_processor.get_list_of_words()
-                     if w['b_idx'] == row['block'] and w['p_idx'] == row['paragraph'] and w['w_idx'] == row['word']]
-        word_info = word_info[0]
-        # 2. crop image to bounding box
-        x_min, y_min = list(map(min, *word_info['bounding_box']))
-        x_max, y_max = list(map(max, *word_info['bounding_box']))
-        x_min = max(0, x_min - 20)
-        x_max = min(x_max + 10, image_processor.current_image_width)
-        word_image = image_processor.annotator.cropped_image(x_min, x_max, y_min, y_max)
-        # 3. save image to word_image_folder
         save_location = data_loader.save_cv2_image(word_image_folder, word_filename, word_image, timestamp=False)
-        # 4. add word image location to zooniverse_classifications
-        zooniverse_classifications.at[idx, 'word_image_location'] = save_location
         word_image_metadata.at[idx, 'full_size_image_location'] = full_size_image_location
         word_image_metadata.at[idx, 'word_image_location'] = save_location
+        zooniverse_classifications.at[idx, 'word_image_location'] = save_location
+
     data_loader.save_dataframe_as_csv(word_image_folder, 'words_metadata', word_image_metadata, timestamp=False)
+
+
+def crop_word_image(image_processor, row):
+    word_info = [w for w in image_processor.get_list_of_words()
+                 if w['b_idx'] == row['block'] and w['p_idx'] == row['paragraph'] and w['w_idx'] == row['word']][0]
+    x_min, y_min = list(map(min, *word_info['bounding_box']))
+    x_max, y_max = list(map(max, *word_info['bounding_box']))
+    x_min = max(0, x_min - 20)
+    x_max = min(x_max + 10, image_processor.current_image_width)
+    # todo: this line below doesn't work because it looks like annotator isn't initialized fully
+    word_image = image_processor.annotator.cropped_image(x_min, x_max, y_min, y_max)
+    return word_image
 
 
 def maine():
@@ -637,10 +636,11 @@ if __name__ == '__main__':
     #     if not os.path.exists(folder):
     #         os.makedirs(folder)
 
-    main(zooniverse_results, image_folders)
-    # if len(sys.argv) == 3:
-    #     main(zooniverse_results, image_folder)
-    # else:
-    #     # words_save_folder = os.path.join('file_resources', 'word_images')
-    #     words_save_folder = Path(sys.argv[2])
-    #     main(zooniverse_results, image_folders, words_save_folder)
+    words_save_folder = Path(sys.argv[2])
+    if words_save_folder:
+        # words_save_folder = os.path.join('file_resources', 'word_images')
+        if not os.path.exists(words_save_folder):
+            os.makedirs(words_save_folder)
+        main(zooniverse_results, image_folders, words_save_folder)
+    else:
+        main(zooniverse_results, image_folders)
