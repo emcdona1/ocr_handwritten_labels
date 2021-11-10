@@ -159,12 +159,19 @@ class ImageProcessor(ABC):
                 self.current_label_width = math.ceil(self.current_image_width * 0.365)
             self.pickle_current_image_state('new ocr')
 
+    def load_image_by_barcode(self, barcode: str) -> None:
+        pickle_name = f'{barcode}.pickle'
+        search_directory = os.listdir(self.object_save_directory)
+        if pickle_name in search_directory:
+            pickle_path = os.path.join(self.object_save_directory, pickle_name)
+            self._load_from_pickle(pickle_path)
+
     def _load_from_pickle(self, pickle_location: str) -> None:
         loaded = load_pickle(pickle_location)
         self.__setstate__(loaded.__dict__)
 
     def _search_for_pickled_object(self) -> Union[str, None]:
-        pickled_search_name = self.current_image_basename + '.pickle'
+        pickled_search_name = f'{self.current_image_basename}.pickle'
         search_directory = os.listdir(self.object_save_directory)
         if pickled_search_name in search_directory:
             return os.path.join(self.object_save_directory, pickled_search_name)
@@ -240,7 +247,7 @@ class GCVProcessor(ImageProcessor):
 
     def _initialize_name_and_save_directory(self) -> str:
         self.name = 'gcv'
-        self.object_save_directory = self.object_save_directory + os.path.sep + self.name
+        self.object_save_directory = os.path.join(self.object_save_directory, self.name)
         if not os.path.exists(self.object_save_directory):
             os.makedirs(self.object_save_directory)
         return self.name
@@ -308,7 +315,7 @@ class AWSProcessor(ImageProcessor):
 
     def _initialize_name_and_save_directory(self) -> str:
         self.name = 'aws'
-        self.object_save_directory = self.object_save_directory + os.path.sep + self.name
+        self.object_save_directory = os.path.join(self.object_save_directory, self.name)
         if not os.path.exists(self.object_save_directory):
             os.makedirs(self.object_save_directory)
         return self.name
