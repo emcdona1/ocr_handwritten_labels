@@ -399,13 +399,16 @@ def expert_manual_review_steyermark(df: pd.DataFrame) -> None:
 
 def expert_manual_review_standley(df: pd.DataFrame) -> None:
     df.loc[df['id'] == 'C0361312F-b18p0w3', ('unclear', 'status')] = (False, 'Expert Reviewed')
+    df.loc[df['id'] == 'C0613301F-b12p0w2', ('human_transcription', 'unclear', 'status')] = \
+        ('Underw', False, 'Expert Reviewed')
     df.loc[df['id'] == 'C0384964F-b15p0w0', ('human_transcription', 'status')] = ('nderw.', 'Expert Reviewed')
     df.loc[df['id'] == 'C0615106F-b16p0w0', ('human_transcription', 'status')] = ('hes', 'Expert Reviewed')
     df.loc[df['id'] == 'C0615742F-b16p1w0', ('human_transcription', 'status')] = ('um serratu', 'Expert Reviewed')
     df.loc[df['id'] == 'C0358756F-b18p0w2', ('human_transcription', 'status')] = ('maxo', 'Expert Reviewed')
     df.loc[df['id'] == 'C0361270F-b17p0w0', ('human_transcription', 'status')] = ('Phanerophlebia', 'Expert Reviewed')
     df.loc[df['id'] == 'C0361295F-b14p0w4', ('human_transcription', 'status')] = ('hapm', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0361295F-b14p0w7', ('human_transcription', 'status')] = ('.U.', 'Expert Reviewed')
+    df.loc[df['id'] == 'C0361295F-b14p0w7', ('human_transcription', 'unclear', 'status')] = \
+        ('.U.', False, 'Expert Reviewed')
     df.loc[df['id'] == 'C0606741F-b11p1w1', ('human_transcription', 'status')] = ('anch', 'Expert Reviewed')
     df.loc[df['id'] == 'C0608095F-b14p0w0', ('human_transcription', 'status')] = ('n', 'Expert Reviewed')
     df.loc[df['id'] == 'C0608963F-b14p0w4', ('human_transcription', 'status')] = ('dum', 'Expert Reviewed')
@@ -418,6 +421,28 @@ def expert_manual_review_standley(df: pd.DataFrame) -> None:
     df.loc[df['id'] == 'C0612935F-b15p0w1', ('human_transcription', 'status')] = ('ban', 'Expert Reviewed')
     df.loc[df['id'] == 'C0613085F-b9p0w0', ('human_transcription', 'status')] = ('quisetum', 'Expert Reviewed')
     df.loc[df['id'] == 'C0613136F-b12p1w0', ('human_transcription', 'status')] = ('. Br', 'Expert Reviewed')
+    df.loc[df['id'] == 'C0613274F-b16p0w12', ('human_transcription', 'status')] = ('Fleshy', 'Expert Reviewed')
+    df.loc[df['id'] == 'C0613287F-b18p0w0', ('human_transcription', 'status')] = ('nderw', 'Expert Reviewed')
+    df.loc[df['id'] == 'C0613287F-b20p0w2', ('human_transcription', 'status')] = ('Moist', 'Expert Reviewed')
+    df.loc[df['id'] == 'C0613288F-b13p0w1', ('human_transcription', 'status')] = ('Underw', 'Expert Reviewed')
+    df.loc[df['id'] == 'C0613342F-b13p0w1', ('human_transcription', 'status')] = ('excavata', 'Expert Reviewed')
+    df.loc[df['id'] == 'C0613475F-b19p0w0', ('human_transcription', 'status')] = ('nsis', 'Expert Reviewed')
+    df.loc[df['id'] == 'C0613475F-b19p0w1', ('human_transcription', 'status')] = ('guatemale', 'Expert Reviewed')
+    df.loc[df['id'] == 'C0613475F-b20p0w0', ('human_transcription', 'status')] = ('nemia', 'Expert Reviewed')
+    df.loc[df['id'] == 'C0613475F-b22p0w0', ('human_transcription', 'status')] = ('axon', 'Expert Reviewed')
+    df.loc[df['id'] == 'C0613486F-b16p0w1', ('human_transcription', 'status')] = ('Maxon', 'Expert Reviewed')
+    df.loc[df['id'] == 'C0613657F-b13p0w0', ('human_transcription', 'status')] = ('Anemia', 'Expert Reviewed')
+    df.loc[df['id'] == 'C0613902F-b20p0w3', ('human_transcription', 'status')] = ('M. & G.)', 'Expert Reviewed')
+    df.loc[df['id'] == 'C0613981F-b16p0w1', ('human_transcription', 'status')] = ('hastatum', 'Expert Reviewed')
+    df.loc[df['id'] == 'C0614187F-b18p0w1', ('human_transcription', 'status')] = ('W', 'Expert Reviewed')
+    df.loc[df['id'] == 'C0614298F-b15p0w1', ('human_transcription', 'status')] = ('sp', 'Expert Reviewed')
+    df.loc[df['id'] == 'C0614383F-b20p0w1', ('human_transcription', 'status')] = ('M.&G.', 'Expert Reviewed')
+    df.loc[df['id'] == 'C0614420F-b19p1w1', ('human_transcription', 'status')] = ('Not', 'Expert Reviewed')
+    df.loc[df['id'] == 'C0614463F-b15p0w1', ('human_transcription', 'status')] = ('W', 'Expert Reviewed')
+    df.loc[df['id'] == 'C0614743F-b15p0w1', ('human_transcription', 'status')] = ('harpeodes', 'Expert Reviewed')
+    df.loc[df['id'] == 'C0614847F-b15p0w0', ('human_transcription', 'status')] = ('laetum', 'Expert Reviewed')
+    df.loc[df['id'] == 'C0615077F-b18p0w5', ('human_transcription', 'status')] = ('C. Chr', 'Expert Reviewed')
+    df.loc[df['id'] == 'C0615110F-b16p0w0', ('human_transcription', 'status')] = ('m', 'Expert Reviewed')
     # df.loc[df['id'] == '', ('human_transcription', 'status')] = ('', 'Expert Reviewed')
 
     df.loc[df['id'] == 'C0358543F-b13p0w2', 'status'] = 'Expert Reviewed'
@@ -443,6 +468,48 @@ def expert_manual_review_standley(df: pd.DataFrame) -> None:
     df.loc[df['id'] == 'C0613097F-b11p1w0', 'status'] = 'Expert Reviewed'
     df.loc[df['id'] == 'C0613144F-b12p0w2', 'status'] = 'Expert Reviewed'
     df.loc[df['id'] == 'C0613149F-b10p1w1', 'status'] = 'Expert Reviewed'
+    df.loc[df['id'] == 'C0613149F-b10p1w2', 'status'] = 'Expert Reviewed'
+    df.loc[df['id'] == 'C0613153F-b14p0w0', 'status'] = 'Expert Reviewed'
+    df.loc[df['id'] == 'C0613277F-b16p0w2', 'status'] = 'Expert Reviewed'
+    df.loc[df['id'] == 'C0613302F-b10p0w1', 'status'] = 'Expert Reviewed'
+    df.loc[df['id'] == 'C0613342F-b13p0w0', 'status'] = 'Expert Reviewed'
+    df.loc[df['id'] == 'C0613343F-b16p0w3', 'status'] = 'Expert Reviewed'
+    df.loc[df['id'] == 'C0613347F-b17p0w2', 'status'] = 'Expert Reviewed'
+    df.loc[df['id'] == 'C0613475F-b19p0w2', 'status'] = 'Expert Reviewed'
+    df.loc[df['id'] == 'C0613480F-b15p0w0', 'status'] = 'Expert Reviewed'
+    df.loc[df['id'] == 'C0613482F-b16p0w1', 'status'] = 'Expert Reviewed'
+    df.loc[df['id'] == 'C0613659F-b17p0w1', 'status'] = 'Expert Reviewed'
+    df.loc[df['id'] == 'C0613742F-b15p0w4', 'status'] = 'Expert Reviewed'
+    df.loc[df['id'] == 'C0613897F-b16p1w5', 'status'] = 'Expert Reviewed'
+    df.loc[df['id'] == 'C0613899F-b16p0w3', 'status'] = 'Expert Reviewed'
+    df.loc[df['id'] == 'C0613899F-b16p1w0', 'status'] = 'Expert Reviewed'
+    df.loc[df['id'] == 'C0613980F-b17p0w3', 'status'] = 'Expert Reviewed'
+    df.loc[df['id'] == 'C0613988F-b16p0w2', 'status'] = 'Expert Reviewed'
+    df.loc[df['id'] == 'C0614113F-b17p0w1', 'status'] = 'Expert Reviewed'
+    df.loc[df['id'] == 'C0614153F-b16p0w2', 'status'] = 'Expert Reviewed'
+    df.loc[df['id'] == 'C0614154F-b14p0w1', 'status'] = 'Expert Reviewed'
+    df.loc[df['id'] == 'C0614298F-b15p1w2', 'status'] = 'Expert Reviewed'
+    df.loc[df['id'] == 'C0614298F-b15p1w3', 'status'] = 'Expert Reviewed'
+    df.loc[df['id'] == 'C0614366F-b14p0w0', 'status'] = 'Expert Reviewed'
+    df.loc[df['id'] == 'C0614420F-b19p0w0', ('unclear', 'status')] = (False, 'Expert Reviewed')
+    df.loc[df['id'] == 'C0614477F-b16p0w1', 'status'] = 'Expert Reviewed'
+    df.loc[df['id'] == 'C0614558F-b17p1w1', 'status'] = 'Expert Reviewed'
+    df.loc[df['id'] == 'C0614609F-b17p0w1', 'status'] = 'Expert Reviewed'
+    df.loc[df['id'] == 'C0614610F-b16p0w1', 'status'] = 'Expert Reviewed'
+    df.loc[df['id'] == 'C0614610F-b16p0w2', 'status'] = 'Expert Reviewed'
+    df.loc[df['id'] == 'C0614655F-b16p0w0', 'status'] = 'Expert Reviewed'
+    df.loc[df['id'] == 'C0614686F-b15p0w5', 'status'] = 'Expert Reviewed'
+    df.loc[df['id'] == 'C0614802F-b16p0w3', 'status'] = 'Expert Reviewed'
+    df.loc[df['id'] == 'C0614841F-b23p0w2', 'status'] = 'Expert Reviewed'
+    df.loc[df['id'] == 'C0614846F-b15p0w4', 'status'] = 'Expert Reviewed'
+    df.loc[df['id'] == 'C0615108F-b18p1w0', 'status'] = 'Expert Reviewed'
+    df.loc[df['id'] == 'C0615110F-b17p0w0', 'status'] = 'Expert Reviewed'
+    df.loc[df['id'] == 'C0615177F-b17p0w0', 'status'] = 'Expert Reviewed'
+    df.loc[df['id'] == 'C0615177F-b18p0w0', 'status'] = 'Expert Reviewed'
+    df.loc[df['id'] == 'C0615178F-b17p0w0', 'status'] = 'Expert Reviewed'
+    df.loc[df['id'] == 'C0615305F-b17p0w0', 'status'] = 'Expert Reviewed'
+    df.loc[df['id'] == 'C0615305F-b17p0w2', 'status'] = 'Expert Reviewed'
+    df.loc[df['id'] == 'C0615502F-b15p0w1', 'status'] = 'Expert Reviewed'
     # df.loc[df['id'] == '', 'status'] = 'Expert Reviewed'
 
     df.loc[df['id'] == 'C0384980F-b17p0w16', 'status'] = 'Discard - Reviewed'
@@ -459,6 +526,48 @@ def expert_manual_review_standley(df: pd.DataFrame) -> None:
     df.loc[df['id'] == 'C0608095F-b13p0w4', 'status'] = 'Discard - Reviewed'
     df.loc[df['id'] == 'C0612993F-b13p0w1', 'status'] = 'Discard - Reviewed'
     df.loc[df['id'] == 'C0613149F-b10p1w0', 'status'] = 'Discard - Reviewed'
+    df.loc[df['id'] == 'C0614295F-b15p0w1', 'status'] = 'Discard - Reviewed'
+    df.loc[df['id'] == 'C0613274F-b16p0w0', 'status'] = 'Discard - Reviewed'
+    df.loc[df['id'] == 'C0613280F-b13p0w1', 'status'] = 'Discard - Reviewed'
+    df.loc[df['id'] == 'C0613280F-b13p0w2', 'status'] = 'Discard - Reviewed'
+    df.loc[df['id'] == 'C0613288F-b13p0w2', 'status'] = 'Discard - Reviewed'
+    df.loc[df['id'] == 'C0613302F-b7p0w1', 'status'] = 'Discard - Reviewed'
+    df.loc[df['id'] == 'C0613342F-b13p0w9', 'status'] = 'Discard - Reviewed'
+    df.loc[df['id'] == 'C0613343F-b16p0w4', 'status'] = 'Discard - Reviewed'
+    df.loc[df['id'] == 'C0613343F-b21p0w13', 'status'] = 'Discard - Reviewed'
+    df.loc[df['id'] == 'C0613506F-b13p0w1', 'status'] = 'Discard - Reviewed'
+    df.loc[df['id'] == 'C0613682F-b15p0w1', 'status'] = 'Discard - Reviewed'
+    df.loc[df['id'] == 'C0613897F-b17p0w11', 'status'] = 'Discard - Reviewed'
+    df.loc[df['id'] == 'C0613981F-b13p0w0', 'status'] = 'Discard - Reviewed'
+    df.loc[df['id'] == 'C0613992F-b18p0w2', 'status'] = 'Discard - Reviewed'
+    df.loc[df['id'] == 'C0614113F-b14p0w1', 'status'] = 'Discard - Reviewed'
+    df.loc[df['id'] == 'C0614297F-b15p0w1', 'status'] = 'Discard - Reviewed'
+    df.loc[df['id'] == 'C0614298F-b13p0w1', 'status'] = 'Discard - Reviewed'
+    df.loc[df['id'] == 'C0614298F-b13p0w2', 'status'] = 'Discard - Reviewed'
+    df.loc[df['id'] == 'C0614384F-b17p0w1', 'status'] = 'Discard - Reviewed'
+    df.loc[df['id'] == 'C0614420F-b15p0w2', 'status'] = 'Discard - Reviewed'
+    df.loc[df['id'] == 'C0614420F-b16p0w0', 'status'] = 'Discard - Reviewed'
+    df.loc[df['id'] == 'C0614420F-b16p0w2', 'status'] = 'Discard - Reviewed'
+    df.loc[df['id'] == 'C0614420F-b16p0w3', 'status'] = 'Discard - Reviewed'
+    df.loc[df['id'] == 'C0614420F-b17p0w0', 'status'] = 'Discard - Reviewed'
+    df.loc[df['id'] == 'C0614421F-b13p0w1', 'status'] = 'Discard - Reviewed'
+    df.loc[df['id'] == 'C0614464F-b19p0w4', 'status'] = 'Discard - Reviewed'
+    df.loc[df['id'] == 'C0614743F-b15p0w4', 'status'] = 'Discard - Reviewed'
+    df.loc[df['id'] == 'C0614744F-b14p0w1', 'status'] = 'Discard - Reviewed'
+    df.loc[df['id'] == 'C0614745F-b13p0w0', 'status'] = 'Discard - Reviewed'
+    df.loc[df['id'] == 'C0614745F-b13p0w1', 'status'] = 'Discard - Reviewed'
+    df.loc[df['id'] == 'C0614745F-b13p0w2', 'status'] = 'Discard - Reviewed'
+    df.loc[df['id'] == 'C0614747F-b13p0w0', 'status'] = 'Discard - Reviewed'
+    df.loc[df['id'] == 'C0614802F-b13p0w0', 'status'] = 'Discard - Reviewed'
+    df.loc[df['id'] == 'C0614802F-b13p0w1', 'status'] = 'Discard - Reviewed'
+    df.loc[df['id'] == 'C0614841F-b23p0w3', 'status'] = 'Discard - Reviewed'
+    df.loc[df['id'] == 'C0615108F-b18p1w3', 'status'] = 'Discard - Reviewed'
+    df.loc[df['id'] == 'C0615178F-b19p0w2', 'status'] = 'Discard - Reviewed'
+    df.loc[df['id'] == 'C0615178F-b19p0w3', 'status'] = 'Discard - Reviewed'
+    df.loc[df['id'] == 'C0615350F-b14p0w1', 'status'] = 'Discard - Reviewed'
+    df.loc[df['id'] == 'C0615474F-b16p0w5', 'status'] = 'Discard - Reviewed'
+    df.loc[df['id'] == 'C0615498F-b17p0w3', 'status'] = 'Discard - Reviewed'
+    df.loc[df['id'] == 'C0615550F-b20p1w2', 'status'] = 'Discard - Reviewed'
     # df.loc[df['id'] == '', 'status'] = 'Discard - Reviewed'
 
 
@@ -509,6 +618,7 @@ def maine():
     image_folders = [Path('file_resources\\processed_images_zooniverse-Standley'),
                      Path('file_resources\\processed_images_zooniverse-Steyermark')]
     main(zooniverse_results, image_folders)
+
 
 if __name__ == '__main__':
     # assert len(sys.argv) >= 3, 'Include 3+ arguments: (1) the location of the Zooniverse CSV classifications, ' + \
