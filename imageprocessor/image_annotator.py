@@ -3,10 +3,12 @@ import numpy as np
 from utilities.data_loader import open_cv2_image, save_cv2_image
 from utilities.data_processor import extract_barcode_from_image_name
 import cv2
+from typing import Union
+from pathlib import Path
 
 
 class ImageAnnotator:
-    def __init__(self, name: str, starting_image_location=None):
+    def __init__(self, name: Union[str, Path], starting_image_location=None):
         self.save_location = os.path.join('annotated_images', name)
         self.current_image_location = None
         self.current_image_barcode = None
