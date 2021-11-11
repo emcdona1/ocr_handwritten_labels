@@ -605,7 +605,6 @@ def crop_word_image(image_processor, row):
     x_max, y_max = list(map(max, *word_info['bounding_box']))
     x_min = max(0, x_min - 20)
     x_max = min(x_max + 10, image_processor.current_image_width)
-    # todo: this line below doesn't work because it looks like annotator isn't initialized fully
     word_image = image_processor.annotator.cropped_image(x_min, x_max, y_min, y_max)
     return word_image
 
