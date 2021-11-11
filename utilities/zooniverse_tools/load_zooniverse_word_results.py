@@ -29,8 +29,7 @@ def main(zooniverse_classifications_file: Path, folders_of_source_images: List[P
     print('Manual edits.')
     expert_manual_review_steyermark(zooniverse_classifications)
     expert_manual_review_standley(zooniverse_classifications)
-    csv_save_location = data_loader.save_dataframe_as_csv('C:\\Users\\betht\\Documents\\Field Museum\\' + \
-                                                          'ocr_handwritten_labels\\file_resources', 'zooniverse_parsed',
+    csv_save_location = data_loader.save_dataframe_as_csv('file_resources', 'zooniverse_parsed',
                                                           zooniverse_classifications)
     print('Saved to %s.' % csv_save_location)
 
@@ -192,8 +191,7 @@ def consolidate_classification_rows(zooniverse_classifications: pd.DataFrame) ->
 
 
 def update_full_image_paths(folders: List[Path], zooniverse_classifications: pd.DataFrame) -> None:
-    collector_barcodes = data_loader.load_pickle(Path('C:\\Users\\betht\\Documents\\Field Museum\\' + \
-                                                      'ocr_handwritten_labels\\file_resources\\barcode_dict.pickle'))
+    collector_barcodes = data_loader.load_pickle(Path('file_resources\\barcode_dict.pickle'))
     for idx, row in zooniverse_classifications.iterrows():
         barcode = row['barcode']
         collector = collector_barcodes[barcode]
@@ -613,9 +611,11 @@ def crop_word_image(image_processor, row):
 
 
 def maine():
-    zooniverse_results = Path('C:\\Users\\betht\\Downloads\\2021_11_03-humans-versus-machines-deciphering-herbarium-handwriting-classifications.csv')
-    image_folders = [Path('file_resources\\processed_images_zooniverse-Standley'),
-                     Path('file_resources\\processed_images_zooniverse-Steyermark')]
+    zooniverse_results = Path('C:\\Users\\bmcdonald\\Downloads\\2021_11_03-humans-versus-machines-deciphering-herbarium-handwriting-classifications.csv')
+    image_folders = [Path('file_resources\\Steyermark\\processed_images_zooniverse'),
+                     Path('file_resources\\Standley\\processed_images_zooniverse')]
+        # [Path('file_resources\\processed_images_zooniverse-Standley'),
+        #  Path('file_resources\\processed_images_zooniverse-Steyermark')]
     main(zooniverse_results, image_folders)
 
 
