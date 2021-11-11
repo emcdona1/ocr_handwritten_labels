@@ -165,6 +165,7 @@ class ImageProcessor(ABC):
         if pickle_name in search_directory:
             pickle_path = os.path.join(self.object_save_directory, pickle_name)
             self._load_from_pickle(pickle_path)
+        self.annotator.load_image_from_file(self.current_image_location)
 
     def _load_from_pickle(self, pickle_location: str) -> None:
         loaded = load_pickle(pickle_location)
