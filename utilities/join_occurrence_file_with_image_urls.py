@@ -21,7 +21,7 @@ def extract_occur_and_images_from_zip(zip_file_path: str) -> (pd.DataFrame, pd.D
     with ZipFile(zip_file_path, 'r') as zipped_file:
         occur_bytes = zipped_file.read('occurrences.csv')
         occur = pd.read_csv(BytesIO(occur_bytes), encoding='UTF-8')
-        images_bytes = zipped_file.read('images.csv')
+        images_bytes = zipped_file.read('multimedia.csv')
         images = pd.read_csv(BytesIO(images_bytes), encoding='UTF-8')
     return occur, images
 
