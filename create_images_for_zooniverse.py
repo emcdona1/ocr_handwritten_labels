@@ -81,15 +81,19 @@ def clean_and_save_manifests():
 
 
 if __name__ == '__main__':
-    assert len(sys.argv) > 1, 'Include one command line argument (either an image file or a directory of images).'
+    assert len(sys.argv) > 1, 'Include one command line argument (either an image file or a directory of images).' + \
+                              'Optional 2nd argument: append the image folder names with an ID string.'
     folder_or_image_file = sys.argv[1]
 
     image_folder_zooniverse = 'processed_images_zooniverse'
-    # image_folder_nn = 'processed_images_nn'
+    image_folder_nn = 'processed_images_nn'
+    if len(sys.argv) == 3:
+        image_folder_zooniverse = f'{image_folder_zooniverse}-{sys.argv[2]}'
+        image_folder_nn = f'{image_folder_nn}-{sys.argv[2]}'
     if not os.path.exists(image_folder_zooniverse):
         os.mkdir(image_folder_zooniverse)
-    # if not os.path.exists(image_folder_nn):
-    #     os.mkdir(image_folder_nn)
+    if not os.path.exists(image_folder_nn):
+        os.mkdir(image_folder_nn)
 
     box_drawing_color = (240, 17, 17)  # blue
     main()
