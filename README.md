@@ -25,7 +25,7 @@ ___
 ___
 ## Example Workflows
 
-#### Comparing OCR platforms on analyzing herbarium sheet labels
+### A. Comparing OCR platforms on analyzing herbarium sheet labels
 *Currently available: Google Cloud Vision and Amazon Web Services Textract*
 
 1. **Download the ground truth information for your dataset, plus URLs of the images**.
@@ -85,6 +85,15 @@ ___
     per image on an average personal computer.)
     
 
+### B. Zooniverse project preparation
+1. After the first three steps above, run `create_images_for_zooniverse.py` using the folder of downloaded images 
+     (and an optional 2nd argument to ID the folders that will be created -- highly recommended!).  This script will 
+     generate two new folders: `processed_images-{optional_id}` (label images with words boxed by blue squares) and 
+     `processed_images_nn-{optional_id}` (images of each word, cropped, for use in machine learning once labelled).  The first folder
+     will also contain a file `zooniverse_manifest.csv`, which should be uploaded to Zooniverse with the images.
+2. Upload the `processed_images-{optional_id}` folder with the CSV file to Zooniverse as a subject set.
+3. Once volunteers have finished the workflow for this subject set, export the data ("Request new classification export 
+     CSV").
 
 ---
 ## Repository Structure
