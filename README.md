@@ -29,22 +29,22 @@ ___
 *Currently available: Google Cloud Vision and Amazon Web Services Textract*
 
 1. **Download the ground truth information for your dataset, plus URLs of the images**.
-    1. In a web browser, log into the [Fern Portal](https://pteridoportal.org/) 
-       and download an occurrence file, which should contain human-created transcriptions 
-       of the herbarium sheet text:
-   1. As an authenticated user, click the "Crowdsource", and click the pencil icon 
-      next to the desired dataset.
-   1. Click the "Exporter" tab. Create a search query (e.g. 
-      *Collector/Observer CONTAINS Steyermark*).
-       1. For "Processing Status" select "Reviewed." (This ensures that you have ground truth
-          data, i.e. transcribed by humans and reviewed by staff, to compare to the OCR.)
+    1. In a web browser, log into a Symbiota portal ([Fern Portal](https://pteridoportal.org/) 
+       or [Bryophyte Portal](https://bryophyteportal.org/)) and download an occurrence file, which will be a CSV file 
+       containing image data and transcriptions of the herbarium sheet text.
+    2. As an authenticated user, click "Search Collections" under the "Search" tab.  Uncheck the box to the left of
+       "_Select/Deselect all collections_" to deselect everything, and then check the box for the desired dataset (e.g. 
+       "Field Museum of Natural History").  Click the search button.
+    3. Use the search fields to narrow down your export as needed.  Some common examples:
+       1. Collector's Last Name (e.g. *Steyermark*).
+    4. Click "Table Display" to load the query results.  Near the top right, click the down-arrow button to open a 
+       pop-up window for exporting the data.
        1. For "Structure," select "Darwin Core."
-       1. For "Data Extensions," deselect "include Determination History"
+       2. For "Data Extensions," deselect "include Determination History"
           and select "include Image Records."
-       1. (Compression should already be checked, and "CSV" selected for file format.)
-       1. For "Character Set" select "UTF-8 (unicode)."
-       1. Click "Download Records" button.
-   1. Place this downloaded ZIP file in your working directory.
+       3. (Compression should already be checked, and "CSV" selected for file format.)
+       4. For "Character Set" select "UTF-8 (unicode)."
+       5. Click "Download Records" button.
 1. **Download your image set**.
     1. Run the script `utilities\join_occurrence_file_with_image_urls.py`, pointing to 
        the ZIP file you just downloaded.  A new CSV file 
