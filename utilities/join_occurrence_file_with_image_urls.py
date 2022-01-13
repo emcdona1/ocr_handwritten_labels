@@ -40,8 +40,12 @@ def join_occur_and_images_information(occur: pd.DataFrame, images: pd.DataFrame)
 
 
 def is_valid_url(image_url: str) -> bool:
-    result = requests.get(image_url)
-    return result.status_code == 200
+    try:
+        result = requests.get(image_url)
+        return result.status_code == 200
+    except requests.exceptions.MissingSchema as e:
+        print(e)
+        return False
 
 
 if __name__ == '__main__':
