@@ -10,32 +10,29 @@ from imageprocessor import GCVProcessor
 import math
 from pathlib import Path
 
-WORKFLOW_NAME = 'Transcribe Words'  # from Zooniverse / the classifications CSV file - case-sensitive!
-MINIMUM_WORKFLOW_VERSION = '21.31'  # from Zooniverse - all classifications from versions >= are included
+WORKFLOW_NAME = 'Transcribe Words'  # from Zooniverse or the classifications CSV file - case-sensitive!
+MINIMUM_WORKFLOW_VERSION = '21.31'  # from Zooniverse or the classifications CSV file -
+                                    # all classifications this version and higher will be included
 RETIREMENT_COUNT = 5  # from Zooniverse within the workflow
 
 
 def main(zooniverse_classifications_file: Path, folders_of_source_images: List[Path], image_save_folder=None):
-    print('Load raw file.')
+    print('Load & clean classification file.')
     zooniverse_classifications = pd.read_csv(zooniverse_classifications_file)
-    print('Clean file.')
     zooniverse_classifications = clean_raw_zooniverse_file(zooniverse_classifications)
     print('Consolidate file.')
     zooniverse_classifications = consolidate_classification_rows(zooniverse_classifications)
     print('Update file paths.')
     update_full_image_paths(folders_of_source_images, zooniverse_classifications)
-    print('Manual edits.')
+    print('Update with manual edits & save.')
     expert_manual_review_steyermark(zooniverse_classifications)
     expert_manual_review_standley(zooniverse_classifications)
     csv_save_location = data_loader.save_dataframe_as_csv('file_resources', 'zooniverse_parsed',
                                                           zooniverse_classifications)
-    print('Saved to %s.' % csv_save_location)
-
-    # compare_gcv_to_human(zooniverse_classifications)
+    print('Saved parsed results file to %s.' % csv_save_location)
     if image_save_folder:
-        print('Saving images.')
-        destination_folder: Path = image_save_folder
-        save_images_to_folders(zooniverse_classifications, destination_folder)
+        print(f'Saving word images to {image_save_folder}')
+        save_images_to_folders(zooniverse_classifications, image_save_folder)
 
 
 def _parse_zooniverse_subject_text(subject_text):
