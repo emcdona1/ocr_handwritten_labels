@@ -10,14 +10,12 @@ from imageprocessor import GCVProcessor
 import math
 from pathlib import Path
 
-sys.path.append('')  # to run __main__
 WORKFLOW_NAME = 'Transcribe Words'  # from Zooniverse / the classifications CSV file - case-sensitive!
 MINIMUM_WORKFLOW_VERSION = '21.31'  # from Zooniverse - all classifications from versions >= are included
 RETIREMENT_COUNT = 5  # from Zooniverse within the workflow
 
 
-def main(zooniverse_classifications_file: Path, folders_of_source_images: List[Path],
-         image_save_folder=None):
+def main(zooniverse_classifications_file: Path, folders_of_source_images: List[Path], image_save_folder=None):
     print('Load raw file.')
     zooniverse_classifications = pd.read_csv(zooniverse_classifications_file)
     print('Clean file.')
@@ -609,37 +607,24 @@ def crop_word_image(image_processor, row):
     return word_image
 
 
-def maine():
-    zooniverse_results = Path('C:\\Users\\bmcdonald\\Downloads\\2021_11_03-humans-versus-machines-deciphering-herbarium-handwriting-classifications.csv')
-    image_folders = [Path('file_resources\\Steyermark\\processed_images_zooniverse'),
-                     Path('file_resources\\Standley\\processed_images_zooniverse')]
-        # [Path('file_resources\\processed_images_zooniverse-Standley'),
-        #  Path('file_resources\\processed_images_zooniverse-Steyermark')]
-    main(zooniverse_results, image_folders)
-
-
 if __name__ == '__main__':
-    # assert len(sys.argv) >= 3, 'Include 3+ arguments: (1) the location of the Zooniverse CSV classifications, ' + \
-    #                            '(2) the folder in which to save images for the neural network, or "None" if' + \
-    #                            'not generating the images, and' + \
-    #                            '(3+) the folder(s) of label images which were used in Zooniverse. '
-    # zooniverse_results = Path(sys.argv[1])
-    zooniverse_results = Path('C:\\Users\\betht\\Downloads\\2021_11_03-humans-versus-machines-deciphering-herbarium-handwriting-classifications.csv')
-    # assert os.path.isfile(zooniverse_results), 'Invalid 1st argument: `%s` must be a file on the local computer.' \
-    #                                            % zooniverse_results
+    assert len(sys.argv) >= 3, 'Include 3+ arguments: (1) the location of the Zooniverse CSV classifications, ' + \
+                               '(2) the folder in which to save images for the neural network, or "None" if' + \
+                               'not generating the images, and' + \
+                               '(3+) the folder(s) of label images which were used in Zooniverse. '
 
-    # image_folders = [Path(f) for f in sys.argv[3:]]
-    image_folders = [Path('file_resources\\processed_images_zooniverse-Standley'),
-                     Path('file_resources\\processed_images_zooniverse-Steyermark')]
-    # for folder in image_folders:
-    #     if not os.path.exists(folder):
-    #         os.makedirs(folder)
+    zooniverse_results = Path(sys.argv[1])
+    assert os.path.isfile(zooniverse_results), f'Invalid 1st argument: {zooniverse_results} is not a file.'
 
-    words_save_folder = Path(sys.argv[2])
-    if words_save_folder:
-        # words_save_folder = os.path.join('file_resources', 'word_images')
+    if sys.argv[2] == 'None':
+        words_save_folder = None
+    else:
+        words_save_folder = Path(sys.argv[2])
         if not os.path.exists(words_save_folder):
             os.makedirs(words_save_folder)
-        main(zooniverse_results, image_folders, words_save_folder)
-    else:
-        main(zooniverse_results, image_folders)
+
+    image_folders = [Path(f) for f in sys.argv[3:]]
+    for image_folder in image_folders:
+        assert os.path.exists(image_folder), f'Invalid image folder: {image_folder} does not exist.'
+
+    main(zooniverse_results, image_folders, words_save_folder)
