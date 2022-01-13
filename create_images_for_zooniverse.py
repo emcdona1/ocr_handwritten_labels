@@ -1,6 +1,5 @@
 import sys
 import os
-import copy
 import pandas as pd
 import numpy as np
 import cv2
@@ -21,8 +20,12 @@ def main():
 
         list_of_words = gcv_processor.get_list_of_words(label_only=True)
         for word in list_of_words:
+            image_of_one_cropped_word = gcv_processor.annotator.cropped_to_box(word['bounding_box'])
+            save_image_to_file(image_of_one_cropped_word, image_folder_nn, 'word', image_barcode,
+                               word['b_idx'], word['p_idx'], word['w_idx'])
+
             gcv_processor.annotator.draw_polygon(word['bounding_box'], box_drawing_color)
-            cropped_image = crop_to_label(gcv_processor, gcv_processor.current_label_location)
+            cropped_image = gcv_processor.annotator.cropped_to_box(gcv_processor.current_label_location)
             word_filename = save_image_to_file(cropped_image, image_folder_zooniverse, 'wordbox',
                                                image_barcode, word['b_idx'], word['p_idx'], word['w_idx'])
             add_word_to_zooniverse_manifest(gcv_processor, word, word_filename)
