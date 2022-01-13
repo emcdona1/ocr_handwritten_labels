@@ -8,6 +8,7 @@ import pandas as pd
 import requests
 from pathlib import Path
 from typing import Union, List
+from requests.exceptions import MissingSchema
 
 
 def load_list_from_txt(file_path: str) -> list:
@@ -82,14 +83,18 @@ def save_dataframe_as_csv(save_location: Union[Path, str], file_id: str, df: pd.
 
 
 def download_image(image_url: str, save_directory: Union[Path, str], image_id: str) -> str:
-    image_save_path = os.path.join(save_directory, image_id + '.jpg')
+    image_save_path = os.path.join(save_directory, str(image_id) + '.jpg')
     if os.path.exists(image_save_path):
         image_save_path = 'EXISTS'
     else:
-        result = requests.get(image_url)
-        if result.status_code == 200:
-            with open(image_save_path, 'wb') as f:
-                f.write(result.content)
-        else:
+        try:
+            result = requests.get(image_url)
+            if result.status_code == 200:
+                with open(image_save_path, 'wb') as f:
+                    f.write(result.content)
+            else:
+                image_save_path = ''
+        except MissingSchema:
+            print(f'No image url: {image_id}')
             image_save_path = ''
     return image_save_path
