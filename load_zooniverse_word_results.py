@@ -207,7 +207,7 @@ def update_full_image_paths(folders: List[Path], zooniverse_classifications: pd.
             if os.path.exists(image_name):
                 found_image_path = image_name
             else:
-                print(f'Warning: {image_name} doesn\'t exist in these folders.')
+                print(f"Warning: {image_name} doesn't exist in these folders.")
                 found_image_path = Path(f'foo/{image_name}')
         zooniverse_classifications.at[idx, 'image_location'] = found_image_path
 
