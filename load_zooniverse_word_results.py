@@ -36,10 +36,7 @@ def main(zooniverse_classifications_file: Path, folders_of_source_images: List[P
 
 
 def _parse_zooniverse_subject_text(subject_text):
-    try:
-        image_name = subject_text['Filename']
-    except KeyError:
-        image_name = subject_text['image_of_boxed_letter']
+    image_name = subject_text['Filename']
     id = image_name.replace('wordbox-', '').replace('.jpg', '').replace('label-', '')
     barcode = id.split('-')[0]  # in case the file name includes "-label"
     block = int(id.split('b')[1].split('p')[0])
@@ -54,11 +51,14 @@ def _parse_zooniverse_subject_text(subject_text):
     return result
 
 
-def _text_cleaning(raw_zooniverse_classifications: pd.DataFrame) -> pd.DataFrame:
+def _filter_workflow_versions(raw_zooniverse_classifications: pd.DataFrame) -> pd.DataFrame:
     filtered_raw_zooniverse = raw_zooniverse_classifications.query(
         f'workflow_name == "{WORKFLOW_NAME}" and workflow_version >= {MINIMUM_WORKFLOW_VERSION}').copy()
+    return filtered_raw_zooniverse
 
-    def clean_zooniverse_csv_text_values(txt: str):
+
+def _clean_csv_strings(raw_zooniverse_classifications: pd.DataFrame) -> pd.DataFrame:
+    def clean_zooniverse_csv_strings(txt: str):
         txt = txt.replace('null', 'None')
         txt = ast.literal_eval(txt)
         if type(txt) is dict:  # for subject_data
@@ -66,11 +66,15 @@ def _text_cleaning(raw_zooniverse_classifications: pd.DataFrame) -> pd.DataFrame
             txt = txt[0]
         return txt
 
-    filtered_raw_zooniverse.loc[:, 'annotations'] = \
-        filtered_raw_zooniverse['annotations'].apply(clean_zooniverse_csv_text_values)
-    filtered_raw_zooniverse.loc[:, 'subject_data'] = \
-        filtered_raw_zooniverse['subject_data'].apply(clean_zooniverse_csv_text_values)
-    return filtered_raw_zooniverse
+    raw_zooniverse_classifications.loc[:, 'annotations'] = \
+        raw_zooniverse_classifications['annotations'].apply(clean_zooniverse_csv_strings)
+    raw_zooniverse_classifications.loc[:, 'subject_data'] = \
+        raw_zooniverse_classifications['subject_data'].apply(lambda s:
+                                                             s.replace('image_of_boxed_letter', 'Filename')
+                                                             .replace('image_of_boxed_word', 'Filename'))
+    raw_zooniverse_classifications.loc[:, 'subject_data'] = \
+        raw_zooniverse_classifications['subject_data'].apply(clean_zooniverse_csv_strings)
+    return raw_zooniverse_classifications
 
 
 def _process_annotations_into_columns(filtered_raw_zooniverse, parsed_zooniverse_classifications) -> None:
@@ -90,7 +94,8 @@ def _process_annotations_into_columns(filtered_raw_zooniverse, parsed_zooniverse
 
 
 def clean_raw_zooniverse_file(raw_zooniverse_classifications: pd.DataFrame) -> pd.DataFrame:
-    filtered_raw_zooniverse = _text_cleaning(raw_zooniverse_classifications)
+    raw_zooniverse_classifications = _filter_workflow_versions(raw_zooniverse_classifications)
+    filtered_raw_zooniverse = _clean_csv_strings(raw_zooniverse_classifications)
 
     parsed_zooniverse_classifications = filtered_raw_zooniverse['subject_data'].apply(_parse_zooniverse_subject_text)
     _process_annotations_into_columns(filtered_raw_zooniverse, parsed_zooniverse_classifications)
@@ -600,7 +605,7 @@ def crop_word_image(image_processor, row):
     x_max, y_max = list(map(max, *word_info['bounding_box']))
     x_min = max(0, x_min - 20)
     x_max = min(x_max + 10, image_processor.current_image_width)
-    word_image = image_processor.annotator.cropped_image(x_min, x_max, y_min, y_max)
+    word_image = image_processor.annotator.cropped_copy_of_image(x_min, x_max, y_min, y_max)
     return word_image
 
 
