@@ -78,6 +78,8 @@ def _clean_csv_strings(raw_zooniverse_classifications: pd.DataFrame) -> pd.DataF
 
 
 def _process_annotations_into_columns(filtered_raw_zooniverse, parsed_zooniverse_classifications) -> None:
+    """ This method needs to be tailored to your project's workflow(s), which will
+    impact the annotations column in your classifications file! """
     parsed_zooniverse_classifications['handwritten'] = filtered_raw_zooniverse['annotations'].apply(
         lambda a: a[0]['value'] == 'handwritten')
     parsed_zooniverse_classifications['human_transcription'] = filtered_raw_zooniverse['annotations'].apply(
