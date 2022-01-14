@@ -20,9 +20,9 @@ def main():
 
         list_of_words = gcv_processor.get_list_of_words(label_only=True)
         for word in list_of_words:
-            image_of_one_cropped_word = gcv_processor.annotator.cropped_to_box(word['bounding_box'])
-            save_image_to_file(image_of_one_cropped_word, image_folder_nn, 'word', image_barcode,
-                               word['b_idx'], word['p_idx'], word['w_idx'])
+            # image_of_one_cropped_word = gcv_processor.annotator.cropped_to_box(word['bounding_box'])
+            # save_image_to_file(image_of_one_cropped_word, image_folder_nn, 'word', image_barcode,
+            #                    word['b_idx'], word['p_idx'], word['w_idx'])
 
             gcv_processor.annotator.draw_polygon(word['bounding_box'], box_drawing_color)
             cropped_image = gcv_processor.annotator.cropped_to_box(gcv_processor.current_label_location)
@@ -86,14 +86,14 @@ if __name__ == '__main__':
     folder_or_image_file = sys.argv[1]
 
     image_folder_zooniverse = 'processed_images_zooniverse'
-    image_folder_nn = 'processed_images_nn'
+    # image_folder_nn = 'processed_images_nn'
     if len(sys.argv) == 3:
         image_folder_zooniverse = f'{image_folder_zooniverse}-{sys.argv[2]}'
-        image_folder_nn = f'{image_folder_nn}-{sys.argv[2]}'
+        # image_folder_nn = f'{image_folder_nn}-{sys.argv[2]}'
     if not os.path.exists(image_folder_zooniverse):
         os.mkdir(image_folder_zooniverse)
-    if not os.path.exists(image_folder_nn):
-        os.mkdir(image_folder_nn)
+    # if not os.path.exists(image_folder_nn):
+    #     os.mkdir(image_folder_nn)
 
     box_drawing_color = (240, 17, 17)  # blue
     main()
