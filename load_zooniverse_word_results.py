@@ -569,15 +569,6 @@ def expert_manual_review_standley(df: pd.DataFrame) -> None:
     # df.loc[df['id'] == '', 'status'] = 'Discard - Reviewed'
 
 
-def compare_gcv_to_human(zooniverse_classifications: pd.DataFrame) -> None:
-    subset = zooniverse_classifications.query("status == 'Complete' or 'status' == 'Expert Reviewed'")
-    zooniverse_classifications['matches'] = subset['gcv_identification'] == subset['human_transcription']
-    summary = zooniverse_classifications['matches'].value_counts()
-    ratio = summary.at[False] / (summary.at[False] + summary.at[True])
-    print('Zooniverse users corrected %i values and confirmed %i values (%.2f%%)' %
-          (summary.at[False], summary.at[True], ratio * 100))
-
-
 def save_images_to_folders(zooniverse_classifications: pd.DataFrame, word_image_folder: Path) -> None:
     filtered_zooniverse: pd.DataFrame = zooniverse_classifications \
         .query("handwritten == True and (status == 'Complete' or status == 'Expert Reviewed')")
