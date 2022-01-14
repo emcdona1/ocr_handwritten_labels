@@ -581,7 +581,7 @@ def save_images_to_folders(zooniverse_classifications: pd.DataFrame, word_image_
     word_image_metadata = word_image_metadata.rename(columns={'image_location': 'zooniverse_image_location'})
     image_processor = GCVProcessor()
     for idx, row in filtered_zooniverse.iterrows():
-        word_filename = f"{row['id']}-word.jpg"
+        word_filename = f"{row['id']}-word"
         image_processor.load_image_by_barcode(row['barcode'])
         full_size_image_location = image_processor.current_image_location
         word_image = crop_word_image(image_processor, row)
