@@ -110,42 +110,49 @@ def clean_raw_zooniverse_file(raw_zooniverse_classifications: pd.DataFrame) -> p
     return parsed_zooniverse_classifications
 
 
-def vote(df: pd.DataFrame, col_name: str) -> (Union[list, str], int, int):
+def vote(df: pd.DataFrame, col_name: str) -> (list, int, int):
+    """ Returns:
+    (1) A list (len >= 1) of the most voted item (can be multiple in the case of a tie).
+    (2) The number (int) of votes the previous item received.
+    (3) The number (int) of total votes for this word (i.e. the number of volunteers who classified it)."""
     total = df.shape[0]
     voted = multimode(list(df.loc[:, col_name]))
+    if type(voted) is not list:
+        voted = [voted]
     voted_count = df[df[col_name] == voted[0]].shape[0]
     if len(voted) == 1:  # single mode value
         voted = voted[0]
     return voted, voted_count, total
 
 
-def _handwritten_vote(new_row, subset):
+def _vote_on_handwriting(subset, consolidated_row):
     type_vote, _, _ = vote(subset, 'handwritten')
-    if type(type_vote) is list and len(type_vote) > 1:  # if it's evenly split, mark as handwritten
-        type_vote = 'handwritten'
-    new_row.at['handwritten'] = type_vote
+    if len(type_vote) > 1:  # if vote is evenly split, mark it as handwritten
+        type_vote = ['handwritten']
+    consolidated_row.at['handwritten'] = type_vote[0]
 
 
-def _transcription_vote(new_row, subset):
+def _vote_on_transcription_text(subset, consolidated_row):
     voted, count, total = vote(subset, 'human_transcription')
-    new_row.at['confidence'] = count / total
-    if type(voted) is list:
-        voted = [e.strip() for e in voted]
-        try:
-            voted.remove('')
-        except ValueError:
-            pass
-        voted = list(set(voted))  # todo: just flagging to make sure this doesn't cause any problems
+    consolidated_row.at['confidence'] = count / total
+    # These steps remove empty spaces
+    voted = [e.strip() for e in voted]
+    try:
+        voted.remove('')
+    except ValueError:
+        pass
+    voted = list(set(voted))  # todo: this isn't logically consistent -- if there are duplicates now, they should be the
+                              # todo: voted text now! Either [dup] or [dup1, dup2, ...]
     if len(voted) == 1:
         voted = voted[0]
-    new_row.at['human_transcription'] = voted
+    consolidated_row.at['human_transcription'] = voted
 
 
-def _unclear_vote(new_row, subset):
+def _vote_on_unclear_status(subset, consolidated_row):
     unclear_vote, _, _ = vote(subset, 'unclear')
-    if type(unclear_vote) is list and len(unclear_vote) > 1:  # if it's evenly split, mark as NOT unclear
-        unclear_vote = False
-    new_row.at['unclear'] = unclear_vote
+    if len(unclear_vote) > 1:  # if it's evenly split, mark as NOT unclear
+        unclear_vote = [False]
+    consolidated_row.at['unclear'] = unclear_vote[0]
 
 
 def _status_vote(row) -> str:
@@ -169,22 +176,20 @@ def consolidate_classification_rows(zooniverse_classifications: pd.DataFrame) ->
     too_few = zooniverse_classifications[zooniverse_classifications['seen_count'] < math.ceil(RETIREMENT_COUNT / 2)]
     zooniverse_classifications = zooniverse_classifications.drop(index=too_few.index)
 
-    duplicates = zooniverse_classifications[zooniverse_classifications['seen_count'] > 1]
-    unique_ids = set(duplicates['image_location'])
-    for id_name in unique_ids:
-        subset = zooniverse_classifications[zooniverse_classifications['image_location'] == id_name]
-        new_row = subset.loc[subset.index[0], :]
+    all_unique_barcodes = set(zooniverse_classifications[zooniverse_classifications['seen_count'] > 1]['barcode'])
+    for barcode in all_unique_barcodes:
+        subset = zooniverse_classifications[zooniverse_classifications['barcode'] == barcode]
+        consolidated_row = subset.loc[subset.index[0], :]
 
-        _handwritten_vote(new_row, subset)
-        if new_row.at['handwritten']:
-            _transcription_vote(new_row, subset)
-            _unclear_vote(new_row, subset)
-
+        _vote_on_handwriting(subset, consolidated_row)
+        if consolidated_row.at['handwritten']:
+            _vote_on_transcription_text(subset, consolidated_row)
+            _vote_on_unclear_status(subset, consolidated_row)
         else:
-            new_row.at['status'] = 'Discard - Typewritten'
+            consolidated_row.at['status'] = 'Discard - Typewritten'
 
         zooniverse_classifications = zooniverse_classifications.drop(index=subset.index)
-        zooniverse_classifications = zooniverse_classifications.append(new_row)
+        zooniverse_classifications = zooniverse_classifications.append(consolidated_row)
 
     zooniverse_classifications['status'] = zooniverse_classifications.apply(_status_vote, axis=1)
     typed = zooniverse_classifications.query('handwritten == False')
