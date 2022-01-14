@@ -570,6 +570,11 @@ def expert_manual_review_standley(df: pd.DataFrame) -> None:
 
 
 def save_images_to_folders(zooniverse_classifications: pd.DataFrame, word_image_folder: Path) -> None:
+    collectors = (zooniverse_classifications['collector'])
+    for collector in collectors:
+        collector_image_path = Path(word_image_folder, collector)
+        if not os.path.exists(collector_image_path):
+            os.makedirs(collector_image_path)
     filtered_zooniverse: pd.DataFrame = zooniverse_classifications \
         .query("handwritten == True and (status == 'Complete' or status == 'Expert Reviewed')")
     word_image_metadata = filtered_zooniverse.copy()
@@ -581,7 +586,8 @@ def save_images_to_folders(zooniverse_classifications: pd.DataFrame, word_image_
         full_size_image_location = image_processor.current_image_location
         word_image = crop_word_image(image_processor, row)
 
-        save_location = data_loader.save_cv2_image(word_image_folder, word_filename, word_image, timestamp=False)
+        save_location = data_loader.save_cv2_image(Path(word_image_folder, row['collector']),
+                                                   word_filename, word_image, timestamp=False)
         word_image_metadata.at[idx, 'full_size_image_location'] = full_size_image_location
         word_image_metadata.at[idx, 'word_image_location'] = save_location
         zooniverse_classifications.at[idx, 'word_image_location'] = save_location
