@@ -172,9 +172,13 @@ def _status_vote(row) -> str:
     return status
 
 
-def consolidate_classification_rows(zooniverse_classifications: pd.DataFrame) -> pd.DataFrame:
+def _drop_subjects_without_enough_views(zooniverse_classifications: pd.DataFrame) -> pd.DataFrame:
     too_few = zooniverse_classifications[zooniverse_classifications['seen_count'] < math.ceil(RETIREMENT_COUNT / 2)]
-    zooniverse_classifications = zooniverse_classifications.drop(index=too_few.index)
+    return zooniverse_classifications.drop(index=too_few.index)
+
+
+def consolidate_classification_rows(zooniverse_classifications: pd.DataFrame) -> pd.DataFrame:
+    zooniverse_classifications = _drop_subjects_without_enough_views(zooniverse_classifications)
 
     all_unique_barcodes = set(zooniverse_classifications[zooniverse_classifications['seen_count'] > 1]['barcode'])
     for barcode in all_unique_barcodes:
