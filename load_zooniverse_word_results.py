@@ -184,6 +184,8 @@ def consolidate_classification_rows(zooniverse_classifications: pd.DataFrame) ->
     for barcode in all_unique_barcodes:
         subset = zooniverse_classifications[zooniverse_classifications['barcode'] == barcode]
         consolidated_row = subset.loc[subset.index[0], :]
+        consolidated_row.at['gcv_identification'] = max([item for item in subset.loc[:, 'gcv_identification'] if item],
+                                                        key=len)
 
         _vote_on_handwriting(subset, consolidated_row)
         if consolidated_row.at['handwritten']:
