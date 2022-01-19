@@ -157,16 +157,17 @@ def _vote_on_unclear_status(subset, consolidated_row):
 
 def _status_vote(row) -> str:
     status = 'Complete'
-    if row.at['confidence'] <= 0.5:  # todo: doesn't account for "complete" if you're downloading a incomplete dataset
+    if row.at['confidence'] <= 0.5:
+        if row.at['unclear']:
+            status = 'Discard - Unclear & Low Confidence'
+        else:
+            status = 'Expert Required'
+    elif type(row.at['human_transcription']) is list:  # Tie for transcription
         status = 'Expert Required'
-    elif type(row.at['human_transcription']) is str and \
-            len(row.at['human_transcription']) == 1 and \
-            row.at['human_transcription'] in string.punctuation:
-        status = 'Discard - Short'
+    elif len(row.at['human_transcription']) == 1 and row.at['human_transcription'] in string.punctuation:
+        status = 'Discard - Short & Only Punctuation'
     elif row.at['unclear']:
         status = 'Discard - Unclear'
-    elif type(row.at['human_transcription']) is list:
-        status = 'Expert Required'
     elif row.at['status'] == 'Discard - Typewritten':
         status = row.at['status']
     return status
