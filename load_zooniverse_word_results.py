@@ -226,9 +226,9 @@ def expert_manual_reviews(df: pd.DataFrame) -> None:
         id = row['id']
         if id in df['id'].values:
             df.loc[df['id'] == id, row['edit 1']] = row['edit 1 value']
-            if row['edit 2']:
+            if pd.notna(row['edit 2']):
                 df.loc[df['id'] == id, row['edit 2']] = row['edit 2 value']
-                if row['edit 3']:
+                if pd.notna(row['edit 3']):
                     df.loc[df['id'] == id, row['edit 3']] = row['edit 3 value']
     # df.loc[df['id'] == 'C0604088F-b14p1w1', ('human_transcription', 'status')] = (
     #     'T53N', 'Expert Reviewed')  # cut off on end
