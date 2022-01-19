@@ -179,9 +179,9 @@ def _drop_subjects_without_enough_views(zooniverse_classifications: pd.DataFrame
 def consolidate_classification_rows(zooniverse_classifications: pd.DataFrame) -> pd.DataFrame:
     zooniverse_classifications = _drop_subjects_without_enough_views(zooniverse_classifications)
 
-    all_unique_barcodes = set(zooniverse_classifications[zooniverse_classifications['seen_count'] > 1]['barcode'])
-    for barcode in all_unique_barcodes:
-        subset = zooniverse_classifications[zooniverse_classifications['barcode'] == barcode]
+    all_unique_ids = set(zooniverse_classifications[zooniverse_classifications['seen_count'] > 1]['id'])
+    for image_id in all_unique_ids:
+        subset = zooniverse_classifications[zooniverse_classifications['id'] == image_id]
         consolidated_row = subset.loc[subset.index[0], :]
         consolidated_row.at['gcv_identification'] = max([item for item in subset.loc[:, 'gcv_identification'] if item],
                                                         key=len)
