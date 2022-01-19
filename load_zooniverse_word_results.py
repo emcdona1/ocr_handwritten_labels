@@ -204,11 +204,10 @@ def consolidate_classification_rows(zooniverse_classifications: pd.DataFrame) ->
 
 
 def update_full_image_paths(folders: List[Path], zooniverse_classifications: pd.DataFrame) -> None:
-    collector_barcodes = data_loader.load_pickle(Path('file_resources\\barcode_dict.pickle'))
+    collector_name = data_loader.load_pickle(Path('file_resources\\collectors_by_barcode.pickle'))
     for idx, row in zooniverse_classifications.iterrows():
         barcode = row['barcode']
-        collector = collector_barcodes[barcode]
-        zooniverse_classifications.at[idx, 'collector'] = collector
+        zooniverse_classifications.at[idx, 'collector'] = collector_name[barcode]
         image_name = row['image_location']
         found_image_path = None
         for one_folder in folders:
