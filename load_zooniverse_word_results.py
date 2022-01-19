@@ -120,15 +120,13 @@ def vote(df: pd.DataFrame, col_name: str) -> (list, int, int):
     if type(voted) is not list:
         voted = [voted]
     voted_count = df[df[col_name] == voted[0]].shape[0]
-    if len(voted) == 1:  # single mode value
-        voted = voted[0]
     return voted, voted_count, total
 
 
 def _vote_on_handwriting(subset, consolidated_row):
     type_vote, _, _ = vote(subset, 'handwritten')
     if len(type_vote) > 1:  # if vote is evenly split, mark it as handwritten
-        type_vote = ['handwritten']
+        type_vote = [True]
     consolidated_row.at['handwritten'] = type_vote[0]
 
 
