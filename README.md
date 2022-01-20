@@ -275,8 +275,9 @@ ___
 ## Credits
 This project is being developed for the
 [Grainger Bioinformatics Center](https://sites.google.com/fieldmuseum.org/bioinformatics/home) at
-the [Field Museum](https://www.fieldmuseum.org/) by Beth McDonald ([@emcdona1](https://github.com/emcdona1)),
-under the guidance of Dr. Rick Ree and Dr. Matt von Konrat.
+the [Field Museum](https://www.fieldmuseum.org/) by Beth McDonald (Machine Learning Engineer, 
+[@emcdona1](https://github.com/emcdona1)) and Sean Cullen (Botany Collections Intern, 
+[@SeanCullen11](https://github.com/SeanCullen11)), under the guidance of Dr. Rick Ree and Dr. Matt von Konrat.
 
 Original codebase for a GUI system with a local database developed by 
 Keshab Panthi ([@kpanthi](https://github.com/kpanthi)), Northeastern Illinois University.
