@@ -9,6 +9,7 @@ from utilities import data_loader
 from imageprocessor import GCVProcessor
 import math
 from pathlib import Path
+from utilities.timer import Timer
 
 WORKFLOW_NAME = 'Transcribe Words'  # from Zooniverse or the classifications CSV file - case-sensitive!
 MINIMUM_WORKFLOW_VERSION = '21.31'  # from Zooniverse or the classifications CSV file -
@@ -21,7 +22,9 @@ def main(zooniverse_classifications_file: Path, folders_of_source_images: List[P
     zooniverse_classifications = pd.read_csv(zooniverse_classifications_file)
     zooniverse_classifications = clean_raw_zooniverse_file(zooniverse_classifications)
     print('Consolidate file.')
+    t = Timer('consolidation')
     zooniverse_classifications = consolidate_classification_rows(zooniverse_classifications)
+    t.stop()
     print('Update file paths.')
     update_full_image_paths(folders_of_source_images, zooniverse_classifications)
     print('Save files.')
@@ -29,8 +32,10 @@ def main(zooniverse_classifications_file: Path, folders_of_source_images: List[P
                                                           zooniverse_classifications)
     print('Saved parsed results file to %s.' % csv_save_location)
     if image_save_folder:
+        t.start('word images')
         print(f'Saving word images to {image_save_folder}')
         save_images_to_folders(zooniverse_classifications, image_save_folder)
+        t.stop()
 
 
 def _parse_zooniverse_subject_text(subject_text):
