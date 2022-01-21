@@ -19,10 +19,14 @@ RETIREMENT_COUNT = 5  # from Zooniverse within the workflow
 
 def main(zooniverse_classifications_file: Path, folders_of_source_images: List[Path], image_save_folder=None):
     print('Load & clean classification file.')
+    t = Timer('load')
     zooniverse_classifications = pd.read_csv(zooniverse_classifications_file)
+    t.stop()
+    t.start('clean')
     zooniverse_classifications = clean_raw_zooniverse_file(zooniverse_classifications)
+    t.stop()
     print('Consolidate file.')
-    t = Timer('consolidation')
+    t.start('consolidation')
     zooniverse_classifications = consolidate_classification_rows(zooniverse_classifications)
     t.stop()
     print('Update file paths.')
@@ -192,8 +196,10 @@ def _drop_subjects_without_enough_views(zooniverse_classifications: pd.DataFrame
 
 
 def consolidate_classification_rows(zooniverse_classifications: pd.DataFrame) -> pd.DataFrame:
+    c = Timer('view count')
     zooniverse_classifications = _drop_subjects_without_enough_views(zooniverse_classifications)
-
+    c.stop()
+    c.start('voting')
     all_unique_ids = set(zooniverse_classifications[zooniverse_classifications['seen_count'] > 1]['id'])
     for image_id in all_unique_ids:
         subset = zooniverse_classifications[zooniverse_classifications['id'] == image_id]
@@ -211,10 +217,17 @@ def consolidate_classification_rows(zooniverse_classifications: pd.DataFrame) ->
         zooniverse_classifications = zooniverse_classifications.drop(index=subset.index)
         zooniverse_classifications = zooniverse_classifications.append(consolidated_row)
     print(f'Consolidated: {zooniverse_classifications.shape}\n')
+    c.stop()
     print('Adding manual reviews.')
+    c.start('manual')
     expert_manual_reviews(zooniverse_classifications)
+    c.stop()
+    print('Save temporary file, before status.')
+    data_loader.save_dataframe_as_csv('file_resources', 'zooniverse_parsed_PARTIAL', zooniverse_classifications)
     zooniverse_classifications['status'] = zooniverse_classifications.apply(_status_vote,axis=1)
+    c.start('typed')
     typed = zooniverse_classifications.query('handwritten == False')
+    c.stop()
     zooniverse_classifications = zooniverse_classifications.drop(index=typed.index)
     return zooniverse_classifications.sort_values(by=['block', 'paragraph', 'word'], ascending=True)
 
