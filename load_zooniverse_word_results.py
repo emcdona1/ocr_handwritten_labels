@@ -136,17 +136,26 @@ def _vote_on_handwriting(subset, consolidated_row):
 def _vote_on_transcription_text(subset, consolidated_row):
     voted, count, total = vote(subset, 'human_transcription')
     consolidated_row.at['confidence'] = count / total
-    # These steps remove empty spaces
-    voted = [e.strip() for e in voted]
+    voted = [e.strip().split('\n')[0] for e in voted]  # remove leading/ending spaces, remove line breaks
     try:
+        voted.remove('')
+        voted.remove('')
         voted.remove('')
     except ValueError:
         pass
-    voted = list(set(voted))  # todo: this isn't logically consistent -- if there are duplicates now, they should be the
-                              # todo: voted text now! Either [dup] or [dup1, dup2, ...]
+    # if there are any duplicates in the list, they become the new list
+    if len(voted) > 1:
+        voted = _filter_duplicates_after_voting(voted)
     if len(voted) == 1:
         voted = voted[0]
     consolidated_row.at['human_transcription'] = voted
+
+
+def _filter_duplicates_after_voting(voted: list) -> list:
+    counts = {a: voted.count(a) for a in voted}
+    max_count = max(counts.values())
+    voted = [a for a in voted if voted.count(a) == max_count]
+    return list(set(voted))
 
 
 def _vote_on_unclear_status(subset, consolidated_row):
