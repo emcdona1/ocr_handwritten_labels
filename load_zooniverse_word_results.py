@@ -166,21 +166,24 @@ def _vote_on_unclear_status(subset, consolidated_row):
 
 
 def _status_vote(row) -> str:
-    status = 'Complete'
-    if row.at['confidence'] <= 0.5:
-        if row.at['unclear']:
-            status = 'Discard - Unclear & Low Confidence'
-        else:
+    if row.at['status'] == 'In Progress':
+        status = 'Complete'
+        if float(row.at['confidence']) <= 0.5:
+            if row.at['unclear']:
+                status = 'Discard - Unclear & Low Confidence'
+            else:
+                status = 'Expert Required'
+        elif type(row.at['human_transcription']) is list:  # Tie for transcription
             status = 'Expert Required'
-    elif type(row.at['human_transcription']) is list:  # Tie for transcription
-        status = 'Expert Required'
-    elif len(row.at['human_transcription']) == 1 and row.at['human_transcription'] in string.punctuation:
-        status = 'Discard - Short & Only Punctuation'
-    elif row.at['unclear']:
-        status = 'Discard - Unclear'
-    elif row.at['status'] == 'Discard - Typewritten':
-        status = row.at['status']
-    return status
+        elif len(row.at['human_transcription']) == 1 and row.at['human_transcription'] in string.punctuation:
+            status = 'Discard - Short & Only Punctuation'
+        elif row.at['unclear']:
+            status = 'Discard - Unclear'
+        elif row.at['status'] == 'Discard - Typewritten':
+            status = row.at['status']
+        return status
+    else:
+        return row.at['status']
 
 
 def _drop_subjects_without_enough_views(zooniverse_classifications: pd.DataFrame) -> pd.DataFrame:
