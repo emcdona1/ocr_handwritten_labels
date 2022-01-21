@@ -6,13 +6,13 @@ class Timer:
         """ Creates and starts a timer.  Optional parameter gives the timer an identifying name. """
         self.start_time = None
         self.active = False
-        self.start()
         self.name: str = name
+        self.start()
         self.duration: float = 0
 
     def start(self, name=None) -> None:
         """ Starts a timer.  Optional parameter to update the timer's name. """
-        if self.start_time:
+        if self.active:
             print(f'Timer {self.name} already started.')
         else:
             self.start_time = time.time()
