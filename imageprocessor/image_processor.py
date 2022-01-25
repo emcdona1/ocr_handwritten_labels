@@ -14,6 +14,7 @@ import math
 import numpy as np
 
 
+
 # from google.cloud.vision_v1 import types
 # from google.cloud import vision_v1
 # from google.protobuf.json_format import MessageToJson, MessageToDict

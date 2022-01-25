@@ -6,6 +6,7 @@ from imageprocessor import ImageProcessor, GCVProcessor
 import pandas as pd
 
 
+
 def main(occurrence_file: str, folder_or_image_path: str):
     list_of_images = load_file_list_from_filesystem(folder_or_image_path)
     processors = GCVProcessor()
