@@ -376,6 +376,7 @@ class GCVProcessor(ImageProcessor):
         print(line_text)
 
 
+
     def get_list_of_symbols(self, label_only=False) -> list:
         symbols = [block for block in self.ocr_blocks if block['type'] == 'SYMBOL']
         if label_only:
