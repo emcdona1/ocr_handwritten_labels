@@ -29,6 +29,7 @@ def main(occurrence_file: str, folder_or_image_path: str):
     print("saving to " + 'detect_language_data' + time + '.csv' )
 
 
+
 if __name__ == '__main__':
     assert len(sys.argv) == 3, 'Must use 2-3 arguments: 1) either an image file or a directory of images, ' + \
                                     '2) the location of the occurrence_with_image_urls file, '
