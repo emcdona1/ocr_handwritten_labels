@@ -35,4 +35,3 @@ if __name__ == '__main__':
     folder_or_image_file = sys.argv[1]
     occur = sys.argv[2]
     main(occur, folder_or_image_file)
-
