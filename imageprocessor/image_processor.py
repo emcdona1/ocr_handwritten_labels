@@ -14,7 +14,6 @@ import math
 import numpy as np
 
 
-
 # from google.cloud.vision_v1 import types
 # from google.cloud import vision_v1
 # from google.protobuf.json_format import MessageToJson, MessageToDict
@@ -309,10 +308,8 @@ class GCVProcessor(ImageProcessor):
         response = self.current_ocr_response
         page = response.full_text_annotation
 
-        page_string = str(response.full_text_annotation)
+        page_string = str(page)
         page_string_split = page_string.split('\n')
-        # every 4th line if it contains 'language code'
-        # every 5th line if it contains 'confidence'
 
         language_code = 'language_code: '
         confidence = 'confidence: '
@@ -351,12 +348,6 @@ class GCVProcessor(ImageProcessor):
             con_num = float(items)
             just_confidence_values_list.append(con_num)
 
-        # take out low confidence values
-        # for i in range(len(just_confidence_values_list)):
-        #     if just_confidence_values_list[i] < .1:
-        #         just_confidence_values_list.remove(just_confidence_values_list[i])
-        #         just_language_code_values_list.remove(just_language_code_values_list[i])
-
         top_languages = []
         top_confidence = []
         if len(just_language_code_values_list) >= 3:
@@ -384,70 +375,6 @@ class GCVProcessor(ImageProcessor):
         print(word_text)
         print(line_text)
 
-        # return locale, top_languages, top_confidence
-
-    # def get_language_data(self):
-    #     response = self.current_ocr_response
-    #     page = response.full_text_annotation
-    #
-    #     page_string = str(page)
-    #     page_string_split = page_string.split('\n')
-    #
-    #     language_code = 'language_code: '
-    #     confidence = 'confidence: '
-    #     language_code_list = []
-    #     confidence_list = []
-    #     stop = 'blocks'
-    #
-    #     for line in page_string_split:
-    #         if stop in line:
-    #             break
-    #         else:
-    #             if language_code in line:
-    #                 language_code_list.append(line)
-    #             else:
-    #                 pass
-    #             if confidence in line:
-    #                 confidence_list.append(line)
-    #             else:
-    #                 pass
-    #
-    #     just_language_code_values_list = []
-    #     for items in language_code_list:
-    #         items = items.replace('language_code: "', "")
-    #         items = items.replace(' ', "")
-    #         items = items.replace('"', "")
-    #         items = items.replace(",", "")
-    #         items = items.replace("'", "")
-    #         just_language_code_values_list.append(items)
-    #
-    #     just_confidence_values_list = []
-    #     for items in confidence_list:
-    #         items = items.replace('confidence: ', "")
-    #         items = items.replace(" ", "")
-    #         items = items.replace(",", "")
-    #         items = items.replace("'", "")
-    #         con_num = float(items)
-    #         just_confidence_values_list.append(con_num)
-    #
-    #     top_languages = []
-    #     top_confidence = []
-    #     for i in range(0, 3):
-    #         top_languages.append(just_language_code_values_list[i])
-    #         top_confidence.append(just_confidence_values_list[i])
-    #
-    #     contains_locale = str(response)
-    #     contains_locale_split = contains_locale.split('\n')
-    #     locale_string = str(contains_locale_split[1])
-    #     locale = locale_string.replace('locale: ', '')
-    #     locale = locale.replace('"', '')
-    #     locale = locale.replace(' ', '')
-    #
-    #     print('Document Level Language: ', locale)
-    #     print('Detected Languages: ', top_languages)
-    #     print('Language Confidence: ', top_confidence)
-    #
-    #     return locale, top_languages, top_confidence
 
     def get_list_of_symbols(self, label_only=False) -> list:
         symbols = [block for block in self.ocr_blocks if block['type'] == 'SYMBOL']
