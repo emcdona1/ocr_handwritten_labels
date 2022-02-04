@@ -25,7 +25,7 @@ openpyxl==3.0.5
 numpy==1.19.5
 bs4==0.0.1
 beautifulsoup4==4.9.3
-python-levenshtein-wheels=0.13.2
+python-levenshtein-wheels==0.13.2
 boto3==1.17.33
 pandas==1.2.1
 matplotlib==3.3.4
