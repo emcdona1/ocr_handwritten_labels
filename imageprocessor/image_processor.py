@@ -1,3 +1,4 @@
+import json
 from configparser import ConfigParser
 import io
 import os
@@ -11,6 +12,11 @@ from imageprocessor.image_annotator import ImageAnnotator
 from typing import List, Tuple, Union
 import math
 import numpy as np
+
+
+# from google.cloud.vision_v1 import types
+# from google.cloud import vision_v1
+# from google.protobuf.json_format import MessageToJson, MessageToDict
 
 
 class ImageProcessor(ABC):
@@ -32,6 +38,9 @@ class ImageProcessor(ABC):
         self.annotator = ImageAnnotator(self.name)
         if starting_image_path:
             self.load_image_from_file(starting_image_path)
+        self.document_level_language = None
+        self.top_languages = None
+        self.top_confidence = None
 
     def __getstate__(self):
         """ Return a copy of the ImageProcessor, without the client instance attribute, for pickling."""
@@ -131,6 +140,9 @@ class ImageProcessor(ABC):
         self.current_label_location = None
         self.current_image_used_cropped_image_ocr = False
         self.annotator.clear_current_image()
+        self.document_level_language = None
+        self.top_languages = None
+        self.top_confidence = None
 
     @abstractmethod
     def _initialize_name_and_save_directory(self) -> str:
@@ -292,6 +304,78 @@ class GCVProcessor(ImageProcessor):
         block_order = {'LINE': 1, 'WORD': 2, 'SYMBOL': 3}
         self.ocr_blocks = sorted(self.ocr_blocks, key=lambda b: block_order[b['type']])
         self.pickle_current_image_state('parsed GCV ocr')
+
+        response = self.current_ocr_response
+        page = response.full_text_annotation
+
+        page_string = str(page)
+        page_string_split = page_string.split('\n')
+
+        language_code = 'language_code: '
+        confidence = 'confidence: '
+        language_code_list = []
+        confidence_list = []
+        stop = 'blocks'
+
+        for line in page_string_split:
+            if stop in line:
+                break
+            else:
+                if language_code in line:
+                    language_code_list.append(line)
+                else:
+                    pass
+                if confidence in line:
+                    confidence_list.append(line)
+                else:
+                    pass
+
+        just_language_code_values_list = []
+        for items in language_code_list:
+            items = items.replace('language_code: "', "")
+            items = items.replace(' ', "")
+            items = items.replace('"', "")
+            items = items.replace(",", "")
+            items = items.replace("'", "")
+            just_language_code_values_list.append(items)
+
+        just_confidence_values_list = []
+        for items in confidence_list:
+            items = items.replace('confidence: ', "")
+            items = items.replace(" ", "")
+            items = items.replace(",", "")
+            items = items.replace("'", "")
+            con_num = float(items)
+            just_confidence_values_list.append(con_num)
+
+        top_languages = []
+        top_confidence = []
+        if len(just_language_code_values_list) >= 3:
+            for i in range(0, 3):
+                top_languages.append(just_language_code_values_list[i])
+                top_confidence.append(just_confidence_values_list[i])
+        else:
+            top_languages = just_language_code_values_list.copy()
+            top_confidence = just_confidence_values_list.copy()
+
+        contains_locale = str(response)
+        contains_locale_split = contains_locale.split('\n')
+        locale_string = str(contains_locale_split[1])
+        locale = locale_string.replace('locale: ', '')
+        locale = locale.replace('"', '')
+        locale = locale.replace(' ', '')
+
+        self.document_level_language = locale
+        self.top_languages = top_languages
+        self.top_confidence = top_confidence
+
+        # print('Document Level Language: ', locale)
+        # print('Detected Languages: ', top_languages)
+        # print('Language Confidence: ', top_confidence)
+        print(word_text)
+        print(line_text)
+
+
 
     def get_list_of_symbols(self, label_only=False) -> list:
         symbols = [block for block in self.ocr_blocks if block['type'] == 'SYMBOL']
