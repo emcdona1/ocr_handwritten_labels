@@ -54,7 +54,7 @@ ___
        downloaded image set.
 3. **Gather language data**.
     1. Run the script `utilities\detect_language.py`, pointing to (1) the desired directory for the 
-       downloaded image set, and (2) the "occurrence_file_with_images.csv" file. This generates a timestamped CSV file called "detect_language_data.csv". This file contains the document level language for each sample as well as any detected languages and the confidence of detection 
+       downloaded image set, and (2) the "occurrence_file_with_images.csv" file. This generates a timestamped CSV file called "detect_language_data.csv". This file contains the document level language for each sample as well as any detected languages and the confidence of detection.
 4. **Retrieve and save OCR data for your image set**.
     1. Run the script `gather_ocr_data_from_cloud_platforms.py` pointing to the folder of 
        images downloaded in the previous step, and the "occurrence_with_image_urls" file.
