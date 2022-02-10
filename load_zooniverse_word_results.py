@@ -9,6 +9,7 @@ from utilities import data_loader
 from imageprocessor import GCVProcessor
 import math
 from pathlib import Path
+from utilities.timer import Timer
 
 WORKFLOW_NAME = 'Transcribe Words'  # from Zooniverse or the classifications CSV file - case-sensitive!
 MINIMUM_WORKFLOW_VERSION = '21.31'  # from Zooniverse or the classifications CSV file -
@@ -18,21 +19,27 @@ RETIREMENT_COUNT = 5  # from Zooniverse within the workflow
 
 def main(zooniverse_classifications_file: Path, folders_of_source_images: List[Path], image_save_folder=None):
     print('Load & clean classification file.')
+    t = Timer('load')
     zooniverse_classifications = pd.read_csv(zooniverse_classifications_file)
+    t.stop()
+    t.start('clean')
     zooniverse_classifications = clean_raw_zooniverse_file(zooniverse_classifications)
+    t.stop()
     print('Consolidate file.')
+    t.start('consolidation')
     zooniverse_classifications = consolidate_classification_rows(zooniverse_classifications)
+    t.stop()
     print('Update file paths.')
     update_full_image_paths(folders_of_source_images, zooniverse_classifications)
-    print('Update with manual edits & save.')
-    expert_manual_review_steyermark(zooniverse_classifications)
-    expert_manual_review_standley(zooniverse_classifications)
+    print('Save files.')
     csv_save_location = data_loader.save_dataframe_as_csv('file_resources', 'zooniverse_parsed',
                                                           zooniverse_classifications)
     print('Saved parsed results file to %s.' % csv_save_location)
     if image_save_folder:
+        t.start('word images')
         print(f'Saving word images to {image_save_folder}')
         save_images_to_folders(zooniverse_classifications, image_save_folder)
+        t.stop()
 
 
 def _parse_zooniverse_subject_text(subject_text):
@@ -78,6 +85,8 @@ def _clean_csv_strings(raw_zooniverse_classifications: pd.DataFrame) -> pd.DataF
 
 
 def _process_annotations_into_columns(filtered_raw_zooniverse, parsed_zooniverse_classifications) -> None:
+    """ This method needs to be tailored to your project's workflow(s), which will
+    impact the annotations column in your classifications file! """
     parsed_zooniverse_classifications['handwritten'] = filtered_raw_zooniverse['annotations'].apply(
         lambda a: a[0]['value'] == 'handwritten')
     parsed_zooniverse_classifications['human_transcription'] = filtered_raw_zooniverse['annotations'].apply(
@@ -108,465 +117,161 @@ def clean_raw_zooniverse_file(raw_zooniverse_classifications: pd.DataFrame) -> p
     return parsed_zooniverse_classifications
 
 
-def vote(df: pd.DataFrame, col_name: str) -> (Union[list, str], int, int):
+def vote(df: pd.DataFrame, col_name: str) -> (list, int, int):
+    """ Returns:
+    (1) A list (len >= 1) of the most voted item (can be multiple in the case of a tie).
+    (2) The number (int) of votes the previous item received.
+    (3) The number (int) of total votes for this word (i.e. the number of volunteers who classified it)."""
     total = df.shape[0]
     voted = multimode(list(df.loc[:, col_name]))
+    if type(voted) is not list:
+        voted = [voted]
     voted_count = df[df[col_name] == voted[0]].shape[0]
-    if len(voted) == 1:  # single mode value
-        voted = voted[0]
     return voted, voted_count, total
 
 
-def _handwritten_vote(new_row, subset):
+def _vote_on_handwriting(subset, consolidated_row):
     type_vote, _, _ = vote(subset, 'handwritten')
-    if type(type_vote) is list and len(type_vote) > 1:  # if it's evenly split, mark as handwritten
-        type_vote = 'handwritten'
-    new_row.at['handwritten'] = type_vote
+    if len(type_vote) > 1:  # if vote is evenly split, mark it as handwritten
+        type_vote = [True]
+    consolidated_row.at['handwritten'] = type_vote[0]
 
 
-def _transcription_vote(new_row, subset):
+def _vote_on_transcription_text(subset, consolidated_row):
     voted, count, total = vote(subset, 'human_transcription')
-    new_row.at['confidence'] = count / total
-    if type(voted) is list:
-        voted = [e.strip() for e in voted]
-        try:
-            voted.remove('')
-        except ValueError:
-            pass
-        voted = list(set(voted))  # todo: just flagging to make sure this doesn't cause any problems
+    consolidated_row.at['confidence'] = count / total
+    voted = [e.strip().split('\n')[0] for e in voted]  # remove leading/ending spaces, remove line breaks
+    try:
+        voted.remove('')
+        voted.remove('')
+        voted.remove('')
+    except ValueError:
+        pass
+    # if there are any duplicates in the list, they become the new list
+    if len(voted) > 1:
+        voted = _filter_duplicates_after_voting(voted)
     if len(voted) == 1:
         voted = voted[0]
-    new_row.at['human_transcription'] = voted
+    consolidated_row.at['human_transcription'] = voted
 
 
-def _unclear_vote(new_row, subset):
+def _filter_duplicates_after_voting(voted: list) -> list:
+    counts = {a: voted.count(a) for a in voted}
+    max_count = max(counts.values())
+    voted = [a for a in voted if voted.count(a) == max_count]
+    return list(set(voted))
+
+
+def _vote_on_unclear_status(subset, consolidated_row):
     unclear_vote, _, _ = vote(subset, 'unclear')
-    if type(unclear_vote) is list and len(unclear_vote) > 1:  # if it's evenly split, mark as NOT unclear
-        unclear_vote = False
-    new_row.at['unclear'] = unclear_vote
+    if len(unclear_vote) > 1:  # if it's evenly split, mark as NOT unclear
+        unclear_vote = [False]
+    consolidated_row.at['unclear'] = unclear_vote[0]
 
 
 def _status_vote(row) -> str:
-    status = 'Complete'
-    if row.at['confidence'] <= 0.5:  # todo: doesn't account for "complete" if you're downloading a incomplete dataset
-        status = 'Expert Required'
-    elif type(row.at['human_transcription']) is str and \
-            len(row.at['human_transcription']) == 1 and \
-            row.at['human_transcription'] in string.punctuation:
-        status = 'Discard - Short'
-    elif row.at['unclear']:
-        status = 'Discard - Unclear'
-    elif type(row.at['human_transcription']) is list:
-        status = 'Expert Required'
-    elif row.at['status'] == 'Discard - Typewritten':
-        status = row.at['status']
-    return status
+    if row.at['status'] == 'In Progress':
+        status = 'Complete'
+        if float(row.at['confidence']) <= 0.5:
+            if row.at['unclear']:
+                status = 'Discard - Unclear & Low Confidence'
+            else:
+                status = 'Expert Required'
+        elif type(row.at['human_transcription']) is list:  # Tie for transcription
+            status = 'Expert Required'
+        elif len(row.at['human_transcription']) == 1 and row.at['human_transcription'] in string.punctuation:
+            status = 'Discard - Short & Only Punctuation'
+        elif row.at['unclear']:
+            status = 'Discard - Unclear'
+        elif row.at['status'] == 'Discard - Typewritten':
+            status = row.at['status']
+        return status
+    else:
+        return row.at['status']
+
+
+def _drop_subjects_without_enough_views(zooniverse_classifications: pd.DataFrame) -> pd.DataFrame:
+    too_few = zooniverse_classifications[zooniverse_classifications['seen_count'] < math.ceil(RETIREMENT_COUNT / 2)]
+    return zooniverse_classifications.drop(index=too_few.index)
 
 
 def consolidate_classification_rows(zooniverse_classifications: pd.DataFrame) -> pd.DataFrame:
-    too_few = zooniverse_classifications[zooniverse_classifications['seen_count'] < math.ceil(RETIREMENT_COUNT / 2)]
-    zooniverse_classifications = zooniverse_classifications.drop(index=too_few.index)
+    c = Timer('view count')
+    zooniverse_classifications = _drop_subjects_without_enough_views(zooniverse_classifications)
+    c.stop()
+    c.start('voting')
+    all_unique_ids = set(zooniverse_classifications[zooniverse_classifications['seen_count'] > 1]['id'])
+    for image_id in all_unique_ids:
+        subset = zooniverse_classifications[zooniverse_classifications['id'] == image_id]
+        consolidated_row = subset.loc[subset.index[0], :]
+        consolidated_row.at['gcv_identification'] = max([item for item in subset.loc[:, 'gcv_identification'] if item],
+                                                        key=len)
 
-    duplicates = zooniverse_classifications[zooniverse_classifications['seen_count'] > 1]
-    unique_ids = set(duplicates['image_location'])
-    for id_name in unique_ids:
-        subset = zooniverse_classifications[zooniverse_classifications['image_location'] == id_name]
-        new_row = subset.loc[subset.index[0], :]
-
-        _handwritten_vote(new_row, subset)
-        if new_row.at['handwritten']:
-            _transcription_vote(new_row, subset)
-            _unclear_vote(new_row, subset)
-
+        _vote_on_handwriting(subset, consolidated_row)
+        if consolidated_row.at['handwritten']:
+            _vote_on_transcription_text(subset, consolidated_row)
+            _vote_on_unclear_status(subset, consolidated_row)
         else:
-            new_row.at['status'] = 'Discard - Typewritten'
+            consolidated_row.at['status'] = 'Discard - Typewritten'
 
         zooniverse_classifications = zooniverse_classifications.drop(index=subset.index)
-        zooniverse_classifications = zooniverse_classifications.append(new_row)
-
-    zooniverse_classifications['status'] = zooniverse_classifications.apply(_status_vote, axis=1)
+        zooniverse_classifications = zooniverse_classifications.append(consolidated_row)
+    print(f'Consolidated: {zooniverse_classifications.shape}\n')
+    c.stop()
+    print('Adding manual reviews.')
+    c.start('manual')
+    expert_manual_reviews(zooniverse_classifications)
+    c.stop()
+    print('Save temporary file, before status.')
+    data_loader.save_dataframe_as_csv('file_resources', 'zooniverse_parsed_PARTIAL', zooniverse_classifications)
+    zooniverse_classifications['status'] = zooniverse_classifications.apply(_status_vote,axis=1)
+    c.start('typed')
     typed = zooniverse_classifications.query('handwritten == False')
+    c.stop()
     zooniverse_classifications = zooniverse_classifications.drop(index=typed.index)
     return zooniverse_classifications.sort_values(by=['block', 'paragraph', 'word'], ascending=True)
 
 
 def update_full_image_paths(folders: List[Path], zooniverse_classifications: pd.DataFrame) -> None:
-    collector_barcodes = data_loader.load_pickle(Path('file_resources\\barcode_dict.pickle'))
+    collector_name = data_loader.load_pickle(Path('file_resources\\collectors_by_barcode.pickle'))
     for idx, row in zooniverse_classifications.iterrows():
         barcode = row['barcode']
-        collector = collector_barcodes[barcode]
-        zooniverse_classifications.at[idx, 'collector'] = collector
-        image_name = row['image_location']
-        found_image_path = None
-        for one_folder in folders:
-            if os.path.exists(Path(one_folder, image_name)):
-                found_image_path = Path(one_folder, image_name)
-            elif os.path.exists(Path(one_folder, barcode + '.jpg')):
-                found_image_path = Path(one_folder, barcode + '.jpg')
-        if not found_image_path:
-            if os.path.exists(image_name):
-                found_image_path = image_name
+        zooniverse_classifications.at[idx, 'collector'] = collector_name[barcode]
+        image_path = Path(row['image_location'])
+        if not os.path.exists(image_path):  # search in image folders for this one, and update path IF found
+            image_filename = image_path.name
+            found_image_path = None
+            for folder in folders:
+                if os.path.exists(Path(folder, image_filename)):
+                    found_image_path = Path(folder, image_filename)
+            if found_image_path:
+                zooniverse_classifications.at[idx, 'image_location'] = found_image_path
             else:
-                print(f"Warning: {image_name} doesn't exist in these folders.")
-                found_image_path = Path(f'foo/{image_name}')
-        zooniverse_classifications.at[idx, 'image_location'] = found_image_path
+                print(f"Warning: {image_path} doesn't exist in these folders.")
 
 
-def expert_manual_review_steyermark(df: pd.DataFrame) -> None:
-    df.loc[df['id'] == 'C0601392F-b11p0w0', ('handwritten', 'human_transcription', 'status')] = \
-        (True, 'No. 26403', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0603620F-b12p0w0', ('handwritten', 'human_transcription', 'status')] = \
-        (True, 'No. 9866', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0604052F-b12p0w0', ('handwritten', 'human_transcription', 'status')] = \
-        (True, 'No. 23578', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0606667F-b13p0w0', ('handwritten', 'status')] = \
-        (True, 'Expert Reviewed')
-    df.loc[df['id'] == 'C0611047F-b14p3w0', ('handwritten', 'human_transcription', 'status')] = \
-        (True, 'May. 6,1939', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0045392F-b19p0w0', ('handwritten', 'status')] = \
-        (True, 'Expert Reviewed')
-    df.loc[df['id'] == 'C0601164F-b14p0w4', ('handwritten', 'status')] = (False, 'Discard - Reviewed')
-    df.loc[df['id'] == 'C0603614F-b9p0w0', ('handwritten', 'status')] = (False, 'Discard - Reviewed')
-    df.loc[df['id'] == 'C0611047F-b11p0w1', ('handwritten', 'status')] = (False, 'Discard - Reviewed')
-
-    df.loc[df['id'] == 'C0612468F-b12p0w16', ('human_transcription', 'status')] = ('Springs,', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0601164F-b11p0w7', ('human_transcription', 'status')] = ('of', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0602626F-b11p0w6', ('human_transcription', 'status')] = ('tributary', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0602766F-b12p0w0', ('human_transcription', 'status')] = ('Hier', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0602766F-b13p0w1', ('human_transcription', 'status')] = ('latiusculum', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0602766F-b13p1w16', ('human_transcription', 'status')] = ('sect', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0603614F-b10p0w0', ('human_transcription', 'status')] = ('Nieuwl.', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0603614F-b12p1w1', ('human_transcription', 'status')] = ('Montevallo', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0603620F-b11p1w21', ('human_transcription', 'status')] = ('City', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0603621F-b10p0w1', ('human_transcription', 'status')] = ('Aspidium', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0604053F-b14p0w4', ('human_transcription', 'status')] = ('Wooded', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0604053F-b14p1w1', ('human_transcription', 'status')] = ('Michx', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0604053F-b14p2w10', ('human_transcription', 'status')] = ('mi', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0604053F-b14p2w12', ('human_transcription', 'status')] = ('W.', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0604053F-b18p0w0', ('human_transcription', 'status')] = ('Sept.', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0604088F-b14p0w2', ('human_transcription', 'status')] = ('N', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0604948F-b15p0w0', ('human_transcription', 'status')] = ('Onoclea', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0604948F-b15p0w2', ('human_transcription', 'status')] = ('f. obtusilobata', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0605403F-b10p1w20', ('human_transcription', 'status')] = ('Munger', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0605417F-b12p0w0', ('human_transcription', 'status')] = ('Osmunda', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0605417F-b12p0w1', ('human_transcription', 'status')] = ('regalis', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0609475F-b12p0w10', ('human_transcription', 'status')] = ('Creek,', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0609475F-b12p0w13', ('human_transcription', 'status')] = ('R19W', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0609475F-b12p0w8', ('human_transcription', 'status')] = ('slopes along', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0609795F-b13p0w2', ('human_transcription', 'status')] = ('R23W', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0609795F-b14p0w1', ('human_transcription', 'status')] = ('fragilis', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0611047F-b12p0w2', ('human_transcription', 'status')] = ('Prantl', 'Expert Reviewed')
-
-    df.loc[df['id'] == 'C0601164F - b11p0w1', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0602626F - b11p1w10', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0604088F-b14p0w7', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0604088F-b14p1w8', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0604948F-b15p0w1', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0609475F-b12p0w15', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0609475F-b12p0w7', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0611180F-b15p0w1', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0612468F-b12p0w15', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0612468F-b12p1w2', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0625663F-b16p0w0', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0625663F-b16p0w11', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0602626F-b11p1w10', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0601389F-b11p0w9', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0603620F-b11p1w5', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0603621F-b10p1w14', 'status'] = 'Expert Reviewed'  # cut off on both sides
-    df.loc[df['id'] == 'C0603621F-b10p3w2', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0601385F-b11p1w29', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0601579F-b13p0w26', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0603617F-b9p0w20', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0603618F-b12p2w1', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0603619F-b8p0w0', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0603622F-b10p0w10', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0603758F-b15p0w7', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0603758F-b15p1w3', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0603843F-b16p1w0', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0604051F-b12p0w2', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0604051F-b14p0w0', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0604054F-b12p0w21', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0604055F-b13p0w1', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0604055F-b13p1w2', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0604057F-b13p0w3', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0604057F-b13p1w1', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0604087F-b14p0w0', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0604683F-b10p0w11', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0604683F-b10p0w14', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0604903F-b14p1w19', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0604904F-b10p1w2', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0604905F-b10p0w6', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0604905F-b10p0w15', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0604905F-b10p1w3', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0604906F-b13p0w0', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0604907F-b8p1w2', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0604907F-b8p2w1', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0604909F-b11p0w8', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0604909F-b11p0w25', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0604909F-b11p1w0', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0604910F-b10p2w0', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0605228F-b10p0w6', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0605228F-b10p0w16', 'status'] = 'Expert Reviewed'
-    # df.loc[df['id'] == '', 'status'] = 'Expert Reviewed'
-
-    df.loc[df['id'] == 'C0603621F-b12p0w0', ('human_transcription', 'status')] = ('Aug', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0604053F-b14p2w1', ('human_transcription', 'status')] = ('Ridge', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0604088F-b14p0w0', ('human_transcription', 'status')] = ('Crevices', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0604088F-b14p1w0', ('human_transcription', 'status')] = ('facing', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0604088F-b14p1w1', ('human_transcription', 'status')] = (
-        'T53N', 'Expert Reviewed')  # cut off on end
-    df.loc[df['id'] == 'C0604948F-b15p1w4', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0604948F-b15p2w0', ('human_transcription', 'status')] = (
-        'Fork', 'Expert Reviewed')  # cut off on both sides
-    df.loc[df['id'] == 'C0604948F-b15p2w13', ('human_transcription', 'status')] = ('E.', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0605227F-b9p0w15', ('human_transcription', 'status')] = ('R9W', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0605403F-b10p1w8', ('human_transcription', 'status')] = ('Fork', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0605403F-b10p2w0', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0605417F-b12p0w19', ('human_transcription', 'status')] = ('of', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0605417F-b12p0w2', ('human_transcription', 'status')] = (
-        'var. spec', 'Expert Reviewed')  # cut off on end
-    df.loc[df['id'] == 'C0605417F-b12p0w3', ('human_transcription', 'status')] = ('tabilis', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0606902F-b12p1w14', ('human_transcription', 'status')] = (
-        'Tom', 'Expert Reviewed')  # cut off both sides
-    df.loc[df['id'] == 'C0606902F-b12p1w15', ('human_transcription', 'status')] = (
-        'Sauk', 'Expert Reviewed')  # cut off both sides
-    df.loc[df['id'] == 'C0606902F-b12p2w0', ('human_transcription', 'status')] = ('S.', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0607530F-b12p1w1', ('human_transcription', 'status')] = (
-        'Fork', 'Expert Reviewed')  # cut off on both sides
-    df.loc[df['id'] == 'C0603758F-b14p0w3', ('unclear', 'status')] = (False, 'Expert Reviewed')
-    df.loc[df['id'] == 'C0607745F-b15p0w0', ('human_transcription', 'status')] = ('June', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0609229F-b12p1w15', ('human_transcription', 'status')] = ('Hollow,', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0609229F-b12p1w5', ('human_transcription', 'status')] = ('Along', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0609475F-b12p1w2', ('human_transcription', 'status')] = ('6,', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0611047F-b14p0w6', ('human_transcription', 'status')] = ('sect', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0612468F-b11p0w3', ('human_transcription', 'status')] = ('L.', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0603617F-b9p0w35', ('human_transcription', 'status')] = ('Callaway', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0603619F-b8p1w0', ('human_transcription', 'status')] = ('uarry', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0604051F-b12p1w1', ('human_transcription', 'status')] = ('Co', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0604057F-b13p1w0', ('human_transcription', 'status')] = ('ewis', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0604683F-b10p1w5', ('human_transcription', 'status')] = ('5/1939', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0604905F-b10p0w17', ('human_transcription', 'status')] = ('N.W', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0605228F-b10p0w1', ('human_transcription', 'status')] = ('claytoniana', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0605228F-b11p0w0', ('human_transcription', 'status')] = ('No. 257', 'Expert Reviewed')
-    # df.loc[df['id'] == '', ('human_transcription', 'status')] = ('', 'Expert Reviewed')
-
-    df.loc[df['id'] == 'C0625663F-b20p0w23', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0604088F - b14p1w2', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0603614F-b11p0w0', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0604052F-b11p0w3', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0606667F-b12p0w16', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0609229F-b12p1w19', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0603620F-b11p1w16', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0602766F-b13p0w3', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0607517F-b13p0w2', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0609475F-b12p0w14', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0609475F-b12p0w6', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0601164F-b12p0w0', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0604052F-b11p1w1', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0604053F-b14p0w2', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0604053F-b18p0w3', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0609229F-b12p0w2', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0604088F-b14p1w2', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0601164F-b11p0w1', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0601070F-b14p0w3', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0601387F-b12p0w3', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0601579F-b13p1w2', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0601779F-b9p0w34', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0603619F-b8p1w6', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0603619F-b8p1w9', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0603619F-b8p2w5', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0603619F-b9p0w2', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0603627F-b10p0w2', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0603627F-b10p0w3', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0603843F-b13p1w6', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0604051F-b12p0w7', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0604054F-b12p0w1', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0604087F-b16p0w3', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0604683F-b10p1w4', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0604905F-b10p0w3', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0604906F-b12p0w6', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0604907F-b8p1w10', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0604907F-b8p1w11', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0604909F-b11p0w5', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0604909F-b11p0w16', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0604909F-b12p0w0', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0604910F-b10p0w6', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0604910F-b10p1w8', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0604910F-b10p2w1', 'status'] = 'Discard - Reviewed'
-
-
-def expert_manual_review_standley(df: pd.DataFrame) -> None:
-    df.loc[df['id'] == 'C0361312F-b18p0w3', ('unclear', 'status')] = (False, 'Expert Reviewed')
-    df.loc[df['id'] == 'C0613301F-b12p0w2', ('human_transcription', 'unclear', 'status')] = \
-        ('Underw', False, 'Expert Reviewed')
-    df.loc[df['id'] == 'C0384964F-b15p0w0', ('human_transcription', 'status')] = ('nderw.', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0615106F-b16p0w0', ('human_transcription', 'status')] = ('hes', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0615742F-b16p1w0', ('human_transcription', 'status')] = ('um serratu', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0358756F-b18p0w2', ('human_transcription', 'status')] = ('maxo', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0361270F-b17p0w0', ('human_transcription', 'status')] = ('Phanerophlebia', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0361295F-b14p0w4', ('human_transcription', 'status')] = ('hapm', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0361295F-b14p0w7', ('human_transcription', 'unclear', 'status')] = \
-        ('.U.', False, 'Expert Reviewed')
-    df.loc[df['id'] == 'C0606741F-b11p1w1', ('human_transcription', 'status')] = ('anch', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0608095F-b14p0w0', ('human_transcription', 'status')] = ('n', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0608963F-b14p0w4', ('human_transcription', 'status')] = ('dum', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0609134F-b22p0w4', ('human_transcription', 'status')] = ('Wet f', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0609134F-b23p0w1', ('human_transcription', 'status')] = ('orest', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0610937F-b11p0w2', ('human_transcription', 'status')] = ('europaeum', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0610937F-b13p0w0', ('human_transcription', 'status')] = ('ug.', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0611164F-b18p0w1', ('human_transcription', 'status')] = ('silotum', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0611168F-b14p1w0', ('human_transcription', 'status')] = ('County On', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0612935F-b15p0w1', ('human_transcription', 'status')] = ('ban', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0613085F-b9p0w0', ('human_transcription', 'status')] = ('quisetum', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0613136F-b12p1w0', ('human_transcription', 'status')] = ('. Br', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0613274F-b16p0w12', ('human_transcription', 'status')] = ('Fleshy', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0613287F-b18p0w0', ('human_transcription', 'status')] = ('nderw', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0613287F-b20p0w2', ('human_transcription', 'status')] = ('Moist', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0613288F-b13p0w1', ('human_transcription', 'status')] = ('Underw', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0613342F-b13p0w1', ('human_transcription', 'status')] = ('excavata', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0613475F-b19p0w0', ('human_transcription', 'status')] = ('nsis', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0613475F-b19p0w1', ('human_transcription', 'status')] = ('guatemale', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0613475F-b20p0w0', ('human_transcription', 'status')] = ('nemia', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0613475F-b22p0w0', ('human_transcription', 'status')] = ('axon', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0613486F-b16p0w1', ('human_transcription', 'status')] = ('Maxon', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0613657F-b13p0w0', ('human_transcription', 'status')] = ('Anemia', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0613902F-b20p0w3', ('human_transcription', 'status')] = ('M. & G.)', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0613981F-b16p0w1', ('human_transcription', 'status')] = ('hastatum', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0614187F-b18p0w1', ('human_transcription', 'status')] = ('W', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0614298F-b15p0w1', ('human_transcription', 'status')] = ('sp', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0614383F-b20p0w1', ('human_transcription', 'status')] = ('M.&G.', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0614420F-b19p1w1', ('human_transcription', 'status')] = ('Not', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0614463F-b15p0w1', ('human_transcription', 'status')] = ('W', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0614743F-b15p0w1', ('human_transcription', 'status')] = ('harpeodes', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0614847F-b15p0w0', ('human_transcription', 'status')] = ('laetum', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0615077F-b18p0w5', ('human_transcription', 'status')] = ('C. Chr', 'Expert Reviewed')
-    df.loc[df['id'] == 'C0615110F-b16p0w0', ('human_transcription', 'status')] = ('m', 'Expert Reviewed')
-    # df.loc[df['id'] == '', ('human_transcription', 'status')] = ('', 'Expert Reviewed')
-
-    df.loc[df['id'] == 'C0358543F-b13p0w2', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0361268F-b19p0w1', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0361271F-b13p0w3', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0361350F-b18p0w3', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0384343F-b12p0w1', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0384343F-b12p0w3', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0384343F-b14p0w0', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0385183F-b18p0w2', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0385187F-b11p0w3', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0385187F-b11p0w6', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0605359F-b8p0w6', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0605614F-b14p0w3', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0606741F-b11p0w0', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0606741F-b11p1w0', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0606741F-b11p1w4', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0609134F-b23p0w0', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0612935F-b20p0w0', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0612993F-b13p0w3', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0613061F-b14p0w0', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0613093F-b13p0w0', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0613097F-b11p1w0', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0613144F-b12p0w2', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0613149F-b10p1w1', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0613149F-b10p1w2', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0613153F-b14p0w0', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0613277F-b16p0w2', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0613302F-b10p0w1', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0613342F-b13p0w0', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0613343F-b16p0w3', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0613347F-b17p0w2', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0613475F-b19p0w2', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0613480F-b15p0w0', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0613482F-b16p0w1', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0613659F-b17p0w1', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0613742F-b15p0w4', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0613897F-b16p1w5', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0613899F-b16p0w3', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0613899F-b16p1w0', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0613980F-b17p0w3', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0613988F-b16p0w2', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0614113F-b17p0w1', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0614153F-b16p0w2', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0614154F-b14p0w1', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0614298F-b15p1w2', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0614298F-b15p1w3', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0614366F-b14p0w0', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0614420F-b19p0w0', ('unclear', 'status')] = (False, 'Expert Reviewed')
-    df.loc[df['id'] == 'C0614477F-b16p0w1', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0614558F-b17p1w1', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0614609F-b17p0w1', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0614610F-b16p0w1', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0614610F-b16p0w2', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0614655F-b16p0w0', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0614686F-b15p0w5', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0614802F-b16p0w3', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0614841F-b23p0w2', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0614846F-b15p0w4', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0615108F-b18p1w0', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0615110F-b17p0w0', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0615177F-b17p0w0', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0615177F-b18p0w0', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0615178F-b17p0w0', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0615305F-b17p0w0', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0615305F-b17p0w2', 'status'] = 'Expert Reviewed'
-    df.loc[df['id'] == 'C0615502F-b15p0w1', 'status'] = 'Expert Reviewed'
-    # df.loc[df['id'] == '', 'status'] = 'Expert Reviewed'
-
-    df.loc[df['id'] == 'C0384980F-b17p0w16', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0611079F-b19p0w0', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0613343F-b21p0w11', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0605512F-b10p1w2', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0609490F-b12p0w24', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0606387F-b15p1w8', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0605770F-b16p0w0', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0361270F-b17p0w2', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0361270F-b17p0w3', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0384344F-b18p1w1', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0605614F-b17p0w1', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0608095F-b13p0w4', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0612993F-b13p0w1', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0613149F-b10p1w0', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0614295F-b15p0w1', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0613274F-b16p0w0', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0613280F-b13p0w1', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0613280F-b13p0w2', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0613288F-b13p0w2', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0613302F-b7p0w1', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0613342F-b13p0w9', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0613343F-b16p0w4', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0613343F-b21p0w13', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0613506F-b13p0w1', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0613682F-b15p0w1', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0613897F-b17p0w11', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0613981F-b13p0w0', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0613992F-b18p0w2', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0614113F-b14p0w1', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0614297F-b15p0w1', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0614298F-b13p0w1', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0614298F-b13p0w2', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0614384F-b17p0w1', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0614420F-b15p0w2', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0614420F-b16p0w0', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0614420F-b16p0w2', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0614420F-b16p0w3', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0614420F-b17p0w0', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0614421F-b13p0w1', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0614464F-b19p0w4', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0614743F-b15p0w4', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0614744F-b14p0w1', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0614745F-b13p0w0', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0614745F-b13p0w1', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0614745F-b13p0w2', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0614747F-b13p0w0', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0614802F-b13p0w0', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0614802F-b13p0w1', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0614841F-b23p0w3', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0615108F-b18p1w3', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0615178F-b19p0w2', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0615178F-b19p0w3', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0615350F-b14p0w1', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0615474F-b16p0w5', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0615498F-b17p0w3', 'status'] = 'Discard - Reviewed'
-    df.loc[df['id'] == 'C0615550F-b20p1w2', 'status'] = 'Discard - Reviewed'
-    # df.loc[df['id'] == '', 'status'] = 'Discard - Reviewed'
+def expert_manual_reviews(df: pd.DataFrame) -> None:
+    edits = pd.read_csv(Path('file_resources\\standley_steyermark_manual_review.csv'))
+    for idx, row in edits.iterrows():
+        id = row['id']
+        if id in df['id'].values:
+            df.loc[df['id'] == id, row['edit 1']] = row['edit 1 value']
+            if pd.notna(row['edit 2']):
+                df.loc[df['id'] == id, row['edit 2']] = row['edit 2 value']
+                if pd.notna(row['edit 3']):
+                    df.loc[df['id'] == id, row['edit 3']] = row['edit 3 value']
+    # df.loc[df['id'] == 'C0604088F-b14p1w1', ('human_transcription', 'status')] = (
+    #     'T53N', 'Expert Reviewed')  # cut off on end
+    # df.loc[df['id'] == 'C0604948F-b15p2w0', ('human_transcription', 'status')] = (
+    #     'Fork', 'Expert Reviewed')  # cut off on both sides
+    # df.loc[df['id'] == 'C0605417F-b12p0w2', ('human_transcription', 'status')] = (
+    #     'var. spec', 'Expert Reviewed')  # cut off on end
+    # df.loc[df['id'] == 'C0606902F-b12p1w14', ('human_transcription', 'status')] = (
+    #     'Tom', 'Expert Reviewed')  # cut off both sides
+    # df.loc[df['id'] == 'C0606902F-b12p1w15', ('human_transcription', 'status')] = (
+    #     'Sauk', 'Expert Reviewed')  # cut off both sides
+    # df.loc[df['id'] == 'C0607530F-b12p1w1', ('human_transcription', 'status')] = (
+    #     'Fork', 'Expert Reviewed')  # cut off on both sides
 
 
 def save_images_to_folders(zooniverse_classifications: pd.DataFrame, word_image_folder: Path) -> None:
