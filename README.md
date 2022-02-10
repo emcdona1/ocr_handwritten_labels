@@ -45,14 +45,17 @@ ___
        3. (Compression should already be checked, and "CSV" selected for file format.)
        4. For "Character Set" select "UTF-8 (unicode)."
        5. Click "Download Records" button.
-1. **Download your image set**.
+2. **Download your image set**.
     1. Run the script `utilities\join_occurrence_file_with_image_urls.py`, pointing to 
        the ZIP file you just downloaded.  A new CSV file 
        (e.g. "occurrence_file_with_images.csv") is created in the same directory. 
-    1. Run the script `utilities\download_images_from_csv.py`, pointing to (1) the
+    2. Run the script `utilities\download_images_from_csv.py`, pointing to (1) the
        "occurrence_file_with_images.csv" file, and (2) the desired directory for the 
        downloaded image set.
-1. **Retrieve and save OCR data for your image set**.
+3. **Gather language data**.
+    1. Run the script `utilities\detect_language.py`, pointing to (1) the desired directory for the 
+       downloaded image set, and (2) the "occurrence_file_with_images.csv" file. This generates a timestamped CSV file called "detect_language_data.csv". This file contains the document level language for each sample as well as any detected languages and the confidence of detection 
+4. **Retrieve and save OCR data for your image set**.
     1. Run the script `gather_ocr_data_from_cloud_platforms.py` pointing to the folder of 
        images downloaded in the previous step, and the "occurrence_with_image_urls" file.
     1. (To cut down on cloud usage, the program attempts to find already existing
@@ -65,7 +68,7 @@ ___
        to visualize and manually compare, add a flag 'True' to the script.
        These images are saved within a new subfolder called `cloud_ocr-[yyyy_mm_dd-hh_mm_ss]`.
        (e.g. `python gather_ocr_data_from_cloud_platforms.py images True`)
-1. **Compare OCR data to ground truth data**.
+5. **Compare OCR data to ground truth data**.
     1. Run the script `prep_comparison_data.py` with the "occurrences_with_ocr" file
        generated in the previous step. This script saves 2 new files to the
        `test_results` folder:

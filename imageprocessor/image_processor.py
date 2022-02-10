@@ -305,27 +305,29 @@ class GCVProcessor(ImageProcessor):
         self.ocr_blocks = sorted(self.ocr_blocks, key=lambda b: block_order[b['type']])
         self.pickle_current_image_state('parsed GCV ocr')
 
+        self._gather_language_data()
+
+        print(word_text)
+        print(line_text)
+
+    def _gather_language_data(self):
         response = self.current_ocr_response
         page = response.full_text_annotation
 
         page_string = str(page)
         page_string_split = page_string.split('\n')
 
-        language_code = 'language_code: '
-        confidence = 'confidence: '
         language_code_list = []
         confidence_list = []
-        stop = 'blocks'
-
         for line in page_string_split:
-            if stop in line:
+            if 'blocks' in line:
                 break
             else:
-                if language_code in line:
+                if 'language_code: ' in line:
                     language_code_list.append(line)
                 else:
                     pass
-                if confidence in line:
+                if 'confidence: ' in line:
                     confidence_list.append(line)
                 else:
                     pass
@@ -368,14 +370,6 @@ class GCVProcessor(ImageProcessor):
         self.document_level_language = locale
         self.top_languages = top_languages
         self.top_confidence = top_confidence
-
-        # print('Document Level Language: ', locale)
-        # print('Detected Languages: ', top_languages)
-        # print('Language Confidence: ', top_confidence)
-        print(word_text)
-        print(line_text)
-
-
 
     def get_list_of_symbols(self, label_only=False) -> list:
         symbols = [block for block in self.ocr_blocks if block['type'] == 'SYMBOL']

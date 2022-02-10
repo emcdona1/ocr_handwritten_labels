@@ -1,7 +1,6 @@
 import sys
 import os
 from zipfile import ZipFile
-import pandas
 import pandas as pd
 from io import BytesIO
 from copy import deepcopy
