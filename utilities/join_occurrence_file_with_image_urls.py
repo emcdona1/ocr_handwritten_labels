@@ -41,6 +41,7 @@ def join_occur_and_images_information(occur: pd.DataFrame, images: pd.DataFrame)
             print('No image url for %i, barcode: %s.' % (idx + 1, row['catalogNumber']))
     return joined_information
 
+
 def drop_just_barcodes(images: pd.DataFrame):
     url_df = deepcopy(images)
 

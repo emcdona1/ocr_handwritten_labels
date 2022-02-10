@@ -310,7 +310,6 @@ class GCVProcessor(ImageProcessor):
         print(word_text)
         print(line_text)
 
-
     def _gather_language_data(self):
         response = self.current_ocr_response
         page = response.full_text_annotation
