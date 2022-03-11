@@ -75,8 +75,8 @@ def compare_ground_truth(ground_truth, predicted_languages: str):
 
     # save compare dataframe to CSV
     time = get_timestamp_for_file_saving()
-    compare_dataframe.to_csv('compare_ground_truth_dataframe' + time + '.csv')
-    print("Finished: saving to " + 'compare_ground_truth_dataframe' + time + '.csv')
+    compare_dataframe.to_csv('language_validation' + time + '.csv')
+    print("Finished: saving to " + 'language_validation' + time + '.csv')
 
     # generate confusion matrix labels
     labels = set(prediction_list) | set(truth_list)

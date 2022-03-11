@@ -139,6 +139,8 @@ ___
       and verify URLs for each image.
     * `download_images_from_csv.py` - After running the previous script, download the images 
       for a given URL.
+    * `detect_language.py` - Extracts language data from the Google Cloud API call
+    * `language_validation.py` - Compare the detect language CSV to a ground truth occurrence CSV
     * `quick_crop_labels.py` - Quickly and roughly crop the bottom right corner of
       a set of herbarium sheet images.
     * `timer.py` - Quick timer class for tracking program execution time.
