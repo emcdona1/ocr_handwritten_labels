@@ -110,7 +110,6 @@ class ImageProcessor(ABC):
         self.current_image_location = image_path
         self.current_image_basename = Path(image_path).stem
         self.current_image_barcode = extract_barcode_from_image_name(self.current_image_location)
-        self.annotator.load_image_from_file(image_path)
 
         # 1. check for imageprocessor_object. If Y, load it and done.
         pickled_object_location = self._search_for_pickled_object()
@@ -120,13 +119,10 @@ class ImageProcessor(ABC):
             # 2. If N, send OCR request, pickle the response, and then _parse_ocr_blocks and pickle the IP.
             self._download_ocr()
             self._parse_ocr_blocks()
-            if is_label:
-                self.current_label_height = self.current_image_height
-                self.current_label_width = self.current_image_height
-            else:
-                self.current_label_height = math.ceil(self.current_image_height * 0.15)
-                self.current_label_width = math.ceil(self.current_image_width * 0.365)
+            self.find_label_location(is_label)
+            self._gather_language_data()
             self.pickle_current_image_state('new ocr')
+        self.annotator.load_image_from_file(image_path)
 
     def load_image_by_barcode(self, barcode: str) -> None:
         pickle_name = f'{barcode}.pickle'
@@ -313,9 +309,16 @@ class GCVProcessor(ImageProcessor):
                     v = word.bounding_box.vertices
                     v = [(v[0].x, v[0].y), (v[1].x, v[1].y), (v[2].x, v[2].y), (v[3].x, v[3].y)]
                     vertices, _, _, _, _ = arrange_coordinates(v)
+                    if word.property.detected_languages:
+                        lang = word.property.detected_languages[0].language_code
+                        lang_conf = word.property.detected_languages[0].confidence
+                    else:
+                        lang = None
+                        lang_conf = None
                     self.ocr_blocks.append({'type': 'WORD', 'confidence': word.confidence,
                                             'bounding_box': vertices, 'text': word_text,
-                                            'b_idx': b_idx, 'p_idx': p_idx, 'w_idx': w_idx, 's_idx': None})
+                                            'b_idx': b_idx, 'p_idx': p_idx, 'w_idx': w_idx, 's_idx': None,
+                                            'language': lang, 'language_confidence': lang_conf})
                 v = paragraph.bounding_box.vertices
                 v = [(v[0].x, v[0].y), (v[1].x, v[1].y), (v[2].x, v[2].y), (v[3].x, v[3].y)]
                 vertices, _, _, _, _ = arrange_coordinates(v)
@@ -326,71 +329,12 @@ class GCVProcessor(ImageProcessor):
         self.ocr_blocks = sorted(self.ocr_blocks, key=lambda b: block_order[b['type']])
         self.pickle_current_image_state('parsed GCV ocr')
 
-        self._gather_language_data()
-
-        print(word_text)
-        print(line_text)
-
     def _gather_language_data(self):
-        response = self.current_ocr_response
-        page = response.full_text_annotation
-
-        page_string = str(page)
-        page_string_split = page_string.split('\n')
-
-        language_code_list = []
-        confidence_list = []
-        for line in page_string_split:
-            if 'blocks' in line:
-                break
-            else:
-                if 'language_code: ' in line:
-                    language_code_list.append(line)
-                else:
-                    pass
-                if 'confidence: ' in line:
-                    confidence_list.append(line)
-                else:
-                    pass
-
-        just_language_code_values_list = []
-        for items in language_code_list:
-            items = items.replace('language_code: "', "")
-            items = items.replace(' ', "")
-            items = items.replace('"', "")
-            items = items.replace(",", "")
-            items = items.replace("'", "")
-            just_language_code_values_list.append(items)
-
-        just_confidence_values_list = []
-        for items in confidence_list:
-            items = items.replace('confidence: ', "")
-            items = items.replace(" ", "")
-            items = items.replace(",", "")
-            items = items.replace("'", "")
-            con_num = float(items)
-            just_confidence_values_list.append(con_num)
-
-        top_languages = []
-        top_confidence = []
-        if len(just_language_code_values_list) >= 3:
-            for i in range(0, 3):
-                top_languages.append(just_language_code_values_list[i])
-                top_confidence.append(just_confidence_values_list[i])
-        else:
-            top_languages = just_language_code_values_list.copy()
-            top_confidence = just_confidence_values_list.copy()
-
-        contains_locale = str(response)
-        contains_locale_split = contains_locale.split('\n')
-        locale_string = str(contains_locale_split[1])
-        locale = locale_string.replace('locale: ', '')
-        locale = locale.replace('"', '')
-        locale = locale.replace(' ', '')
-
-        self.document_level_language = locale
-        self.top_languages = top_languages
-        self.top_confidence = top_confidence
+        super()._gather_language_data()
+        try:
+            self.document_level_language = self.current_ocr_response.text_annotations[0].locale
+        except AttributeError as e:
+            self.document_level_language = None
 
     def get_list_of_symbols(self, label_only=False) -> list:
         symbols = [block for block in self.ocr_blocks if block['type'] == 'SYMBOL']
@@ -465,6 +409,10 @@ class AWSProcessor(ImageProcessor):
             self.ocr_blocks.append(new_line)
 
         self.pickle_current_image_state('parsed AWS ocr')
+
+    def _gather_language_data(self):
+        super()._gather_language_data()
+        self.document_level_language = None
 
     def convert_list_of_relative_coordinates(self, vertex_list: List[Tuple[float, float]]) -> List[Tuple[int, int]]:
         new_vertex_list = list()
