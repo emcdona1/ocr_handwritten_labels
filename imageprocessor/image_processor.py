@@ -1,4 +1,3 @@
-import json
 from configparser import ConfigParser
 import io
 import os
@@ -12,11 +11,7 @@ from imageprocessor.image_annotator import ImageAnnotator
 from typing import List, Tuple, Union
 import math
 import numpy as np
-
-
-# from google.cloud.vision_v1 import types
-# from google.cloud import vision_v1
-# from google.protobuf.json_format import MessageToJson, MessageToDict
+from pathlib import Path
 
 
 class ImageProcessor(ABC):
@@ -35,12 +30,12 @@ class ImageProcessor(ABC):
         self.current_label_height = None
         self.current_label_width = None
         self.current_label_location = None
+        self.document_level_language = None
+        self.languages_found = None
+        self.top_confidence = None
         self.annotator = ImageAnnotator(self.name)
         if starting_image_path:
             self.load_image_from_file(starting_image_path)
-        self.document_level_language = None
-        self.top_languages = None
-        self.top_confidence = None
 
     def __getstate__(self):
         """ Return a copy of the ImageProcessor, without the client instance attribute, for pickling."""
@@ -85,44 +80,6 @@ class ImageProcessor(ABC):
                 word_points.append(vertex)
         return word_points
 
-    def find_label_location(self) -> \
-            Tuple[Tuple[int, int], Tuple[int, int], Tuple[int, int], Tuple[int, int]]:
-        """ Searches bottom quadrant of image for highest concentration of symbol bounding boxes
-        and returns a set of 4 tuples (top-left, top-right, bottom-right, bottom-left).
-        If no OCR data is present, it sets the label location to be the bottom right corner. """
-        np_of_points = np.array(self.get_found_word_locations())
-        if np_of_points.shape[0] == 0:  # no OCR data found
-            upper_left = (self.current_image_width - self.current_label_width,
-                          self.current_image_height - self.current_label_height)
-            upper_right = (self.current_image_width - 1, self.current_image_height - self.current_label_height)
-            lower_right = (self.current_image_width - 1, self.current_image_height - 1)
-            lower_left = (self.current_image_width - self.current_label_width, self.current_image_height - 1)
-        else:
-            max_count = 0
-            max_loc = (0, 0)
-            for y in range(int(self.current_image_height / 2),
-                           self.current_image_height - self.current_label_height + 1):
-                for x in range(int(self.current_image_width / 2),
-                               self.current_image_width - self.current_label_width + 1):
-                    x_values = np_of_points[:, 0]
-                    idx_of_valid_x = np.intersect1d(np.where(x_values >= x),
-                                                    np.where(x_values < x + self.current_label_width))
-                    y_possible = np_of_points[idx_of_valid_x, 1]
-                    valid_y_count = np.intersect1d(np.where(y_possible >= y),
-                                                   np.where(y_possible < y + self.current_label_height))
-                    count = valid_y_count.shape[0]
-                    if count >= max_count:
-                        max_count = count
-                        max_loc = (x, y)
-            print('Label found at point %s with %.0f words.' % (str(max_loc), max_count / 4))
-            upper_left = max_loc
-            upper_right = (max_loc[0] + self.current_label_width, max_loc[1])
-            lower_right = (max_loc[0] + self.current_label_width, max_loc[1] + self.current_label_height)
-            lower_left = (max_loc[0], max_loc[1] + self.current_label_height)
-        self.current_label_location = upper_left, upper_right, lower_right, lower_left
-        self.pickle_current_image_state('find label')
-        return self.current_label_location
-
     @abstractmethod
     def _initialize_client(self):
         pass
@@ -141,17 +98,17 @@ class ImageProcessor(ABC):
         self.current_image_used_cropped_image_ocr = False
         self.annotator.clear_current_image()
         self.document_level_language = None
-        self.top_languages = None
+        self.languages_found = None
         self.top_confidence = None
 
     @abstractmethod
     def _initialize_name_and_save_directory(self) -> str:
         pass
 
-    def load_image_from_file(self, image_path: str, is_label: bool = False) -> None:
+    def load_image_from_file(self, image_path: Union[Path, str], is_label=False) -> None:
         self.clear_current_image()
         self.current_image_location = image_path
-        self.current_image_basename = os.path.basename(image_path).split('.')[0]
+        self.current_image_basename = Path(image_path).stem
         self.current_image_barcode = extract_barcode_from_image_name(self.current_image_location)
         self.annotator.load_image_from_file(image_path)
 
@@ -192,12 +149,76 @@ class ImageProcessor(ABC):
             return None
 
     @abstractmethod
-    def _parse_ocr_blocks(self) -> None:
+    def _download_ocr(self) -> None:
         pass
 
     @abstractmethod
-    def _download_ocr(self) -> None:
+    def _parse_ocr_blocks(self) -> None:
         pass
+
+    def find_label_location(self, is_label=False) -> \
+            Tuple[Tuple[int, int], Tuple[int, int], Tuple[int, int], Tuple[int, int]]:
+        """ Searches bottom quadrant of image for highest concentration of symbol bounding boxes
+        and returns a set of 4 tuples (top-left, top-right, bottom-right, bottom-left).
+        If no OCR data is present, it sets the label location to be the bottom right corner. """
+        if is_label:
+            self.current_label_height = self.current_image_height
+            self.current_label_width = self.current_image_height
+        else:
+            self.current_label_height = math.ceil(self.current_image_height * 0.15)
+            self.current_label_width = math.ceil(self.current_image_width * 0.365)
+        np_of_points = np.array(self.get_found_word_locations())
+        if np_of_points.shape[0] == 0:  # no OCR data found
+            upper_left = (self.current_image_width - self.current_label_width,
+                          self.current_image_height - self.current_label_height)
+            upper_right = (self.current_image_width - 1, self.current_image_height - self.current_label_height)
+            lower_right = (self.current_image_width - 1, self.current_image_height - 1)
+            lower_left = (self.current_image_width - self.current_label_width, self.current_image_height - 1)
+        else:
+            max_count = 0
+            max_loc = (0, 0)
+            for y in range(int(self.current_image_height / 2),
+                           self.current_image_height - self.current_label_height + 1):
+                for x in range(int(self.current_image_width / 2),
+                               self.current_image_width - self.current_label_width + 1):
+                    x_values = np_of_points[:, 0]
+                    idx_of_valid_x = np.intersect1d(np.where(x_values >= x),
+                                                    np.where(x_values < x + self.current_label_width))
+                    y_possible = np_of_points[idx_of_valid_x, 1]
+                    valid_y_count = np.intersect1d(np.where(y_possible >= y),
+                                                   np.where(y_possible < y + self.current_label_height))
+                    count = valid_y_count.shape[0]
+                    if count >= max_count:
+                        max_count = count
+                        max_loc = (x, y)
+            print('Label found at point %s with %.0f words.' % (str(max_loc), max_count / 4))
+            upper_left = max_loc
+            upper_right = (max_loc[0] + self.current_label_width, max_loc[1])
+            lower_right = (max_loc[0] + self.current_label_width, max_loc[1] + self.current_label_height)
+            lower_left = (max_loc[0], max_loc[1] + self.current_label_height)
+        self.current_label_location = upper_left, upper_right, lower_right, lower_left
+        self.pickle_current_image_state('find label')
+        return self.current_label_location
+
+    def _gather_language_data(self):
+        language_code_list = sorted([i['language'] for i in self.get_list_of_words() if i['language']])
+        language_code_list_label = sorted(
+            [i['language'] for i in self.get_list_of_words(label_only=True) if i['language']])
+
+        top_languages = {i: language_code_list.count(i) for i in language_code_list}
+        top_languages = sorted([(key, top_languages[key]) for key in top_languages], key=lambda a: a[1], reverse=True)
+        top_languages_label = {i: language_code_list_label.count(i) for i in language_code_list_label}
+        top_languages_label = sorted([(key, top_languages_label[key]) for key in top_languages_label], key=lambda a: a[1], reverse=True)
+
+        self.languages_found = top_languages
+        self.languages_found_in_label = top_languages_label
+        if self.languages_found_in_label[0][0] != 'en':
+            self.main_language = self.languages_found_in_label[0]
+        elif self.languages_found_in_label[0][1] // 2 > self.languages_found_in_label[1][1]:
+            self.main_language = 'en'
+        else:
+            self.main_language = self.languages_found_in_label[1][0]
+
 
     def get_list_of_words(self, label_only=False) -> list:
         words = [block for block in self.ocr_blocks if block['type'] == 'WORD']
@@ -268,7 +289,7 @@ class GCVProcessor(ImageProcessor):
     def _download_ocr(self) -> None:
         with io.open(self.current_image_location, 'rb') as image_file:
             image_content = image_file.read()
-        image = vision.types.Image(content=image_content)
+        image = vision.Image(content=image_content)
         self.current_ocr_response = self.client.document_text_detection(image=image)
 
     def _parse_ocr_blocks(self):

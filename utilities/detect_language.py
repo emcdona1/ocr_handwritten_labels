@@ -15,7 +15,7 @@ def main(occurrence_file: str, folder_or_image_path: str):
     for im in range(len(list_of_images)):
         processors.load_image_from_file(list_of_images[im])
         document_language = str(processors.document_level_language)
-        top_languages = str(processors.top_languages)
+        top_languages = str(processors.languages_found)
         top_confidences = str(processors.top_confidence)
 
         barcodes = str(occurrence['catalogNumber'][im])
