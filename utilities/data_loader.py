@@ -55,7 +55,7 @@ def pickle_an_object(save_directory: Union[Path, str], object_id: str, obj_to_pi
 
 
 def open_cv2_image(image_location: Union[Path, str]) -> np.ndarray:
-    if 'http' in image_location:
+    if 'http' in str(image_location):
         resp = urlopen(str(image_location))
         image = np.asarray(bytearray(resp.read()), dtype="uint8")
         image_to_draw_on = cv2.imdecode(image, cv2.IMREAD_COLOR)
