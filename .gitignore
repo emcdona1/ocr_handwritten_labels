@@ -17,3 +17,4 @@ Configuration.cfg
 /processed_images*/*
 /imageprocessor_objects/
 /images_standley/
+/models_vertex_ai/
