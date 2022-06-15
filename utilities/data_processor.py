@@ -1,9 +1,9 @@
-import os
-from typing import List, Tuple
+from pathlib import Path
+from typing import List, Tuple, Union
 
 
-def extract_barcode_from_image_name(image_name: str) -> str:
-    image_name_without_extension = os.path.basename(image_name).split('.')[0]
+def extract_barcode_from_image_name(image_name: Union[Path, str]) -> str:
+    image_name_without_extension = Path(image_name).stem
     image_barcode_split = image_name_without_extension.split('_')
     if len(image_barcode_split) == 1:
         image_barcode_split = image_name_without_extension.split('-')

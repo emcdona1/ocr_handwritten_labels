@@ -27,10 +27,10 @@ def main(occurrence_file: str, folder_or_image_path: str, generate_annotated_ima
             occurrence.loc[index, processor.name + 'OcrText'] = processor.get_label_text()
             if generate_annotated_images:
                 draw_comparison_image(processor, save_folder_path)
-        print('OCR gathered for %s' % one_image_location)
+        print(f'OCR gathered for {one_image_location}')
 
     save_location = save_dataframe_as_csv('test_results', 'occurrence_with_ocr', occurrence)
-    print('Saved new occurrence file to %s' % save_location)
+    print(f'Saved new occurrence file to {save_location}')
     return occurrence
 
 

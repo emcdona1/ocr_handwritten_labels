@@ -1,16 +1,13 @@
-import math
-import sys
 import os
 import numpy as np
 import pandas as pd
-import prep_comparison_data
-import calculate_changes
 from imageprocessor import ImageProcessor, GCVProcessor, AWSProcessor
 from typing import List, Tuple
 from matplotlib import pyplot
 from sklearn.cluster import Birch, AgglomerativeClustering
 from sklearn.mixture import GaussianMixture, BayesianGaussianMixture
-from utilities import Timer
+from utilities.timer import Timer
+from pathlib import Path
 
 
 def main(occurrence_filepath: str, ocr_text_filepath: str, image_folder: str, analysis: pd.DataFrame):
@@ -24,7 +21,7 @@ def main(occurrence_filepath: str, ocr_text_filepath: str, image_folder: str, an
     for idx in images:
         row = analysis.iloc[idx, :]
         barcode = row.at['ground_truth', 'barcode']
-        image_location = image_folder + os.path.sep + barcode + '.jpg'
+        image_location = Path(image_folder, barcode + '.jpg')
         label_searcher = Timer(barcode)
         for i, processor in enumerate(processors):
             processor.load_image_from_file(image_location)

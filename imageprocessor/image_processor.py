@@ -15,7 +15,7 @@ from pathlib import Path
 
 
 class ImageProcessor(ABC):
-    def __init__(self, starting_image_path=None):
+    def __init__(self, starting_image_path: Union[Path, str, None] = None):
         self.client = self._initialize_client()
         self.object_save_directory = 'imageprocessor_objects'
         self.name = self._initialize_name_and_save_directory()
@@ -32,7 +32,6 @@ class ImageProcessor(ABC):
         self.current_label_location = None
         self.document_level_language = None
         self.languages_found = None
-        self.top_confidence = None
         self.annotator = ImageAnnotator(self.name)
         if starting_image_path:
             self.load_image_from_file(starting_image_path)
@@ -69,7 +68,7 @@ class ImageProcessor(ABC):
 
     def pickle_current_image_state(self, name: str):
         path = pickle_an_object(self.object_save_directory, self.current_image_basename, self)
-        print('%s ImageProcessor saved to %s, called by %s.' % (self.name, path, name))
+        print(f'{self.name} ImageProcessor saved to {path}, called by {name}.')
 
     def get_found_word_locations(self) -> List[Tuple]:
         """ Returns a list of (x,y) coordinates, where each point is the corner of a symbol identified by the OCR. """
@@ -99,16 +98,15 @@ class ImageProcessor(ABC):
         self.annotator.clear_current_image()
         self.document_level_language = None
         self.languages_found = None
-        self.top_confidence = None
 
     @abstractmethod
     def _initialize_name_and_save_directory(self) -> str:
         pass
 
-    def load_image_from_file(self, image_path: Union[Path, str], is_label=False) -> None:
+    def load_image_from_file(self, image_path: Path, is_label=False) -> None:
         self.clear_current_image()
         self.current_image_location = image_path
-        self.current_image_basename = Path(image_path).stem
+        self.current_image_basename = self.current_image_location.stem
         self.current_image_barcode = extract_barcode_from_image_name(self.current_image_location)
 
         # 1. check for imageprocessor_object. If Y, load it and done.
@@ -122,25 +120,25 @@ class ImageProcessor(ABC):
             self.find_label_location(is_label)
             self._gather_language_data()
             self.pickle_current_image_state('new ocr')
-        self.annotator.load_image_from_file(image_path)
+        self.annotator.load_image_from_file(self.current_image_location)
 
     def load_image_by_barcode(self, barcode: str) -> None:
         pickle_name = f'{barcode}.pickle'
         search_directory = os.listdir(self.object_save_directory)
         if pickle_name in search_directory:
-            pickle_path = os.path.join(self.object_save_directory, pickle_name)
+            pickle_path = Path(self.object_save_directory, pickle_name)
             self._load_from_pickle(pickle_path)
         self.annotator.load_image_from_file(self.current_image_location)
 
-    def _load_from_pickle(self, pickle_location: str) -> None:
+    def _load_from_pickle(self, pickle_location: Union[Path, str]) -> None:
         loaded = load_pickle(pickle_location)
         self.__setstate__(loaded.__dict__)
 
-    def _search_for_pickled_object(self) -> Union[str, None]:
+    def _search_for_pickled_object(self) -> Union[Path, str, None]:
         pickled_search_name = f'{self.current_image_basename}.pickle'
         search_directory = os.listdir(self.object_save_directory)
         if pickled_search_name in search_directory:
-            return os.path.join(self.object_save_directory, pickled_search_name)
+            return Path(self.object_save_directory, pickled_search_name)
         else:
             return None
 
@@ -187,7 +185,7 @@ class ImageProcessor(ABC):
                     if count >= max_count:
                         max_count = count
                         max_loc = (x, y)
-            print('Label found at point %s with %.0f words.' % (str(max_loc), max_count / 4))
+            print(f'Label found at point {str(max_loc)} with {max_count / 4:.0f} words.')
             upper_left = max_loc
             upper_right = (max_loc[0] + self.current_label_width, max_loc[1])
             lower_right = (max_loc[0] + self.current_label_width, max_loc[1] + self.current_label_height)
@@ -204,7 +202,8 @@ class ImageProcessor(ABC):
         top_languages = {i: language_code_list.count(i) for i in language_code_list}
         top_languages = sorted([(key, top_languages[key]) for key in top_languages], key=lambda a: a[1], reverse=True)
         top_languages_label = {i: language_code_list_label.count(i) for i in language_code_list_label}
-        top_languages_label = sorted([(key, top_languages_label[key]) for key in top_languages_label], key=lambda a: a[1], reverse=True)
+        top_languages_label = sorted([(key, top_languages_label[key]) for key in top_languages_label],
+                                     key=lambda a: a[1], reverse=True)
 
         self.languages_found = top_languages
         self.languages_found_in_label = top_languages_label
@@ -278,7 +277,7 @@ class GCVProcessor(ImageProcessor):
 
     def _initialize_name_and_save_directory(self) -> str:
         self.name = 'gcv'
-        self.object_save_directory = os.path.join(self.object_save_directory, self.name)
+        self.object_save_directory = Path(self.object_save_directory, self.name)
         if not os.path.exists(self.object_save_directory):
             os.makedirs(self.object_save_directory)
         return self.name
@@ -360,7 +359,7 @@ class AWSProcessor(ImageProcessor):
 
     def _initialize_name_and_save_directory(self) -> str:
         self.name = 'aws'
-        self.object_save_directory = os.path.join(self.object_save_directory, self.name)
+        self.object_save_directory = Path(self.object_save_directory, self.name)
         if not os.path.exists(self.object_save_directory):
             os.makedirs(self.object_save_directory)
         return self.name
@@ -384,7 +383,7 @@ class AWSProcessor(ImageProcessor):
                     'Bytes': image_content
                 })
         except ConnectionClosedError:
-            print('Unable to get %s connection for image %s.' % (self.name, self.current_image_barcode))
+            print(f'Unable to get {self.name} connection for image {self.current_image_barcode}.')
             self.current_ocr_response = dict()
             self.current_ocr_response['Blocks'] = [{'BlockType': 'PAGE'}]
 
@@ -398,7 +397,7 @@ class AWSProcessor(ImageProcessor):
         if len(' '.join(found_text)) < 200:
             self._rerun_ocr_with_cropping()
             self.current_image_used_cropped_image_ocr = True
-            print('Bad image %s, reran OCR.' % self.current_image_barcode)
+            print(f'Bad image {self.current_image_barcode}, reran OCR.')
 
         lines: list = [line for line in self.current_ocr_response['Blocks'] if not line['BlockType'] == 'PAGE']
         for line in lines:
@@ -424,13 +423,13 @@ class AWSProcessor(ImageProcessor):
         return new_vertex_list
 
     def _rerun_ocr_with_cropping(self):
-        temp_folder = 'tmp'
+        temp_folder = Path('tmp')
         if not os.path.exists(temp_folder):
             os.makedirs(temp_folder)
         # create cropped image of lower right quadrant
         cropped_image = self.annotator.cropped_image_to_ratio(0.5, 1.0, 0.5, 1.0)
         cropped_filepath = save_cv2_image(temp_folder, self.current_image_barcode, cropped_image)
-        cropped_filepath = os.path.join(temp_folder, cropped_filepath)
+        cropped_filepath = Path(temp_folder, cropped_filepath)
         print(cropped_filepath)
         # rerun OCR with the temp image
         self._download_ocr(cropped_filepath)

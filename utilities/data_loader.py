@@ -21,13 +21,14 @@ def load_list_from_txt(file_path: str) -> list:
     return results
 
 
-def load_file_list_from_filesystem(directory_or_file: Union[Path, str]) -> List[Union[Path, str]]:
+def load_file_list_from_filesystem(directory_or_file: Union[Path, str]) -> List[Path]:
+    directory_or_file = Path(directory_or_file)
     if not os.path.exists(directory_or_file):
-        raise FileNotFoundError('Not a valid directory or file: %s' % directory_or_file)
+        raise FileNotFoundError(f'Not a valid directory or file: {directory_or_file}')
 
     if os.path.isdir(directory_or_file):
         all_directory_contents = os.listdir(directory_or_file)
-        all_directory_contents_with_full_path = [os.path.join(directory_or_file, filename)
+        all_directory_contents_with_full_path = [Path(directory_or_file, filename)
                                                  for filename in all_directory_contents]
         results = [item for item in all_directory_contents_with_full_path if not os.path.isdir(item)]
         if isinstance(directory_or_file, Path):

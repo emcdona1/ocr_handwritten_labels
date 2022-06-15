@@ -12,15 +12,14 @@ def main(occurrence_file: str, folder_or_image_path: str):
     language_dataframe = pd.DataFrame(data=None, index=None, columns=['Barcode', 'Document Language',
                                                                       'Detected Languages', 'Confidence of Detection'])
 
-    for im in range(len(list_of_images)):
-        processors.load_image_from_file(list_of_images[im])
+    for i, image in enumerate(list_of_images):
+        processors.load_image_from_file(image)
         document_language = str(processors.document_level_language)
         top_languages = str(processors.languages_found)
-        top_confidences = str(processors.top_confidence)
 
-        barcodes = str(occurrence['catalogNumber'][im])
-        element = [barcodes, document_language, top_languages, top_confidences]
-        language_dataframe.loc[im] = element
+        barcodes = str(occurrence['catalogNumber'][i])
+        element = [barcodes, document_language, top_languages]
+        language_dataframe.loc[i] = element
 
     time = get_timestamp_for_file_saving()
     language_dataframe.to_csv('detect_language_data' + time + '.csv')

@@ -9,7 +9,7 @@ import copy
 
 
 class ImageAnnotator:
-    def __init__(self, name: Union[str, Path], starting_image_location=None):
+    def __init__(self, name: Union[str, Path], starting_image_location: Union[Path, str, None] = None):
         self.save_location = os.path.join('annotated_images', name)
         self.current_image_location = None
         self.current_image_barcode = None
@@ -21,12 +21,12 @@ class ImageAnnotator:
     def set_save_location(self, name: str):
         self.save_location = name
 
-    def load_image_from_file(self, image_path: str):
+    def load_image_from_file(self, image_path: Union[Path, str]):
         self.clear_current_image()
-        self.current_image_location: str = image_path
+        self.current_image_location = Path(image_path)
         self.current_image_to_annotate: np.ndarray = open_cv2_image(self.current_image_location)
         self.current_image_barcode: str = extract_barcode_from_image_name(self.current_image_location)
-        self.current_image_basename: str = os.path.basename(self.current_image_location)
+        self.current_image_basename: str = Path(self.current_image_location).stem
 
     def draw_line(self, point1, point2, color=(0, 0, 0), width=1):
         cv2.line(self.current_image_to_annotate, point1, point2, color, width)

@@ -4,6 +4,8 @@ import pandas as pd
 import numpy as np
 import cv2
 from imageprocessor import GCVProcessor
+from typing import List
+from pathlib import Path
 
 zooniverse_manifest = pd.DataFrame()
 letter_metadata = pd.DataFrame()
@@ -16,7 +18,7 @@ def main():
     for one_image in list_of_images:
         gcv_processor.load_image_from_file(one_image)
         image_barcode = gcv_processor.current_image_barcode
-        print('%s loaded.' % one_image, sep='\t | \t')
+        print(f'{one_image} loaded.' , sep='\t | \t')
 
         list_of_words = gcv_processor.get_list_of_words(label_only=True)
         for word in list_of_words:
@@ -31,14 +33,14 @@ def main():
             add_word_to_zooniverse_manifest(gcv_processor, word, word_filename)
             gcv_processor.annotator.reset_current_image()
 
-        print('%s completed.' % one_image)
+        print(f'{one_image} completed.')
     clean_and_save_manifests()
 
 
-def load_list_of_images() -> list:
+def load_list_of_images() -> List[Path]:
     if os.path.isdir(folder_or_image_file):
         list_of_images = os.listdir(folder_or_image_file)
-        list_of_images = [os.path.join(folder_or_image_file, filename) for filename in list_of_images]
+        list_of_images = [Path(folder_or_image_file, filename) for filename in list_of_images]
         list_of_images = [item for item in list_of_images if not os.path.isdir(item)]  # remove subdirectories
     elif os.path.isfile(folder_or_image_file):
         list_of_images = [folder_or_image_file]
