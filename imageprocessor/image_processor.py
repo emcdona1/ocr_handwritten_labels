@@ -210,11 +210,12 @@ class ImageProcessor(ABC):
         self.languages_found_in_label = top_languages_label
         if self.languages_found_in_label[0][0] != 'en':
             self.main_language = self.languages_found_in_label[0]
+        elif len(self.languages_found_in_label) == 1:
+            self.main_language = self.languages_found_in_label[0][0]
         elif self.languages_found_in_label[0][1] // 2 > self.languages_found_in_label[1][1]:
-            self.main_language = 'en'
+            self.main_language = self.languages_found_in_label[0][0]
         else:
             self.main_language = self.languages_found_in_label[1][0]
-
 
     def get_list_of_words(self, label_only=False) -> list:
         words = [block for block in self.ocr_blocks if block['type'] == 'WORD']
