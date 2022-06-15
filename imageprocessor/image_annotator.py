@@ -3,10 +3,13 @@ import numpy as np
 from utilities.data_loader import open_cv2_image, save_cv2_image
 from utilities.data_processor import extract_barcode_from_image_name
 import cv2
+from typing import Union
+from pathlib import Path
+import copy
 
 
 class ImageAnnotator:
-    def __init__(self, name: str, starting_image_location=None):
+    def __init__(self, name: Union[str, Path], starting_image_location=None):
         self.save_location = os.path.join('annotated_images', name)
         self.current_image_location = None
         self.current_image_barcode = None
@@ -46,6 +49,10 @@ class ImageAnnotator:
     def reset_current_image(self):
         self.current_image_to_annotate = open_cv2_image(self.current_image_location)
 
+    def cropped_copy_of_image(self, x_min: int, x_max: int, y_min: int, y_max: int) -> np.ndarray:
+        """ Returns a subset of the current image, cropped to the desired absolute values. """
+        return copy.deepcopy(self.current_image_to_annotate[y_min:y_max + 1, x_min:x_max + 1])
+
     def cropped_image_to_ratio(self, x_min: float, x_max: float, y_min: float, y_max: float) -> np.ndarray:
         """ Returns a subset of the current image, cropped to the desired ratio. """
         height = self.current_image_to_annotate.shape[0]
@@ -54,8 +61,12 @@ class ImageAnnotator:
         x_max = int(height * x_max)
         y_min = int(width * y_min)
         y_max = int(width * y_max)
-        return self.cropped_image(x_min, x_max, y_min, y_max)
+        return self.cropped_copy_of_image(x_min, x_max, y_min, y_max)
 
-    def cropped_image(self, x_min: int, x_max: int, y_min: int, y_max: int) -> np.ndarray:
+    def cropped_to_box(self, list_of_four_sorted_points: list) -> np.ndarray:
         """ Returns a subset of the current image, cropped to the desired absolute values. """
-        return self.current_image_to_annotate[y_min:y_max + 1, x_min:x_max + 1]
+        x_min = list_of_four_sorted_points[0][0]
+        x_max = list_of_four_sorted_points[1][0]
+        y_min = list_of_four_sorted_points[1][1]
+        y_max = list_of_four_sorted_points[2][1]
+        return self.cropped_copy_of_image(x_min, x_max, y_min, y_max)

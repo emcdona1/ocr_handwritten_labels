@@ -11,6 +11,7 @@ from imageprocessor.image_annotator import ImageAnnotator
 from typing import List, Tuple, Union
 import math
 import numpy as np
+from pathlib import Path
 
 
 class ImageProcessor(ABC):
@@ -29,6 +30,9 @@ class ImageProcessor(ABC):
         self.current_label_height = None
         self.current_label_width = None
         self.current_label_location = None
+        self.document_level_language = None
+        self.languages_found = None
+        self.top_confidence = None
         self.annotator = ImageAnnotator(self.name)
         if starting_image_path:
             self.load_image_from_file(starting_image_path)
@@ -76,11 +80,89 @@ class ImageProcessor(ABC):
                 word_points.append(vertex)
         return word_points
 
-    def find_label_location(self) -> \
+    @abstractmethod
+    def _initialize_client(self):
+        pass
+
+    def clear_current_image(self):
+        self._current_ocr_response = None
+        self.ocr_blocks = None
+        self.current_image_location = None
+        self.current_image_basename = None
+        self.current_image_barcode = None
+        self.current_image_width = None
+        self.current_image_height = None
+        self.current_label_width = None
+        self.current_label_height = None
+        self.current_label_location = None
+        self.current_image_used_cropped_image_ocr = False
+        self.annotator.clear_current_image()
+        self.document_level_language = None
+        self.languages_found = None
+        self.top_confidence = None
+
+    @abstractmethod
+    def _initialize_name_and_save_directory(self) -> str:
+        pass
+
+    def load_image_from_file(self, image_path: Union[Path, str], is_label=False) -> None:
+        self.clear_current_image()
+        self.current_image_location = image_path
+        self.current_image_basename = Path(image_path).stem
+        self.current_image_barcode = extract_barcode_from_image_name(self.current_image_location)
+
+        # 1. check for imageprocessor_object. If Y, load it and done.
+        pickled_object_location = self._search_for_pickled_object()
+        if pickled_object_location:
+            self._load_from_pickle(pickled_object_location)
+        else:
+            # 2. If N, send OCR request, pickle the response, and then _parse_ocr_blocks and pickle the IP.
+            self._download_ocr()
+            self._parse_ocr_blocks()
+            self.find_label_location(is_label)
+            self._gather_language_data()
+            self.pickle_current_image_state('new ocr')
+        self.annotator.load_image_from_file(image_path)
+
+    def load_image_by_barcode(self, barcode: str) -> None:
+        pickle_name = f'{barcode}.pickle'
+        search_directory = os.listdir(self.object_save_directory)
+        if pickle_name in search_directory:
+            pickle_path = os.path.join(self.object_save_directory, pickle_name)
+            self._load_from_pickle(pickle_path)
+        self.annotator.load_image_from_file(self.current_image_location)
+
+    def _load_from_pickle(self, pickle_location: str) -> None:
+        loaded = load_pickle(pickle_location)
+        self.__setstate__(loaded.__dict__)
+
+    def _search_for_pickled_object(self) -> Union[str, None]:
+        pickled_search_name = f'{self.current_image_basename}.pickle'
+        search_directory = os.listdir(self.object_save_directory)
+        if pickled_search_name in search_directory:
+            return os.path.join(self.object_save_directory, pickled_search_name)
+        else:
+            return None
+
+    @abstractmethod
+    def _download_ocr(self) -> None:
+        pass
+
+    @abstractmethod
+    def _parse_ocr_blocks(self) -> None:
+        pass
+
+    def find_label_location(self, is_label=False) -> \
             Tuple[Tuple[int, int], Tuple[int, int], Tuple[int, int], Tuple[int, int]]:
         """ Searches bottom quadrant of image for highest concentration of symbol bounding boxes
         and returns a set of 4 tuples (top-left, top-right, bottom-right, bottom-left).
         If no OCR data is present, it sets the label location to be the bottom right corner. """
+        if is_label:
+            self.current_label_height = self.current_image_height
+            self.current_label_width = self.current_image_height
+        else:
+            self.current_label_height = math.ceil(self.current_image_height * 0.15)
+            self.current_label_width = math.ceil(self.current_image_width * 0.365)
         np_of_points = np.array(self.get_found_word_locations())
         if np_of_points.shape[0] == 0:  # no OCR data found
             upper_left = (self.current_image_width - self.current_label_width,
@@ -114,70 +196,26 @@ class ImageProcessor(ABC):
         self.pickle_current_image_state('find label')
         return self.current_label_location
 
-    @abstractmethod
-    def _initialize_client(self):
-        pass
+    def _gather_language_data(self):
+        language_code_list = sorted([i['language'] for i in self.get_list_of_words() if i['language']])
+        language_code_list_label = sorted(
+            [i['language'] for i in self.get_list_of_words(label_only=True) if i['language']])
 
-    def clear_current_image(self):
-        self._current_ocr_response = None
-        self.ocr_blocks = None
-        self.current_image_location = None
-        self.current_image_basename = None
-        self.current_image_barcode = None
-        self.current_image_width = None
-        self.current_image_height = None
-        self.current_label_width = None
-        self.current_label_height = None
-        self.current_label_location = None
-        self.current_image_used_cropped_image_ocr = False
-        self.annotator.clear_current_image()
+        top_languages = {i: language_code_list.count(i) for i in language_code_list}
+        top_languages = sorted([(key, top_languages[key]) for key in top_languages], key=lambda a: a[1], reverse=True)
+        top_languages_label = {i: language_code_list_label.count(i) for i in language_code_list_label}
+        top_languages_label = sorted([(key, top_languages_label[key]) for key in top_languages_label], key=lambda a: a[1], reverse=True)
 
-    @abstractmethod
-    def _initialize_name_and_save_directory(self) -> str:
-        pass
-
-    def load_image_from_file(self, image_path: str, is_label: bool = False) -> None:
-        self.clear_current_image()
-        self.current_image_location = image_path
-        self.current_image_basename = os.path.basename(image_path).split('.')[0]
-        self.current_image_barcode = extract_barcode_from_image_name(self.current_image_location)
-        self.annotator.load_image_from_file(image_path)
-
-        # 1. check for imageprocessor_object. If Y, load it and done.
-        pickled_object_location = self._search_for_pickled_object()
-        if pickled_object_location:
-            self._load_from_pickle(pickled_object_location)
+        self.languages_found = top_languages
+        self.languages_found_in_label = top_languages_label
+        if self.languages_found_in_label[0][0] != 'en':
+            self.main_language = self.languages_found_in_label[0]
+        elif len(self.languages_found_in_label) == 1:
+            self.main_language = self.languages_found_in_label[0][0]
+        elif self.languages_found_in_label[0][1] // 2 > self.languages_found_in_label[1][1]:
+            self.main_language = self.languages_found_in_label[0][0]
         else:
-            # 2. If N, send OCR request, pickle the response, and then _parse_ocr_blocks and pickle the IP.
-            self._download_ocr()
-            self._parse_ocr_blocks()
-            if is_label:
-                self.current_label_height = self.current_image_height
-                self.current_label_width = self.current_image_height
-            else:
-                self.current_label_height = math.ceil(self.current_image_height * 0.15)
-                self.current_label_width = math.ceil(self.current_image_width * 0.365)
-            self.pickle_current_image_state('new ocr')
-
-    def _load_from_pickle(self, pickle_location: str) -> None:
-        loaded = load_pickle(pickle_location)
-        self.__setstate__(loaded.__dict__)
-
-    def _search_for_pickled_object(self) -> Union[str, None]:
-        pickled_search_name = self.current_image_basename + '.pickle'
-        search_directory = os.listdir(self.object_save_directory)
-        if pickled_search_name in search_directory:
-            return os.path.join(self.object_save_directory, pickled_search_name)
-        else:
-            return None
-
-    @abstractmethod
-    def _parse_ocr_blocks(self) -> None:
-        pass
-
-    @abstractmethod
-    def _download_ocr(self) -> None:
-        pass
+            self.main_language = self.languages_found_in_label[1][0]
 
     def get_list_of_words(self, label_only=False) -> list:
         words = [block for block in self.ocr_blocks if block['type'] == 'WORD']
@@ -240,7 +278,7 @@ class GCVProcessor(ImageProcessor):
 
     def _initialize_name_and_save_directory(self) -> str:
         self.name = 'gcv'
-        self.object_save_directory = self.object_save_directory + os.path.sep + self.name
+        self.object_save_directory = os.path.join(self.object_save_directory, self.name)
         if not os.path.exists(self.object_save_directory):
             os.makedirs(self.object_save_directory)
         return self.name
@@ -248,7 +286,7 @@ class GCVProcessor(ImageProcessor):
     def _download_ocr(self) -> None:
         with io.open(self.current_image_location, 'rb') as image_file:
             image_content = image_file.read()
-        image = vision.types.Image(content=image_content)
+        image = vision.Image(content=image_content)
         self.current_ocr_response = self.client.document_text_detection(image=image)
 
     def _parse_ocr_blocks(self):
@@ -272,9 +310,16 @@ class GCVProcessor(ImageProcessor):
                     v = word.bounding_box.vertices
                     v = [(v[0].x, v[0].y), (v[1].x, v[1].y), (v[2].x, v[2].y), (v[3].x, v[3].y)]
                     vertices, _, _, _, _ = arrange_coordinates(v)
+                    if word.property.detected_languages:
+                        lang = word.property.detected_languages[0].language_code
+                        lang_conf = word.property.detected_languages[0].confidence
+                    else:
+                        lang = None
+                        lang_conf = None
                     self.ocr_blocks.append({'type': 'WORD', 'confidence': word.confidence,
                                             'bounding_box': vertices, 'text': word_text,
-                                            'b_idx': b_idx, 'p_idx': p_idx, 'w_idx': w_idx, 's_idx': None})
+                                            'b_idx': b_idx, 'p_idx': p_idx, 'w_idx': w_idx, 's_idx': None,
+                                            'language': lang, 'language_confidence': lang_conf})
                 v = paragraph.bounding_box.vertices
                 v = [(v[0].x, v[0].y), (v[1].x, v[1].y), (v[2].x, v[2].y), (v[3].x, v[3].y)]
                 vertices, _, _, _, _ = arrange_coordinates(v)
@@ -284,6 +329,13 @@ class GCVProcessor(ImageProcessor):
         block_order = {'LINE': 1, 'WORD': 2, 'SYMBOL': 3}
         self.ocr_blocks = sorted(self.ocr_blocks, key=lambda b: block_order[b['type']])
         self.pickle_current_image_state('parsed GCV ocr')
+
+    def _gather_language_data(self):
+        super()._gather_language_data()
+        try:
+            self.document_level_language = self.current_ocr_response.text_annotations[0].locale
+        except AttributeError as e:
+            self.document_level_language = None
 
     def get_list_of_symbols(self, label_only=False) -> list:
         symbols = [block for block in self.ocr_blocks if block['type'] == 'SYMBOL']
@@ -308,7 +360,7 @@ class AWSProcessor(ImageProcessor):
 
     def _initialize_name_and_save_directory(self) -> str:
         self.name = 'aws'
-        self.object_save_directory = self.object_save_directory + os.path.sep + self.name
+        self.object_save_directory = os.path.join(self.object_save_directory, self.name)
         if not os.path.exists(self.object_save_directory):
             os.makedirs(self.object_save_directory)
         return self.name
@@ -358,6 +410,10 @@ class AWSProcessor(ImageProcessor):
             self.ocr_blocks.append(new_line)
 
         self.pickle_current_image_state('parsed AWS ocr')
+
+    def _gather_language_data(self):
+        super()._gather_language_data()
+        self.document_level_language = None
 
     def convert_list_of_relative_coordinates(self, vertex_list: List[Tuple[float, float]]) -> List[Tuple[int, int]]:
         new_vertex_list = list()

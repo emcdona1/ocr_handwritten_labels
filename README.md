@@ -25,34 +25,38 @@ ___
 ___
 ## Example Workflows
 
-#### Comparing OCR platforms on analyzing herbarium sheet labels
+### A. Comparing OCR platforms on analyzing herbarium sheet labels
 *Currently available: Google Cloud Vision and Amazon Web Services Textract*
 
 1. **Download the ground truth information for your dataset, plus URLs of the images**.
-    1. In a web browser, log into the [Fern Portal](https://pteridoportal.org/) 
-       and download an occurrence file, which should contain human-created transcriptions 
-       of the herbarium sheet text:
-   1. As an authenticated user, click the "Crowdsource", and click the pencil icon 
-      next to the desired dataset.
-   1. Click the "Exporter" tab. Create a search query (e.g. 
-      *Collector/Observer CONTAINS Steyermark*).
-       1. For "Processing Status" select "Reviewed." (This ensures that you have ground truth
-          data, i.e. transcribed by humans and reviewed by staff, to compare to the OCR.)
+    1. In a web browser, log into a Symbiota portal ([Fern Portal](https://pteridoportal.org/) 
+       or [Bryophyte Portal](https://bryophyteportal.org/)) and download an occurrence file, which will be a CSV file 
+       containing image data and transcriptions of the herbarium sheet text.
+    2. As an authenticated user, click "Search Collections" under the "Search" tab.  Uncheck the box to the left of
+       "_Select/Deselect all collections_" to deselect everything, and then check the box for the desired dataset (e.g. 
+       "Field Museum of Natural History").  Click the search button.
+    3. Use the search fields to narrow down your export as needed.  Some common examples:
+       1. Collector's Last Name (e.g. *Steyermark*).
+    4. Click "Table Display" to load the query results.  Near the top right, click the down-arrow button to open a 
+       pop-up window for exporting the data.
        1. For "Structure," select "Darwin Core."
-       1. For "Data Extensions," deselect "include Determination History"
+       2. For "Data Extensions," deselect "include Determination History"
           and select "include Image Records."
-       1. (Compression should already be checked, and "CSV" selected for file format.)
-       1. For "Character Set" select "UTF-8 (unicode)."
-       1. Click "Download Records" button.
-   1. Place this downloaded ZIP file in your working directory.
-1. **Download your image set**.
+       3. (Compression should already be checked, and "CSV" selected for file format.)
+       4. For "Character Set" select "UTF-8 (unicode)."
+       5. Click "Download Records" button.
+2. **Download your image set**.
     1. Run the script `utilities\join_occurrence_file_with_image_urls.py`, pointing to 
        the ZIP file you just downloaded.  A new CSV file 
        (e.g. "occurrence_file_with_images.csv") is created in the same directory. 
-    1. Run the script `utilities\download_images_from_csv.py`, pointing to (1) the
+    2. Run the script `utilities\download_images_from_csv.py`, pointing to (1) the
        "occurrence_file_with_images.csv" file, and (2) the desired directory for the 
        downloaded image set.
-1. **Retrieve and save OCR data for your image set**.
+3. **Gather language data**.
+    1. Run the script `utilities\detect_language.py`, pointing to (1) the desired directory for the 
+       downloaded image set, and (2) the "occurrence_file_with_images.csv" file. This generates a timestamped CSV file called "detect_language_data.csv". This file contains the document level language for each sample as well as any detected languages and the confidence of detection.
+    2. If the ground truth for the detected labels exists, you can run the script `utilities\language_validation.py` pointing to (1) ground truth occurrence file and (2) detect_language_date.csv file and a language_validation_date.csv file will be generated showing the accuracy of the language detection
+4. **Retrieve and save OCR data for your image set**.
     1. Run the script `gather_ocr_data_from_cloud_platforms.py` pointing to the folder of 
        images downloaded in the previous step, and the "occurrence_with_image_urls" file.
     1. (To cut down on cloud usage, the program attempts to find already existing
@@ -65,7 +69,7 @@ ___
        to visualize and manually compare, add a flag 'True' to the script.
        These images are saved within a new subfolder called `cloud_ocr-[yyyy_mm_dd-hh_mm_ss]`.
        (e.g. `python gather_ocr_data_from_cloud_platforms.py images True`)
-1. **Compare OCR data to ground truth data**.
+5. **Compare OCR data to ground truth data**.
     1. Run the script `prep_comparison_data.py` with the "occurrences_with_ocr" file
        generated in the previous step. This script saves 2 new files to the
        `test_results` folder:
@@ -85,6 +89,15 @@ ___
     per image on an average personal computer.)
     
 
+### B. Zooniverse project preparation
+1. After the first three steps above, run `create_images_for_zooniverse.py` using the folder of downloaded images 
+     (and an optional 2nd argument to ID the folders that will be created -- highly recommended!).  This script will 
+     generate two new folders: `processed_images-{optional_id}` (label images with words boxed by blue squares) and 
+     `processed_images_nn-{optional_id}` (images of each word, cropped, for use in machine learning once labelled).  The first folder
+     will also contain a file `zooniverse_manifest.csv`, which should be uploaded to Zooniverse with the images.
+2. Upload the `processed_images-{optional_id}` folder with the CSV file to Zooniverse as a subject set.
+3. Once volunteers have finished the workflow for this subject set, export the data ("Request new classification export 
+     CSV").
 
 ---
 ## Repository Structure
@@ -126,6 +139,8 @@ ___
       and verify URLs for each image.
     * `download_images_from_csv.py` - After running the previous script, download the images 
       for a given URL.
+    * `detect_language.py` - Extracts language data from the Google Cloud API call
+    * `language_validation.py` - Compare the detect language CSV to a ground truth occurrence CSV
     * `quick_crop_labels.py` - Quickly and roughly crop the bottom right corner of
       a set of herbarium sheet images.
     * `timer.py` - Quick timer class for tracking program execution time.
@@ -266,8 +281,9 @@ ___
 ## Credits
 This project is being developed for the
 [Grainger Bioinformatics Center](https://sites.google.com/fieldmuseum.org/bioinformatics/home) at
-the [Field Museum](https://www.fieldmuseum.org/) by Beth McDonald ([@emcdona1](https://github.com/emcdona1)),
-under the guidance of Dr. Rick Ree and Dr. Matt von Konrat.
+the [Field Museum](https://www.fieldmuseum.org/) by Beth McDonald (Machine Learning Engineer, 
+[@emcdona1](https://github.com/emcdona1)) and Sean Cullen (Botany Collections Intern, 
+[@SeanCullen11](https://github.com/SeanCullen11)), under the guidance of Dr. Rick Ree and Dr. Matt von Konrat.
 
 Original codebase for a GUI system with a local database developed by 
 Keshab Panthi ([@kpanthi](https://github.com/kpanthi)), Northeastern Illinois University.

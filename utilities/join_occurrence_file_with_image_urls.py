@@ -21,34 +21,48 @@ def extract_occur_and_images_from_zip(zip_file_path: str) -> (pd.DataFrame, pd.D
     with ZipFile(zip_file_path, 'r') as zipped_file:
         occur_bytes = zipped_file.read('occurrences.csv')
         occur = pd.read_csv(BytesIO(occur_bytes), encoding='UTF-8')
-        images_bytes = zipped_file.read('images.csv')
+        images_bytes = zipped_file.read('multimedia.csv')
         images = pd.read_csv(BytesIO(images_bytes), encoding='UTF-8')
+
     return occur, images
 
 
 def join_occur_and_images_information(occur: pd.DataFrame, images: pd.DataFrame) -> pd.DataFrame:
     joined_information = deepcopy(occur)
-    joined_information = joined_information.assign(image_url = images['identifier'])
+    url_df = drop_just_barcodes(images)
+    joined_information = joined_information.assign(image_url=url_df['identifier'])
     num_rows = joined_information.shape[0]
+
     for idx, row in joined_information.iterrows():
         valid_image_url = is_valid_url(row['image_url'])
         if valid_image_url:
             print('Image %i / %i validated.' % (idx + 1, num_rows))
         else:
-            web_resolution_image = images.at[idx, 'goodQualityAccessURI']
-            valid_image_url = is_valid_url(web_resolution_image)
-            if valid_image_url:
-                joined_information.at[idx, 'image_url'] = web_resolution_image
-                print('Image %i / %i successfully replaced.' % (idx + 1, num_rows))
-            else:
-                joined_information.at[idx, 'image_url'] = ''
-                print('No image url for %i, barcode: %s.' % (idx + 1, row['catalogNumber']))
+            print('No image url for %i, barcode: %s.' % (idx + 1, row['catalogNumber']))
     return joined_information
 
 
+def drop_just_barcodes(images: pd.DataFrame):
+    url_df = deepcopy(images)
+
+    for i in range(len(images)):
+        url = images.at[i, 'identifier']
+        if "_b.jpg" in url or "_B.jpg" in url:
+            url_df = url_df.drop([i])
+        else:
+            pass
+
+    url_df = url_df.reset_index(drop=True)
+    return url_df
+
+
 def is_valid_url(image_url: str) -> bool:
-    result = requests.get(image_url)
-    return result.status_code == 200
+    try:
+        result = requests.get(image_url)
+        return result.status_code == 200
+    except requests.exceptions.MissingSchema as e:
+        print(e)
+        return False
 
 
 if __name__ == '__main__':
