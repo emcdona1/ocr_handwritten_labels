@@ -10,7 +10,7 @@ from imageprocessor.image_processor import GCVProcessor
 
 def main(folder: Path):
     t = Timer('gather languages')
-    list_of_images = [Path(folder, i) for i in os.listdir(folder)]
+    list_of_images = [Path(folder, str(i)) for i in os.listdir(folder)]
     ip = GCVProcessor()
     results = pd.DataFrame(columns=('image_location', 'barcode',
                                     'document_language', 'document_language_by_word',
